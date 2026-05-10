@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cora Backoffice — Expedição v1 (wireframes)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<template id="__bundler_thumbnail" data-bg-color="#FAFAF8">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#FAFAF8"/>
+    <g transform="translate(360,260)" fill="#2E55CD">
+      <rect x="0" y="0" width="160" height="22" rx="3" opacity=".5"/>
+      <rect x="0" y="40" width="200" height="22" rx="3" opacity=".25"/>
+      <rect x="0" y="80" width="120" height="22" rx="3"/>
+      <rect x="260" y="0" width="220" height="62" rx="6" opacity=".15"/>
+      <circle cx="295" cy="92" r="8"/>
+      <rect x="320" y="86" width="160" height="12" rx="3" opacity=".5"/>
+    </g>
+    <text x="600" y="500" text-anchor="middle" font-family="Georgia,serif" font-size="36" fill="#172E6E" letter-spacing="4">EXPEDIÇÃO v1</text>
+    <text x="600" y="540" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#7A766E">cora backoffice · low-fi</text>
+  </svg>
+</template>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--warm-50);min-height:100vh;color:var(--warm-700)}
+
+  /* SHELL */
+  .shell{max-width:1600px;margin:0 auto;padding:24px 24px 80px}
+  .shell-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:24px;flex-wrap:wrap}
+  .shell-head h1{font-family:var(--font-display);font-size:24px;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0}
+  .shell-head .sub{font-family:var(--font-body);font-size:13px;color:var(--warm-500);margin-top:4px;max-width:62ch;line-height:1.5}
+  .tabs-wrap{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .tabs{display:inline-flex;gap:0;background:var(--warm-100);padding:3px;border-radius:8px;border:1px solid var(--warm-200)}
+  .tabs button{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:12px;background:transparent;border:0;padding:8px 12px;border-radius:6px;color:var(--warm-500);cursor:pointer}
+  .tabs button.on{background:#fff;color:var(--brand-500)}
+  .tabs-label{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-400)}
+  .wf-tag{font-family:var(--font-body);font-size:10px;color:var(--warm-400);text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border:1px dashed var(--warm-300);border-radius:3px;background:var(--warm-100);display:inline-block;margin-left:8px;vertical-align:middle}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-bottom:18px;padding:10px 14px;background:var(--warm-100);border:1px dashed var(--warm-300);border-radius:8px}
+  .legend strong{font-weight:600;color:var(--warm-700)}
+  .legend .sw{display:inline-flex;align-items:center;gap:6px}
+  .legend .sw i{width:12px;height:12px;border-radius:2px;display:inline-block;border:1px solid var(--warm-300)}
+
+  .stage{display:none}
+  .stage.on{display:block}
+  .stage.mobile{display:none;justify-content:center;padding:24px 0;gap:24px;flex-wrap:wrap}
+  .stage.mobile.on{display:flex}
+
+  /* DESKTOP shell */
+  .dk{display:grid;grid-template-columns:220px 1fr;background:var(--warm-50);border:1px dashed var(--warm-300);border-radius:8px;overflow:hidden;min-height:880px;position:relative}
+  .dk aside{background:#fff;border-right:1px dashed var(--warm-300);padding:18px 0 20px;display:flex;flex-direction:column}
+  .dk aside .brand{padding:0 18px 14px;margin-bottom:6px;border-bottom:1px dashed var(--warm-300);font-family:var(--font-display);font-size:18px;color:var(--brand-500);letter-spacing:.04em;text-transform:uppercase}
+  .dk aside .brand .tag{font-family:var(--font-body);font-size:11px;color:var(--warm-400);text-transform:none;letter-spacing:0;margin-left:6px}
+  .dk aside .nav-label{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-400);padding:14px 18px 6px}
+  .dk aside nav a{display:flex;align-items:center;gap:10px;padding:9px 18px;color:var(--warm-600);font-family:var(--font-body);font-size:14px;text-decoration:none;border-left:3px solid transparent}
+  .dk aside nav a .ico{font-family:var(--font-body);font-size:11px;color:var(--warm-400);background:var(--warm-100);border:1px dashed var(--warm-300);padding:1px 5px;border-radius:3px;letter-spacing:.04em}
+  .dk aside nav a.on{color:var(--brand-500);background:var(--brand-50);border-left-color:var(--brand-500);font-weight:600}
+  .dk aside nav a.on .ico{background:#fff;border-color:var(--brand-200);color:var(--brand-500)}
+  .dk aside nav a.disabled{color:var(--warm-400);justify-content:space-between;padding-right:14px;cursor:not-allowed}
+  .dk aside nav a.disabled .pill{font-family:var(--font-body);font-size:10px;color:var(--warm-400);background:var(--warm-100);padding:1px 6px;border-radius:3px}
+  .dk aside .foot{margin-top:auto;padding:14px 18px;border-top:1px dashed var(--warm-300);font-family:var(--font-body);font-size:12px;color:var(--warm-500);display:flex;align-items:center;gap:10px}
+  .dk aside .foot .av{width:26px;height:26px;border-radius:50%;background:var(--warm-200);border:1px dashed var(--warm-400);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;color:var(--warm-600)}
+  .dk main{padding:24px 28px 60px;min-width:0;overflow:hidden;position:relative}
+
+  /* header */
+  .wk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:16px;border-bottom:1px dashed var(--warm-300)}
+  .wk-head .eyebrow{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:4px}
+  .wk-head h1{font-family:var(--font-display);font-size:36px;line-height:1;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0}
+  .wk-head .sub{font-family:var(--font-body);font-size:13px;color:var(--warm-500);margin-top:6px}
+  .wk-nav{display:inline-flex;align-items:center;gap:0;border:1px dashed var(--warm-300);border-radius:8px;background:#fff;padding:3px}
+  .wk-nav button{font-family:var(--font-body);font-size:13px;background:transparent;border:0;padding:7px 10px;border-radius:6px;color:var(--warm-600);cursor:pointer;min-height:36px;min-width:36px}
+  .wk-nav button:hover{background:var(--warm-50)}
+  .wk-head .av{width:34px;height:34px;border-radius:50%;background:var(--warm-200);border:1px dashed var(--warm-400);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;color:var(--warm-600)}
+  .head-right{display:flex;align-items:center;gap:12px}
+  .status-pill{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px dashed var(--warm-300);background:var(--warm-100);color:var(--warm-600)}
+  .status-pill.pre{background:var(--warm-100);color:var(--warm-600)}
+  .status-pill.live{background:var(--brand-50);border-color:var(--brand-200);color:var(--brand-500);border-style:solid}
+  .status-pill.done{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text);border-style:solid}
+
+  /* banner */
+  .banner{padding:10px 14px;border-radius:6px;font-family:var(--font-body);font-size:13px;margin-bottom:18px;display:flex;gap:10px;align-items:center;justify-content:space-between;line-height:1.4}
+  .banner.info{background:var(--brand-50);border:1px solid var(--brand-200);color:var(--brand-700)}
+  .banner.info strong{color:var(--brand-800);font-weight:600}
+  .banner.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+  .banner.success strong{color:var(--success-text);font-weight:700}
+  .banner.success a{color:var(--brand-500);font-weight:600;text-decoration:none}
+  .banner.success a:hover{text-decoration:underline}
+  .banner.warn{background:var(--warning-bg);border:1px solid var(--warning-border);color:var(--warning-text)}
+  .banner.warn strong{color:var(--warning-text);font-weight:600}
+  .banner.muted{background:var(--warm-100);border:1px dashed var(--warm-300);color:var(--warm-600)}
+  .banner.muted strong{color:var(--warm-700);font-weight:600}
+  .banner .b-eyebrow{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0}
+
+  /* ── SUMMARY CARDS (4 no topo) ── */
+  .sumcards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .sumcard{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:14px 16px}
+  .sumcard.click{cursor:pointer}
+  .sumcard.click:hover{background:var(--warm-50);border-color:var(--brand-200)}
+  .sumcard .v{font-family:var(--font-display);font-size:36px;color:var(--brand-500);line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .sumcard .v .of{font-family:var(--font-body);font-size:18px;color:var(--warm-500);font-weight:400;margin-left:2px}
+  .sumcard .v.dim{color:var(--warm-400)}
+  .sumcard .v.ok{color:var(--success-text)}
+  .sumcard .v.wn{color:var(--warning-text)}
+  .sumcard .k{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600;margin-top:8px}
+  .sumcard .d{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);margin-top:3px;line-height:1.3}
+  .sumcard.muted .v{color:var(--warm-500)}
+  @media (max-width:1100px){.sumcards{grid-template-columns:repeat(2,1fr)}}
+
+  /* ── BULK ATALHO (geral) ── */
+  .bulk-bar{display:flex;justify-content:space-between;align-items:center;background:var(--brand-50);border:1px solid var(--brand-200);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-family:var(--font-body);font-size:13px;color:var(--brand-700);gap:12px;flex-wrap:wrap}
+  .bulk-bar .L strong{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);margin-right:6px}
+  .bulk-bar .R{display:flex;gap:8px;align-items:center}
+  .btn-primary{background:var(--brand-500);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;min-height:34px;font-weight:600}
+  .btn-primary:hover{filter:brightness(0.95)}
+  .btn-primary.success{background:var(--success-text)}
+  .btn-secondary{background:#fff;color:var(--warm-700);border:1px dashed var(--warm-400);border-radius:6px;padding:7px 12px;font-family:var(--font-body);font-size:12px;cursor:pointer;min-height:32px}
+  .btn-secondary:hover{background:var(--warm-50);border-color:var(--brand-200);color:var(--brand-500)}
+  .btn-ghost{background:transparent;color:var(--warm-500);border:0;padding:7px 10px;font-family:var(--font-body);font-size:12px;cursor:pointer;text-decoration:underline;text-decoration-color:var(--warm-300);text-underline-offset:3px}
+  .btn-ghost:hover{color:var(--brand-500)}
+
+  /* ── LISTA HIERÁRQUICA ── */
+  .city{margin-bottom:22px}
+  .city-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed var(--warm-300)}
+  .city-head .L .nm{font-family:var(--font-display);font-size:22px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-500);line-height:1}
+  .city-head .L .origin{font-family:var(--font-body);font-size:13px;color:var(--warm-700);margin-top:6px;font-weight:500}
+  .city-head .L .origin-sub{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);margin-top:2px;font-style:italic}
+  .city-head .R{text-align:right;font-family:var(--font-body);font-size:13px;color:var(--warm-700)}
+  .city-head .R .ct{font-family:var(--font-display);font-size:18px;color:var(--warm-800);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .city-head .R .ct .lb{font-family:var(--font-body);font-size:11px;color:var(--warm-500);font-weight:400;margin-left:4px;text-transform:uppercase;letter-spacing:.04em}
+  .city-head .R .progress{font-family:var(--font-body);font-size:11px;color:var(--warm-500);margin-top:3px}
+
+  .zone{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;margin-bottom:10px;overflow:hidden}
+  .zone-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px dashed var(--warm-200);background:var(--warm-50);gap:12px;flex-wrap:wrap}
+  .zone-head .L{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .zone-head .nm{font-family:var(--font-display);font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--warm-800);font-weight:600}
+  .zone-head .meta{font-family:var(--font-body);font-size:12px;color:var(--warm-500)}
+  .zone-head .ct{font-family:var(--font-body);font-size:12px;color:var(--warm-700);font-variant-numeric:tabular-nums}
+  .zone-head .ct strong{font-weight:700;color:var(--warm-800)}
+  .zone-head .R{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .zone-head .progress{font-family:var(--font-body);font-size:11px;color:var(--warm-500);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+  .zone-head .progress .bar{width:60px;height:5px;background:var(--warm-200);border-radius:3px;overflow:hidden;display:inline-block}
+  .zone-head .progress .bar i{display:block;height:100%;background:var(--brand-500)}
+  .zone-head .progress.done .bar i{background:var(--success-text)}
+
+  /* entrega individual */
+  .deliv-list{padding:4px 0}
+  .deliv{display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;padding:12px 16px;border-bottom:1px dashed var(--warm-200);align-items:center}
+  .deliv:last-child{border-bottom:0}
+  .deliv .stt-dot{width:10px;height:10px;border-radius:50%;background:var(--warm-300);border:1px solid var(--warm-400);flex-shrink:0}
+  .deliv.programada .stt-dot{background:var(--warm-200);border-color:var(--warm-400)}
+  .deliv.pendente .stt-dot{background:var(--brand-300);border-color:var(--brand-500)}
+  .deliv.entregue .stt-dot{background:var(--success-text);border-color:var(--success-text)}
+  .deliv.problema .stt-dot{background:var(--warning-text);border-color:var(--warning-text)}
+  .deliv .body .nm-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .deliv .body .nm{font-family:var(--font-body);font-weight:600;color:var(--warm-800);font-size:14px}
+  .deliv .body .neighborhood{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500)}
+  .deliv .body .addr{font-family:var(--font-body);font-size:12px;color:var(--warm-600);margin-top:3px;line-height:1.4}
+  .deliv .body .composition{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);margin-top:3px;font-style:italic}
+  .deliv .stt{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px dashed var(--warm-300);background:var(--warm-100);color:var(--warm-600);font-weight:600;align-self:center}
+  .deliv.programada .stt{background:var(--warm-100);color:var(--warm-600);border-color:var(--warm-300)}
+  .deliv.pendente .stt{background:var(--brand-50);color:var(--brand-500);border-color:var(--brand-200);border-style:solid}
+  .deliv.entregue .stt{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);border-style:solid}
+  .deliv.problema .stt{background:var(--warning-bg);color:var(--warning-text);border-color:var(--warning-border);border-style:solid}
+  .deliv .actions{display:flex;gap:6px;align-items:center}
+  .deliv .btn-act{font-family:var(--font-display);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:7px 11px;border-radius:5px;cursor:pointer;font-weight:600;min-height:32px;border:1px solid var(--warm-300);background:#fff;color:var(--warm-700)}
+  .deliv .btn-act:hover{background:var(--warm-50)}
+  .deliv .btn-act.primary{background:var(--brand-500);color:#fff;border-color:var(--brand-500)}
+  .deliv .btn-act.primary:hover{filter:brightness(0.95)}
+  .deliv .btn-act.success{background:var(--success-text);color:#fff;border-color:var(--success-text)}
+  .deliv .btn-act.danger{background:#fff;color:var(--warning-text);border-color:var(--warning-border)}
+  .deliv .btn-act.danger:hover{background:var(--warning-bg)}
+  .deliv .fixed-state{font-family:var(--font-body);font-size:11px;color:var(--warm-500);font-style:italic}
+  .deliv .fixed-state.problem{color:var(--warning-text);font-style:normal;font-weight:500}
+  .deliv .fixed-state.problem .wa{color:var(--brand-500);text-decoration:underline;cursor:pointer;margin-left:4px}
+
+  /* expandir/colapsar zona */
+  .zone.collapsed .deliv-list{display:none}
+  .zone-head .toggle{font-family:var(--font-body);font-size:13px;color:var(--warm-400);cursor:pointer;padding:4px 8px}
+
+  /* ── EMPTY STATE (Estado A) ── */
+  .empty{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:60px 30px;text-align:center;margin-bottom:18px}
+  .empty .icon{width:64px;height:64px;margin:0 auto 16px;border:1px dashed var(--warm-300);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:24px;color:var(--warm-400);background:var(--warm-50)}
+  .empty h3{font-family:var(--font-display);font-size:18px;color:var(--warm-700);text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px}
+  .empty .lede{font-family:var(--font-body);font-size:14px;color:var(--warm-600);max-width:48ch;margin:0 auto 14px;line-height:1.5}
+  .empty .estimate{display:inline-block;background:var(--warm-100);border:1px dashed var(--warm-300);border-radius:6px;padding:9px 14px;font-family:var(--font-body);font-size:13px;color:var(--warm-700);margin-top:6px}
+  .empty .estimate strong{color:var(--brand-500);font-weight:700;font-family:var(--font-display);font-size:16px;margin-right:4px;letter-spacing:.02em}
+  .empty .estimate .meta{font-family:var(--font-body);font-size:11px;color:var(--warm-500);font-style:italic;margin-left:8px;display:block;margin-top:4px}
+
+  /* preview da próxima semana (lista cinza) */
+  .preview-list{margin-top:14px}
+  .preview-list .city{opacity:.62}
+  .preview-list .deliv{opacity:.7}
+
+  /* ── MODAL PROBLEMA (desktop) ── */
+  .modal-overlay{position:absolute;inset:0;background:rgba(26,24,21,0.32);z-index:10;display:none;align-items:center;justify-content:center;padding:30px}
+  .modal-overlay.on{display:flex}
+  .modal{width:520px;max-width:100%;background:var(--warm-50);border:1px dashed var(--warm-300);border-radius:10px;overflow:hidden;box-shadow:0 8px 32px rgba(26,24,21,.12)}
+  .modal .mh{padding:16px 20px;background:#fff;border-bottom:1px dashed var(--warm-300);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .modal .mh h2{font-family:var(--font-display);font-size:20px;color:var(--warning-text);text-transform:uppercase;letter-spacing:.02em;margin:0;line-height:1.1}
+  .modal .mh .who{font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-top:4px}
+  .modal .mh .who strong{color:var(--warm-800);font-weight:600}
+  .modal .mh .close{width:32px;height:32px;border:1px dashed var(--warm-300);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);font-size:16px;color:var(--warm-500);cursor:pointer;background:#fff;flex-shrink:0}
+  .modal .mb{padding:18px 20px}
+  .modal .field{margin-bottom:14px}
+  .modal .field .lbl{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600;margin-bottom:6px;display:block}
+  .modal .field textarea{width:100%;border:1.5px solid var(--warm-300);background:#fff;border-radius:6px;padding:11px 13px;font-family:var(--font-body);font-size:13px;color:var(--warm-700);resize:vertical;min-height:80px;line-height:1.5;outline:none}
+  .modal .field textarea:focus{border-color:var(--brand-300)}
+  .modal .field .hint{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);margin-top:5px;font-style:italic;line-height:1.4}
+  .modal .preview{background:var(--brand-50);border:1px solid var(--brand-200);border-radius:6px;padding:12px 14px;font-family:var(--font-body);font-size:13px;color:var(--brand-700);line-height:1.55}
+  .modal .preview .pl{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-500);margin-bottom:6px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .modal .preview .pl .wa-icon{font-family:var(--font-body);font-size:10px;background:var(--brand-500);color:#fff;padding:1px 6px;border-radius:3px;font-weight:700;letter-spacing:.04em}
+  .modal .preview em{color:var(--warm-700);background:var(--warm-100);border:1px dashed var(--warm-300);padding:0 4px;border-radius:3px;font-style:normal;font-size:12px}
+  .modal .mf{padding:14px 20px;background:#fff;border-top:1px dashed var(--warm-300);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .modal .mf .L{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);font-style:italic;flex:1;min-width:0}
+
+  /* ── MOBILE 375 ── */
+  .mb{width:375px;background:var(--warm-50);border:1px dashed var(--warm-300);border-radius:24px;overflow:hidden;min-height:820px;display:flex;flex-direction:column;position:relative}
+  .mb-top{background:#fff;padding:12px 14px 10px;border-bottom:1px dashed var(--warm-300);display:flex;justify-content:space-between;align-items:center}
+  .mb-top .hmb{width:36px;height:36px;border:1px dashed var(--warm-300);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);font-size:11px;color:var(--warm-500)}
+  .mb-top .brand{font-family:var(--font-display);font-size:16px;color:var(--brand-500);letter-spacing:.04em;text-transform:uppercase}
+  .mb-top .nv{font-family:var(--font-body);font-size:11px;color:var(--warm-500)}
+  .mb-head{padding:14px;background:#fff;border-bottom:1px dashed var(--warm-300)}
+  .mb-head .eyebrow{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:2px}
+  .mb-head h1{font-family:var(--font-display);font-size:22px;line-height:1;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0}
+  .mb-head .sub{font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-top:4px}
+  .mb-head .row{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .mb-head .wnav{flex:1;display:flex;justify-content:space-between;align-items:center;border:1px dashed var(--warm-300);border-radius:6px;background:var(--warm-50)}
+  .mb-head .wnav button{min-height:38px;min-width:44px;font-family:var(--font-body);font-size:13px;background:transparent;border:0;color:var(--warm-600);padding:0 10px}
+  .mb-head .wnav .curr{font-family:var(--font-body);font-size:12px;color:var(--warm-700);flex:1;text-align:center}
+  .mb-head .status-pill{font-size:10px}
+
+  .mb-body{flex:1;overflow-y:auto;padding:14px 14px 80px}
+  .mb-banner{padding:8px 11px;border-radius:6px;font-family:var(--font-body);font-size:12px;margin-bottom:12px;line-height:1.4;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .mb-banner.info{background:var(--brand-50);border:1px solid var(--brand-200);color:var(--brand-700)}
+  .mb-banner.info strong{color:var(--brand-800);font-weight:600}
+  .mb-banner.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+  .mb-banner.success strong{color:var(--success-text);font-weight:700}
+  .mb-banner.success a{color:var(--brand-500);font-weight:600;text-decoration:none}
+  .mb-banner.warn{background:var(--warning-bg);border:1px solid var(--warning-border);color:var(--warning-text)}
+  .mb-banner.muted{background:var(--warm-100);border:1px dashed var(--warm-300);color:var(--warm-600)}
+  .mb-banner.muted strong{color:var(--warm-700);font-weight:600}
+
+  /* mb summary 4-up (2x2) */
+  .mb-sumcards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .mb-sumcards .c{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:11px 12px}
+  .mb-sumcards .c .v{font-family:var(--font-display);font-size:24px;color:var(--brand-500);line-height:1;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .mb-sumcards .c .v .of{font-family:var(--font-body);font-size:13px;color:var(--warm-500);font-weight:400}
+  .mb-sumcards .c .v.dim{color:var(--warm-400)}
+  .mb-sumcards .c .v.ok{color:var(--success-text)}
+  .mb-sumcards .c .v.wn{color:var(--warning-text)}
+  .mb-sumcards .c .k{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600;margin-top:6px}
+  .mb-sumcards .c .d{font-family:var(--font-body);font-size:10.5px;color:var(--warm-500);margin-top:2px;line-height:1.3}
+
+  .mb-bulk{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--brand-50);border:1px solid var(--brand-200);border-radius:8px;padding:9px 11px;margin-bottom:12px;font-family:var(--font-body);font-size:12px;color:var(--brand-700);flex-wrap:wrap}
+  .mb-bulk .L strong{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);display:block}
+  .mb-bulk .btn-primary{padding:7px 10px;font-size:10px;min-height:32px}
+
+  /* mb city / zone / deliv */
+  .mb-city{margin-bottom:16px}
+  .mb-city-head{margin-bottom:6px;padding-bottom:6px;border-bottom:1px dashed var(--warm-300)}
+  .mb-city-head .nm{font-family:var(--font-display);font-size:16px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-500);line-height:1;display:flex;justify-content:space-between;align-items:baseline}
+  .mb-city-head .nm .ct{font-family:var(--font-display);font-size:13px;color:var(--warm-700);font-variant-numeric:tabular-nums}
+  .mb-city-head .origin{font-family:var(--font-body);font-size:11.5px;color:var(--warm-700);margin-top:5px;font-weight:500}
+  .mb-city-head .origin-sub{font-family:var(--font-body);font-size:10.5px;color:var(--warm-500);margin-top:1px;font-style:italic;line-height:1.4}
+  .mb-zone{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;margin-bottom:8px;overflow:hidden}
+  .mb-zone-head{padding:10px 12px;background:var(--warm-50);border-bottom:1px dashed var(--warm-200);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .mb-zone-head .L .nm{font-family:var(--font-display);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--warm-800);font-weight:600}
+  .mb-zone-head .L .meta{font-family:var(--font-body);font-size:10.5px;color:var(--warm-500);margin-top:2px}
+  .mb-zone-head .R{display:flex;gap:6px;align-items:center}
+  .mb-zone-head .ct{font-family:var(--font-body);font-size:11px;color:var(--warm-700);font-variant-numeric:tabular-nums;font-weight:600}
+  .mb-zone-head .progress{font-family:var(--font-body);font-size:10px;color:var(--warm-500);font-variant-numeric:tabular-nums}
+  .mb-zone-head .btn-primary{padding:6px 8px;font-size:9.5px;min-height:28px}
+  .mb-zone .deliv-list{padding:2px 0}
+  .mb-deliv{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 12px;border-bottom:1px dashed var(--warm-200);align-items:flex-start}
+  .mb-deliv:last-child{border-bottom:0}
+  .mb-deliv .stt-dot{width:9px;height:9px;border-radius:50%;background:var(--warm-300);border:1px solid var(--warm-400);margin-top:6px;flex-shrink:0}
+  .mb-deliv.programada .stt-dot{background:var(--warm-200);border-color:var(--warm-400)}
+  .mb-deliv.pendente .stt-dot{background:var(--brand-300);border-color:var(--brand-500)}
+  .mb-deliv.entregue .stt-dot{background:var(--success-text);border-color:var(--success-text)}
+  .mb-deliv.problema .stt-dot{background:var(--warning-text);border-color:var(--warning-text)}
+  .mb-deliv .body .nm{font-family:var(--font-body);font-weight:600;color:var(--warm-800);font-size:13.5px}
+  .mb-deliv .body .neighborhood{font-family:var(--font-body);font-size:11px;color:var(--warm-500);margin-left:6px;font-weight:400}
+  .mb-deliv .body .addr{font-family:var(--font-body);font-size:11.5px;color:var(--warm-600);margin-top:2px;line-height:1.4}
+  .mb-deliv .body .composition{font-family:var(--font-body);font-size:11px;color:var(--warm-500);font-style:italic;margin-top:2px}
+  .mb-deliv .body .pill-row{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+  .mb-deliv .stt{font-family:var(--font-display);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px dashed var(--warm-300);background:var(--warm-100);color:var(--warm-600);font-weight:600}
+  .mb-deliv.programada .stt{background:var(--warm-100);color:var(--warm-600)}
+  .mb-deliv.pendente .stt{background:var(--brand-50);color:var(--brand-500);border-color:var(--brand-200);border-style:solid}
+  .mb-deliv.entregue .stt{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);border-style:solid}
+  .mb-deliv.problema .stt{background:var(--warning-bg);color:var(--warning-text);border-color:var(--warning-border);border-style:solid}
+  .mb-deliv .actions{display:flex;gap:5px;margin-left:auto}
+  .mb-deliv .btn-act{font-family:var(--font-display);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border-radius:5px;cursor:pointer;font-weight:600;min-height:30px;border:1px solid var(--warm-300);background:#fff;color:var(--warm-700)}
+  .mb-deliv .btn-act.primary{background:var(--brand-500);color:#fff;border-color:var(--brand-500)}
+  .mb-deliv .btn-act.success{background:var(--success-text);color:#fff;border-color:var(--success-text)}
+  .mb-deliv .btn-act.danger{background:#fff;color:var(--warning-text);border-color:var(--warning-border)}
+  .mb-deliv .fixed-state{font-family:var(--font-body);font-size:10.5px;color:var(--warm-500);font-style:italic}
+  .mb-deliv .fixed-state.problem{color:var(--warning-text);font-style:normal}
+  .mb-deliv .fixed-state.problem .wa{color:var(--brand-500);text-decoration:underline}
+
+  /* mb empty */
+  .mb-empty{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:36px 20px;text-align:center;margin-bottom:14px}
+  .mb-empty .icon{width:48px;height:48px;margin:0 auto 12px;border:1px dashed var(--warm-300);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:18px;color:var(--warm-400);background:var(--warm-50)}
+  .mb-empty h3{font-family:var(--font-display);font-size:14px;color:var(--warm-700);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px}
+  .mb-empty .lede{font-family:var(--font-body);font-size:12.5px;color:var(--warm-600);max-width:30ch;margin:0 auto 12px;line-height:1.5}
+  .mb-empty .estimate{display:inline-block;background:var(--warm-100);border:1px dashed var(--warm-300);border-radius:6px;padding:7px 11px;font-family:var(--font-body);font-size:11.5px;color:var(--warm-700)}
+  .mb-empty .estimate strong{color:var(--brand-500);font-weight:700;font-family:var(--font-display);font-size:14px;margin-right:4px;letter-spacing:.02em}
+
+  /* bottom nav mobile */
+  .mb-bot{position:sticky;bottom:0;background:#fff;border-top:1px dashed var(--warm-300);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px 8px}
+  .mb-bot a{min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--warm-500);font-family:var(--font-body);font-size:10px;text-decoration:none}
+  .mb-bot a.on{color:var(--brand-500);font-weight:600}
+  .mb-bot a .ico{font-family:var(--font-body);font-size:10px;color:var(--warm-400);background:var(--warm-100);border:1px dashed var(--warm-300);padding:1px 5px;border-radius:3px;letter-spacing:.04em}
+  .mb-bot a.on .ico{color:var(--brand-500);background:#fff;border-color:var(--brand-200)}
+
+  /* mb sheet (problema) */
+  .mb-sheet-overlay{position:absolute;inset:0;background:rgba(26,24,21,0.32);z-index:20;display:none;border-radius:24px;overflow:hidden;align-items:flex-end}
+  .mb-sheet-overlay.on{display:flex}
+  .mb-sheet{width:100%;background:var(--warm-50);border-top:1px dashed var(--warm-300);border-radius:18px 18px 0 0;max-height:88%;display:flex;flex-direction:column;animation:slideUp 0.25s ease-out}
+  @keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}
+  .mb-sheet .grip{width:36px;height:4px;background:var(--warm-300);border-radius:3px;margin:8px auto 4px;flex-shrink:0}
+  .mb-sheet .sh-head{padding:10px 16px 12px;background:#fff;border-bottom:1px dashed var(--warm-300);border-radius:18px 18px 0 0}
+  .mb-sheet .sh-head h2{font-family:var(--font-display);font-size:16px;color:var(--warning-text);text-transform:uppercase;letter-spacing:.02em;margin:0;line-height:1.1}
+  .mb-sheet .sh-head .who{font-family:var(--font-body);font-size:11px;color:var(--warm-500);margin-top:3px}
+  .mb-sheet .sh-head .who strong{color:var(--warm-800);font-weight:600}
+  .mb-sheet .sh-body{padding:14px 16px;overflow-y:auto;flex:1}
+  .mb-sheet .sh-body .field{margin-bottom:12px}
+  .mb-sheet .sh-body .field .lbl{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600;margin-bottom:5px;display:block}
+  .mb-sheet .sh-body .field textarea{width:100%;border:1.5px solid var(--warm-300);background:#fff;border-radius:6px;padding:10px 12px;font-family:var(--font-body);font-size:13px;color:var(--warm-700);resize:vertical;min-height:70px;line-height:1.5;outline:none}
+  .mb-sheet .sh-body .field .hint{font-family:var(--font-body);font-size:10.5px;color:var(--warm-500);margin-top:5px;font-style:italic;line-height:1.4}
+  .mb-sheet .sh-body .preview{background:var(--brand-50);border:1px solid var(--brand-200);border-radius:6px;padding:11px 13px;font-family:var(--font-body);font-size:12px;color:var(--brand-700);line-height:1.55}
+  .mb-sheet .sh-body .preview .pl{font-family:var(--font-display);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-500);margin-bottom:5px;font-weight:600;display:flex;gap:6px;align-items:center}
+  .mb-sheet .sh-body .preview .pl .wa-icon{background:var(--brand-500);color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700}
+  .mb-sheet .sh-body .preview em{color:var(--warm-700);background:var(--warm-100);border:1px dashed var(--warm-300);padding:0 4px;border-radius:3px;font-style:normal;font-size:11.5px}
+  .mb-sheet .sh-foot{padding:12px 16px 16px;background:#fff;border-top:1px dashed var(--warm-300);display:flex;flex-direction:column;gap:8px}
+  .mb-sheet .sh-foot .btn-primary{width:100%;padding:11px;font-size:11px;min-height:44px}
+
+  .copy-todo{font-family:ui-monospace,monospace;font-size:11px;color:var(--warning-text);background:var(--warning-bg);padding:1px 5px;border-radius:3px}
+
+  .wf-note{font-family:var(--font-body);font-size:12px;color:var(--warm-600);background:var(--brand-50);border:1px solid var(--brand-200);border-left:3px solid var(--brand-500);padding:9px 12px;border-radius:5px;line-height:1.5;margin:18px 0 0}
+  .wf-note strong{color:var(--brand-800);font-weight:600}
+  .wf-note code{font-family:ui-monospace,monospace;font-size:11px;background:#fff;padding:1px 5px;border-radius:3px;border:1px solid var(--brand-200);color:var(--brand-700)}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="shell-head">
+    <div>
+      <h1>EXPEDIÇÃO v1 — WIREFRAMES <span class="wf-tag">low-fi</span></h1>
+      <div class="sub">Quem precisa receber, e o que já entreguei? Lista hierárquica cidade → zona → entrega individual. 4 estados de entrega (programada / pendente / entregue / problema). Bulk action por zona. Modal de problema com WhatsApp pré-preenchido. 3 estados × 2 plataformas. Spec: <code>CORA_Backoffice_Spec_Consolidada_v2.md</code> + briefing Expedição v1.</div>
+    </div>
+    <div class="tabs-wrap">
+      <div>
+        <div class="tabs-label">Estado</div>
+        <div class="tabs" id="tabs-state">
+          <button data-st="A">A · aguardando corte</button>
+          <button data-st="B" class="on">B · em operação</button>
+          <button data-st="C">C · concluída</button>
+        </div>
+      </div>
+      <div>
+        <div class="tabs-label">Plataforma</div>
+        <div class="tabs" id="tabs-platform">
+          <button data-pl="desktop" class="on">Desktop</button>
+          <button data-pl="mobile">Mobile 375</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><strong>Estados de entrega:</strong></span>
+    <span class="sw"><i style="background:var(--warm-200);border-color:var(--warm-400)"></i> programada</span>
+    <span class="sw"><i style="background:var(--brand-300);border-color:var(--brand-500)"></i> pendente · em rota</span>
+    <span class="sw"><i style="background:var(--success-text);border-color:var(--success-text)"></i> entregue</span>
+    <span class="sw"><i style="background:var(--warning-text);border-color:var(--warning-text)"></i> problema</span>
+    <span style="margin-left:auto;font-style:italic">Hugo opera com celular na mão · mobile-first</span>
+  </div>
+
+  <!-- ═════════════ DESKTOP ═════════════ -->
+
+  <!-- ESTADO A · DESKTOP -->
+  <div class="stage" data-stage="A-desktop">
+    <div class="dk">
+      <aside>
+        <div class="brand">cora <span class="tag">backoffice</span></div>
+        <div class="nav-label">MVP</div>
+        <nav>
+          <a href="#"><span class="ico">SE</span> Semana</a>
+          <a href="#"><span class="ico">PL</span> Planejamento</a>
+          <a href="#"><span class="ico">PR</span> Produção</a>
+          <a href="#" class="on" data-screen-label="A · Aguardando corte"><span class="ico">EX</span> Expedição</a>
+        </nav>
+        <div class="nav-label">Em breve</div>
+        <nav>
+          <a href="#" class="disabled"><span><span class="ico">AS</span> Assinantes</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">CA</span> Cardápio</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">ES</span> Estoque</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">FI</span> Financeiro</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">RE</span> Relatórios</span> <span class="pill">soon</span></a>
+        </nav>
+        <div class="foot"><div class="av">H</div> Hugo · admin</div>
+      </aside>
+      <main>
+        <div class="wk-head">
+          <div>
+            <div class="eyebrow">Backoffice · Expedição</div>
+            <h1>Expedição</h1>
+            <div class="sub">Semana 14 · entrega quinta 30/abr · Niterói + Rio</div>
+          </div>
+          <div class="head-right">
+            <span class="status-pill pre">aguardando corte</span>
+            <div class="wk-nav">
+              <button>‹</button>
+              <button>Semana 14 · atual</button>
+              <button>›</button>
+            </div>
+            <div class="av">H</div>
+          </div>
+        </div>
+
+        <div class="banner muted">
+          <div><span class="b-eyebrow">⏳ Pré-corte</span> &nbsp; A lista de entregas é gerada automaticamente <strong>terça 12h</strong> quando o corte do cardápio fecha. Até lá, números são estimativas.</div>
+          <div style="font-family:var(--font-body);font-size:12px;color:var(--warm-500)">faltam <strong style="color:var(--warm-700)">~36h</strong> · seg 22h</div>
+        </div>
+
+        <div class="sumcards">
+          <div class="sumcard muted"><div class="v dim">~46</div><div class="k">Entregas estimadas</div><div class="d">com base nas assinaturas ativas · pode mudar até terça</div></div>
+          <div class="sumcard muted"><div class="v dim">—</div><div class="k">Em rota</div><div class="d">disponível após corte</div></div>
+          <div class="sumcard muted"><div class="v dim">—</div><div class="k">Entregues</div><div class="d">disponível após corte</div></div>
+          <div class="sumcard muted"><div class="v dim">—</div><div class="k">Problemas</div><div class="d">disponível após corte</div></div>
+        </div>
+
+        <div class="empty">
+          <div class="icon">⏳</div>
+          <h3>Aguardando corte da semana</h3>
+          <div class="lede">A lista de entregas aparece terça às 12h, depois que o cardápio for confirmado e as assinaturas pausadas/canceladas até o prazo forem aplicadas.</div>
+          <div class="estimate">
+            <strong>~46</strong> entregas previstas · ~58 cestas Niterói + ~24 Rio
+            <span class="meta">números podem variar conforme pausas e novas assinaturas até terça 12h</span>
+          </div>
+        </div>
+
+        <div style="font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin:14px 0 10px">Distribuição estimada · prévia das zonas</div>
+
+        <div class="preview-list">
+          <div class="city">
+            <div class="city-head">
+              <div class="L">
+                <div class="nm">Niterói</div>
+                <div class="origin">Cora · Niterói</div>
+                <div class="origin-sub">Trav. Ari Pinto Lima, 41A · Fonseca</div>
+              </div>
+              <div class="R">
+                <div class="ct">~32 <span class="lb">entregas</span></div>
+                <div class="progress">~58 cestas</div>
+              </div>
+            </div>
+            <div class="zone">
+              <div class="zone-head">
+                <div class="L"><span class="nm">Zona 1</span> <span class="meta">até 3 km</span></div>
+                <div class="R"><span class="ct">~12 entregas · ~22 cestas</span></div>
+              </div>
+            </div>
+            <div class="zone">
+              <div class="zone-head">
+                <div class="L"><span class="nm">Zona 2</span> <span class="meta">3—7 km · Charitas, S. Francisco, Boa Viagem</span></div>
+                <div class="R"><span class="ct">~16 entregas · ~28 cestas</span></div>
+              </div>
+            </div>
+            <div class="zone">
+              <div class="zone-head">
+                <div class="L"><span class="nm">Zona 3</span> <span class="meta">7+ km · Itaipu, Camboinhas, Pendotiba</span></div>
+                <div class="R"><span class="ct">~4 entregas · ~8 cestas</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="city">
+            <div class="city-head">
+              <div class="L">
+                <div class="nm">Rio de Janeiro</div>
+                <div class="origin">Cora · Rio</div>
+                <div class="origin-sub">Conde de Irajá, 439 · Botafogo</div>
+              </div>
+              <div class="R">
+                <div class="ct">~14 <span class="lb">entregas</span></div>
+                <div class="progress">~24 cestas</div>
+              </div>
+            </div>
+            <div class="zone">
+              <div class="zone-head">
+                <div class="L"><span class="nm">Zona Conde</span> <span class="meta">até 2 km</span></div>
+                <div class="R"><span class="ct">~7 entregas · ~12 cestas</span></div>
+              </div>
+            </div>
+            <div class="zone">
+              <div class="zone-head">
+                <div class="L"><span class="nm">Zona Sul</span> <span class="meta">2—5 km · Copa, Ipanema, Leblon, Lagoa</span></div>
+                <div class="R"><span class="ct">~5 entregas · ~9 cestas</span></div>
+              </div>
+            </div>
+            <div class="zone">
+              <div class="zone-head">
+                <div class="L"><span class="nm">Outras</span> <span class="meta">5+ km · Centro, Tijuca, Barra</span></div>
+                <div class="R"><span class="ct">~2 entregas · ~3 cestas</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-note"><strong>Estado A · pré-corte:</strong> tudo são estimativas (com <code>~</code>). Lista populada virá com nomes, endereços e composição da cesta no corte. Botões de ação só aparecem após corte. Esse é o estado padrão de seg/ter de manhã — Hugo geralmente não abre essa tela aqui.</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ESTADO B · DESKTOP -->
+  <div class="stage on" data-stage="B-desktop">
+    <div class="dk" id="dk-B">
+      <aside>
+        <div class="brand">cora <span class="tag">backoffice</span></div>
+        <div class="nav-label">MVP</div>
+        <nav>
+          <a href="#"><span class="ico">SE</span> Semana</a>
+          <a href="#"><span class="ico">PL</span> Planejamento</a>
+          <a href="#"><span class="ico">PR</span> Produção</a>
+          <a href="#" class="on" data-screen-label="B · Em operação"><span class="ico">EX</span> Expedição</a>
+        </nav>
+        <div class="nav-label">Em breve</div>
+        <nav>
+          <a href="#" class="disabled"><span><span class="ico">AS</span> Assinantes</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">CA</span> Cardápio</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">ES</span> Estoque</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">FI</span> Financeiro</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">RE</span> Relatórios</span> <span class="pill">soon</span></a>
+        </nav>
+        <div class="foot"><div class="av">H</div> Hugo · admin</div>
+      </aside>
+      <main>
+        <div class="wk-head">
+          <div>
+            <div class="eyebrow">Backoffice · Expedição</div>
+            <h1>Expedição</h1>
+            <div class="sub">Semana 14 · quinta 30/abr · 14h32 · 46 entregas para hoje</div>
+          </div>
+          <div class="head-right">
+            <span class="status-pill live">em rota</span>
+            <div class="wk-nav">
+              <button>‹</button>
+              <button>Semana 14 · atual</button>
+              <button>›</button>
+            </div>
+            <div class="av">H</div>
+          </div>
+        </div>
+
+        <div class="banner info">
+          <div><span class="b-eyebrow">→ Próximo passo</span> &nbsp; Zona 2 saiu do forno às 13h45 — <strong>16 cestas prontas pra liberar</strong>. fechar Niterói.</div>
+        </div>
+
+        <div class="sumcards">
+          <div class="sumcard"><div class="v">46</div><div class="k">Entregas hoje</div><div class="d">32 Niterói · 14 Rio</div></div>
+          <div class="sumcard"><div class="v">22<span class="of">/46</span></div><div class="k">Em rota</div><div class="d">pendentes de confirmar entrega</div></div>
+          <div class="sumcard click"><div class="v ok">12</div><div class="k">Entregues</div><div class="d">confirmadas pelo parceiro · clique pra filtrar</div></div>
+          <div class="sumcard click"><div class="v wn">1</div><div class="k">Problemas</div><div class="d">a tratar · clique pra ir direto</div></div>
+        </div>
+
+        <div class="bulk-bar">
+          <div class="L"><strong>Atalho de fim de dia:</strong> Marcar todas as <em>22 pendentes</em> como entregues. Use depois que o parceiro confirmar.</div>
+          <div class="R">
+            <button class="btn-secondary">Filtrar por status ▾</button>
+            <button class="btn-primary success">✓ Marcar 22 pendentes como entregues</button>
+          </div>
+        </div>
+
+        <!-- NITERÓI -->
+        <div class="city">
+          <div class="city-head">
+            <div class="L">
+              <div class="nm">Niterói</div>
+              <div class="origin">Cora · Niterói</div>
+              <div class="origin-sub">Trav. Ari Pinto Lima, 41A · Fonseca · saída por zona conforme cocção</div>
+            </div>
+            <div class="R">
+              <div class="ct">32 <span class="lb">entregas</span></div>
+              <div class="progress">11 entregues · 18 em rota · 3 programadas</div>
+            </div>
+          </div>
+
+          <!-- Zona 1 · todas pendentes (saiu 13h) -->
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona 1</span>
+                <span class="meta">até 3 km</span>
+                <span class="ct"><strong>12</strong> entregas · 22 cestas</span>
+              </div>
+              <div class="R">
+                <span class="progress"><span class="bar"><i style="width:75%"></i></span> 9/12 entregues</span>
+                <button class="btn-primary success">✓ Marcar 3 pendentes como entregues</button>
+              </div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Beatriz Silva</span><span class="neighborhood">· Icaraí</span></div>
+                  <div class="addr">R. Lopes Trovão, 49 — apto 802</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas</div>
+                </div>
+                <span class="stt">entregue</span>
+                <div class="actions"><span class="fixed-state">13h12</span></div>
+              </div>
+              <div class="deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">João Vasconcelos</span><span class="neighborhood">· Centro</span></div>
+                  <div class="addr">Av. Quintino Bocaiúva, 122 — sala 4</div>
+                  <div class="composition">2 Originais · 2 cestas</div>
+                </div>
+                <span class="stt">entregue</span>
+                <div class="actions"><span class="fixed-state">13h28</span></div>
+              </div>
+              <div class="deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Camila Ferraz</span><span class="neighborhood">· Ingá</span></div>
+                  <div class="addr">R. São Pedro, 77 — bl B, 304</div>
+                  <div class="composition">1 Integral · 1 cesta</div>
+                </div>
+                <span class="stt">entregue</span>
+                <div class="actions"><span class="fixed-state">13h41</span></div>
+              </div>
+              <div class="deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">+ 6 entregas confirmadas</span></div>
+                  <div class="composition" style="font-style:normal">Daniela R., Eduardo M., Fernanda P., Gabriel L., Henrique S., Isabela T.</div>
+                </div>
+                <span class="stt">entregue</span>
+                <div class="actions"><span class="fixed-state">expandir ›</span></div>
+              </div>
+              <div class="deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Lúcia Almeida</span><span class="neighborhood">· S. Domingos</span></div>
+                  <div class="addr">R. Tiradentes, 198 — casa</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                </div>
+                <span class="stt">em rota</span>
+                <div class="actions">
+                  <button class="btn-act success">Entregue</button>
+                  <button class="btn-act danger" onclick="openModal('Lúcia Almeida','21 99876-5432','S. Domingos · R. Tiradentes, 198')">Problema</button>
+                </div>
+              </div>
+              <div class="deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Marcos Pereira</span><span class="neighborhood">· Icaraí</span></div>
+                  <div class="addr">R. Gavião Peixoto, 304 — apto 1102</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas</div>
+                </div>
+                <span class="stt">em rota</span>
+                <div class="actions">
+                  <button class="btn-act success">Entregue</button>
+                  <button class="btn-act danger" onclick="openModal('Marcos Pereira','21 98765-4321','Icaraí · R. Gavião Peixoto, 304')">Problema</button>
+                </div>
+              </div>
+              <div class="deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Natália Costa</span><span class="neighborhood">· Centro</span></div>
+                  <div class="addr">R. Visconde de Sepetiba, 519 — sala 12</div>
+                  <div class="composition">1 Integral · 1 cesta</div>
+                </div>
+                <span class="stt">em rota</span>
+                <div class="actions">
+                  <button class="btn-act success">Entregue</button>
+                  <button class="btn-act danger" onclick="openModal('Natália Costa','21 99123-4567','Centro · R. Visconde de Sepetiba, 519')">Problema</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zona 2 · acabou de sair (todas programadas — botão liberar) -->
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona 2</span>
+                <span class="meta">3—7 km · Charitas, S. Francisco, Boa Viagem</span>
+                <span class="ct"><strong>16</strong> entregas · 28 cestas</span>
+              </div>
+              <div class="R">
+                <span class="progress">saiu do forno · 13h45</span>
+                <button class="btn-primary">→ Liberar todas pra rota</button>
+              </div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Otávio Mendes</span><span class="neighborhood">· Charitas</span></div>
+                  <div class="addr">R. Joaquim Eugênio, 88 — casa</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><button class="btn-act primary">→ Liberar</button></div>
+              </div>
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Patrícia Rocha</span><span class="neighborhood">· S. Francisco</span></div>
+                  <div class="addr">R. Manoel de Abreu, 217 — apto 504</div>
+                  <div class="composition">2 Originais, 1 Integral · 3 cestas</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><button class="btn-act primary">→ Liberar</button></div>
+              </div>
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Rafael Soares</span><span class="neighborhood">· Boa Viagem</span></div>
+                  <div class="addr">R. Heitor Carrilho, 12 — apto 301</div>
+                  <div class="composition">1 Integral · 1 cesta</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><button class="btn-act primary">→ Liberar</button></div>
+              </div>
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">+ 13 outras entregas da Zona 2</span></div>
+                  <div class="composition" style="font-style:normal">aguardando liberação · saíram do forno às 13h45</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><span class="fixed-state">use "Liberar todas" no header da zona ↑</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zona 3 · ainda no forno -->
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona 3</span>
+                <span class="meta">7+ km · Itaipu, Camboinhas, Pendotiba</span>
+                <span class="ct"><strong>4</strong> entregas · 8 cestas</span>
+              </div>
+              <div class="R">
+                <span class="progress">ainda no forno · sai 14h50</span>
+                <button class="btn-secondary" disabled style="opacity:.55;cursor:not-allowed">Aguardando produção</button>
+              </div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Sabrina Vieira</span><span class="neighborhood">· Itaipu</span></div>
+                  <div class="addr">R. Prefeito Silvio Picanço, 1024 — casa</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><span class="fixed-state">aguarda forno</span></div>
+              </div>
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">+ 3 outras entregas da Zona 3</span></div>
+                  <div class="composition" style="font-style:normal">cocção termina 14h50</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><span class="fixed-state">aguarda forno</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIO -->
+        <div class="city">
+          <div class="city-head">
+            <div class="L">
+              <div class="nm">Rio de Janeiro</div>
+              <div class="origin">Cora · Rio</div>
+              <div class="origin-sub">Conde de Irajá, 439 · Botafogo</div>
+            </div>
+            <div class="R">
+              <div class="ct">14 <span class="lb">entregas</span></div>
+              <div class="progress">1 entregue · 4 em rota · 9 programadas</div>
+            </div>
+          </div>
+
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona Conde</span>
+                <span class="meta">até 2 km</span>
+                <span class="ct"><strong>7</strong> entregas · 12 cestas</span>
+              </div>
+              <div class="R">
+                <span class="progress"><span class="bar"><i style="width:14%"></i></span> 1/7 entregues</span>
+                <button class="btn-primary success">✓ Marcar 4 pendentes como entregues</button>
+              </div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Tatiana Borges</span><span class="neighborhood">· Botafogo</span></div>
+                  <div class="addr">R. Conde de Irajá, 401 — apto 902</div>
+                  <div class="composition">1 Integral · 1 cesta</div>
+                </div>
+                <span class="stt">entregue</span>
+                <div class="actions"><span class="fixed-state">14h05</span></div>
+              </div>
+              <div class="deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Ulisses Carvalho</span><span class="neighborhood">· Humaitá</span></div>
+                  <div class="addr">R. Capitão Salomão, 71 — apto 203</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                </div>
+                <span class="stt">em rota</span>
+                <div class="actions">
+                  <button class="btn-act success">Entregue</button>
+                  <button class="btn-act danger" onclick="openModal('Ulisses Carvalho','21 99555-1212','Humaitá · R. Capitão Salomão, 71')">Problema</button>
+                </div>
+              </div>
+              <div class="deliv problema">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Vera Lúcia Pinto</span><span class="neighborhood">· Urca</span></div>
+                  <div class="addr">Av. Pasteur, 333 — bl 2, apto 1004</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas</div>
+                </div>
+                <span class="stt">problema</span>
+                <div class="actions"><span class="fixed-state problem">13h52 · <span class="wa">↗ ver WhatsApp</span></span></div>
+              </div>
+              <div class="deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">+ 4 outras entregas da Zona Conde</span></div>
+                  <div class="composition" style="font-style:normal">Wagner T., Yasmin C., Zeca M., Aline F.</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona Sul</span>
+                <span class="meta">2—5 km · Copa, Ipanema, Leblon, Lagoa</span>
+                <span class="ct"><strong>5</strong> entregas · 9 cestas</span>
+              </div>
+              <div class="R">
+                <span class="progress">aguardando lote chegar</span>
+                <button class="btn-primary">→ Liberar todas pra rota</button>
+              </div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">5 entregas programadas · Zona Sul</span></div>
+                  <div class="composition" style="font-style:normal">5 cestas</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><span class="fixed-state">use "Liberar todas" ↑</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Outras</span>
+                <span class="meta">5+ km · Centro, Tijuca, Barra</span>
+                <span class="ct"><strong>2</strong> entregas · 3 cestas</span>
+              </div>
+              <div class="R">
+                <span class="progress">aguardando lote chegar</span>
+                <button class="btn-primary">→ Liberar todas pra rota</button>
+              </div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">2 entregas programadas · Outras</span></div>
+                  <div class="composition" style="font-style:normal">Centro (1) · Tijuca (1)</div>
+                </div>
+                <span class="stt">programada</span>
+                <div class="actions"><span class="fixed-state">use "Liberar todas" ↑</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-note"><strong>Estado B · em operação:</strong> esse é onde Hugo passa mais tempo. Mistura de status (entregue/em rota/programada/problema) por zona. Bulk action contextual no header de cada zona — botão muda conforme estado predominante. Atalho geral no topo pra fechar fim de dia em 1 clique.</div>
+      </main>
+
+      <!-- MODAL PROBLEMA · sobreposto à main -->
+      <div class="modal-overlay" id="modal-problem" onclick="if(event.target===this) closeModal()">
+        <div class="modal">
+          <div class="mh">
+            <div>
+              <h2>Marcar problema na entrega</h2>
+              <div class="who"><strong id="modal-name">Lúcia Almeida</strong> · <span id="modal-addr">S. Domingos · R. Tiradentes, 198</span> · <span id="modal-phone">21 99876-5432</span></div>
+            </div>
+            <div class="close" onclick="closeModal()">×</div>
+          </div>
+          <div class="mb">
+            <div class="field">
+              <label class="lbl">O que aconteceu? <span style="color:var(--warm-500);font-weight:400;text-transform:none;letter-spacing:0">(opcional, mas recomendado)</span></label>
+              <textarea id="modal-relato" placeholder="Ex: porteiro recusou, ninguém em casa, entreguei na portaria mas pediram pra reagendar...">porteiro recusou recebimento</textarea>
+              <div class="hint">Esse texto vai junto na mensagem do WhatsApp pro cliente. Mantenha curto e direto.</div>
+            </div>
+            <div class="preview">
+              <div class="pl"><span class="wa-icon">WA</span> Pré-visualização da mensagem</div>
+              Oi <em id="prev-name">Lúcia</em>, aqui é o Hugo da Cora. Tivemos um problema com a sua entrega de hoje: <em id="prev-relato">porteiro recusou recebimento</em>. Vamos resolver juntos. Me chama quando puder. <span class="copy-todo">// COPY a definir</span>
+            </div>
+          </div>
+          <div class="mf">
+            <div class="L">A cesta vira <strong style="color:var(--warning-text)">problema</strong> assim que enviar. Sem registro persistente — fica no histórico do WhatsApp.</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+              <button class="btn-primary" style="background:#25D366" onclick="closeModal()">Enviar no WhatsApp ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO C · DESKTOP -->
+  <div class="stage" data-stage="C-desktop">
+    <div class="dk">
+      <aside>
+        <div class="brand">cora <span class="tag">backoffice</span></div>
+        <div class="nav-label">MVP</div>
+        <nav>
+          <a href="#"><span class="ico">SE</span> Semana</a>
+          <a href="#"><span class="ico">PL</span> Planejamento</a>
+          <a href="#"><span class="ico">PR</span> Produção</a>
+          <a href="#" class="on" data-screen-label="C · Concluída"><span class="ico">EX</span> Expedição</a>
+        </nav>
+        <div class="nav-label">Em breve</div>
+        <nav>
+          <a href="#" class="disabled"><span><span class="ico">AS</span> Assinantes</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">CA</span> Cardápio</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">ES</span> Estoque</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">FI</span> Financeiro</span> <span class="pill">soon</span></a>
+          <a href="#" class="disabled"><span><span class="ico">RE</span> Relatórios</span> <span class="pill">soon</span></a>
+        </nav>
+        <div class="foot"><div class="av">H</div> Hugo · admin</div>
+      </aside>
+      <main>
+        <div class="wk-head">
+          <div>
+            <div class="eyebrow">Backoffice · Expedição</div>
+            <h1>Expedição</h1>
+            <div class="sub">Semana 14 · entrega quinta 30/abr · fechada às 16h47</div>
+          </div>
+          <div class="head-right">
+            <span class="status-pill done">concluída ✓</span>
+            <div class="wk-nav">
+              <button>‹</button>
+              <button>Semana 14</button>
+              <button>›</button>
+            </div>
+            <div class="av">H</div>
+          </div>
+        </div>
+
+        <div class="banner success">
+          <div><span class="b-eyebrow">✓ Concluída</span> &nbsp; Semana 14 fechada · <strong>45 entregues · 1 problema</strong> (Vera Lúcia · Urca · porteiro recusou). Próximo corte fecha em <strong>4d 22h</strong>.</div>
+          <div><a href="#">Ver Semana 15 →</a></div>
+        </div>
+
+        <div class="sumcards">
+          <div class="sumcard"><div class="v">46</div><div class="k">Entregas hoje</div><div class="d">32 Niterói · 14 Rio</div></div>
+          <div class="sumcard muted"><div class="v dim">0</div><div class="k">Em rota</div><div class="d">tudo confirmado</div></div>
+          <div class="sumcard click"><div class="v ok">45</div><div class="k">Entregues</div><div class="d">98% de sucesso</div></div>
+          <div class="sumcard click"><div class="v wn">1</div><div class="k">Problemas</div><div class="d">Vera Lúcia · Urca · porteiro recusou</div></div>
+        </div>
+
+        <!-- NITERÓI · concluída -->
+        <div class="city">
+          <div class="city-head">
+            <div class="L">
+              <div class="nm">Niterói</div>
+              <div class="origin">Cora · Niterói</div>
+              <div class="origin-sub">Trav. Ari Pinto Lima, 41A · Fonseca</div>
+            </div>
+            <div class="R">
+              <div class="ct">32/32 ✓</div>
+              <div class="progress">100% entregues · 0 problemas</div>
+            </div>
+          </div>
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona 1</span>
+                <span class="meta">até 3 km</span>
+                <span class="ct"><strong>12/12</strong> · 22 cestas</span>
+              </div>
+              <div class="R"><span class="progress done"><span class="bar"><i style="width:100%"></i></span> 100%</span></div>
+            </div>
+          </div>
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona 2</span>
+                <span class="meta">3—7 km</span>
+                <span class="ct"><strong>16/16</strong> · 28 cestas</span>
+              </div>
+              <div class="R"><span class="progress done"><span class="bar"><i style="width:100%"></i></span> 100%</span></div>
+            </div>
+          </div>
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona 3</span>
+                <span class="meta">7+ km</span>
+                <span class="ct"><strong>4/4</strong> · 8 cestas</span>
+              </div>
+              <div class="R"><span class="progress done"><span class="bar"><i style="width:100%"></i></span> 100%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIO · concluída com 1 problema -->
+        <div class="city">
+          <div class="city-head">
+            <div class="L">
+              <div class="nm">Rio de Janeiro</div>
+              <div class="origin">Cora · Rio</div>
+              <div class="origin-sub">Conde de Irajá, 439 · Botafogo</div>
+            </div>
+            <div class="R">
+              <div class="ct">13/14 · 1 problema</div>
+              <div class="progress">93% entregues</div>
+            </div>
+          </div>
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona Conde</span>
+                <span class="meta">até 2 km</span>
+                <span class="ct"><strong>6/7</strong> · 1 problema</span>
+              </div>
+              <div class="R"><span class="progress"><span class="bar"><i style="width:86%;background:var(--warning-text)"></i></span> 86%</span></div>
+            </div>
+            <div class="deliv-list">
+              <div class="deliv problema">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm-row"><span class="nm">Vera Lúcia Pinto</span><span class="neighborhood">· Urca</span></div>
+                  <div class="addr">Av. Pasteur, 333 — bl 2, apto 1004 · 21 99411-7733</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas · "porteiro recusou recebimento"</div>
+                </div>
+                <span class="stt">problema</span>
+                <div class="actions"><span class="fixed-state problem">↗ ver WhatsApp</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Zona Sul</span>
+                <span class="meta">2—5 km</span>
+                <span class="ct"><strong>5/5</strong> · 9 cestas</span>
+              </div>
+              <div class="R"><span class="progress done"><span class="bar"><i style="width:100%"></i></span> 100%</span></div>
+            </div>
+          </div>
+          <div class="zone">
+            <div class="zone-head">
+              <div class="L">
+                <span class="nm">Outras</span>
+                <span class="meta">5+ km</span>
+                <span class="ct"><strong>2/2</strong> · 3 cestas</span>
+              </div>
+              <div class="R"><span class="progress done"><span class="bar"><i style="width:100%"></i></span> 100%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-note"><strong>Estado C · concluída:</strong> tudo fechado, foco em retrospectiva. Zonas colapsadas (clique para expandir). Único caso de problema fica visível e linkável pro histórico do WhatsApp. Botões de transição desabilitados — sem desfazer no MVP. Banner verde no topo + atalho pra próxima semana.</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ═════════════ MOBILE 375 ═════════════ -->
+
+  <!-- ESTADO A · MOBILE -->
+  <div class="stage mobile" data-stage="A-mobile">
+    <div class="mb">
+      <div class="mb-top">
+        <div class="hmb">≡</div>
+        <div class="brand">cora</div>
+        <div class="nv">⌕ ⚙</div>
+      </div>
+      <div class="mb-head">
+        <div class="eyebrow">Expedição</div>
+        <h1>Expedição</h1>
+        <div class="sub">Semana 14 · quinta 30/abr</div>
+        <div class="row">
+          <div class="wnav">
+            <button>‹</button>
+            <span class="curr">Semana 14 · atual</span>
+            <button>›</button>
+          </div>
+          <span class="status-pill pre">aguardando</span>
+        </div>
+      </div>
+      <div class="mb-body">
+        <div class="mb-banner muted"><div><strong>⏳ Pré-corte ·</strong> lista aparece terça 12h · faltam ~36h</div></div>
+
+        <div class="mb-sumcards">
+          <div class="c"><div class="v dim">~46</div><div class="k">Estimativa</div><div class="d">com base nas assinaturas</div></div>
+          <div class="c"><div class="v dim">—</div><div class="k">Em rota</div><div class="d">após corte</div></div>
+          <div class="c"><div class="v dim">—</div><div class="k">Entregues</div><div class="d">após corte</div></div>
+          <div class="c"><div class="v dim">—</div><div class="k">Problemas</div><div class="d">após corte</div></div>
+        </div>
+
+        <div class="mb-empty">
+          <div class="icon">⏳</div>
+          <h3>Aguardando corte</h3>
+          <div class="lede">A lista aparece terça às 12h, depois do corte do cardápio.</div>
+          <div class="estimate"><strong>~46</strong> entregas previstas</div>
+        </div>
+
+        <div style="font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin:14px 0 8px">Distribuição estimada</div>
+
+        <div class="mb-city">
+          <div class="mb-city-head">
+            <div class="nm">Niterói <span class="ct">~32 entregas</span></div>
+            <div class="origin">Cora · Niterói</div>
+            <div class="origin-sub">Trav. Ari Pinto Lima, 41A · Fonseca</div>
+          </div>
+          <div class="mb-zone" style="opacity:.7">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 1 · até 3 km</div><div class="meta">~12 entregas · ~22 cestas</div></div>
+              <div class="R"><span class="ct"></span></div>
+            </div>
+          </div>
+          <div class="mb-zone" style="opacity:.7">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 2 · 3—7 km</div><div class="meta">Charitas, S. Francisco</div></div>
+              <div class="R"><span class="ct">~16 · ~28</span></div>
+            </div>
+          </div>
+          <div class="mb-zone" style="opacity:.7">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 3 · 7+ km</div><div class="meta">Itaipu, Camboinhas</div></div>
+              <div class="R"><span class="ct">~4 · ~8</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-city">
+          <div class="mb-city-head">
+            <div class="nm">Rio de Janeiro <span class="ct">~14 entregas</span></div>
+            <div class="origin">Cora · Rio</div>
+            <div class="origin-sub">Conde de Irajá, 439 · Botafogo</div>
+          </div>
+          <div class="mb-zone" style="opacity:.7">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona Conde · até 2 km</div><div class="meta">~7 entregas · ~12 cestas</div></div>
+              <div class="R"><span class="ct"></span></div>
+            </div>
+          </div>
+          <div class="mb-zone" style="opacity:.7">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona Sul · 2—5 km</div><div class="meta">Copa, Ipanema, Leblon</div></div>
+              <div class="R"><span class="ct">~5 · ~9</span></div>
+            </div>
+          </div>
+          <div class="mb-zone" style="opacity:.7">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Outras · 5+ km</div><div class="meta">Centro, Tijuca, Barra</div></div>
+              <div class="R"><span class="ct">~2 · ~3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-bot">
+        <a href="#"><span class="ico">SE</span> Semana</a>
+        <a href="#"><span class="ico">PR</span> Produção</a>
+        <a href="#" class="on"><span class="ico">EX</span> Expedição</a>
+        <a href="#"><span class="ico">▾</span> Mais</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO B · MOBILE -->
+  <div class="stage mobile" data-stage="B-mobile">
+    <div class="mb" id="mb-B">
+      <div class="mb-top">
+        <div class="hmb">≡</div>
+        <div class="brand">cora</div>
+        <div class="nv">⌕ ⚙</div>
+      </div>
+      <div class="mb-head">
+        <div class="eyebrow">Expedição · 14h32</div>
+        <h1>Expedição</h1>
+        <div class="sub">Semana 14 · quinta 30/abr</div>
+        <div class="row">
+          <div class="wnav">
+            <button>‹</button>
+            <span class="curr">Semana 14 · atual</span>
+            <button>›</button>
+          </div>
+          <span class="status-pill live">em rota</span>
+        </div>
+      </div>
+      <div class="mb-body">
+        <div class="mb-banner info"><div><strong>→ Z2 saiu 13h45 ·</strong> 16 cestas prontas pra liberar</div></div>
+
+        <div class="mb-sumcards">
+          <div class="c"><div class="v">46</div><div class="k">Hoje</div><div class="d">32 NIT · 14 RIO</div></div>
+          <div class="c"><div class="v">22<span class="of">/46</span></div><div class="k">Em rota</div><div class="d">a confirmar</div></div>
+          <div class="c"><div class="v ok">12</div><div class="k">Entregues</div><div class="d">parceiro confirmou</div></div>
+          <div class="c"><div class="v wn">1</div><div class="k">Problemas</div><div class="d">a tratar ›</div></div>
+        </div>
+
+        <div class="mb-bulk">
+          <div class="L"><strong>Atalho fim de dia</strong>marcar 22 pendentes</div>
+          <button class="btn-primary success">✓ Todas entregues</button>
+        </div>
+
+        <!-- NITERÓI -->
+        <div class="mb-city">
+          <div class="mb-city-head">
+            <div class="nm">Niterói <span class="ct">32 · 11 ✓ · 18 rota · 3 prog</span></div>
+            <div class="origin">Cora · Niterói</div>
+            <div class="origin-sub">Trav. Ari Pinto Lima, 41A · Fonseca</div>
+          </div>
+
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 1 · até 3 km</div><div class="meta">12 entregas · 22 cestas</div></div>
+              <div class="R"><span class="progress">9/12</span><button class="btn-primary success">✓ Marcar 3</button></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Beatriz Silva <span class="neighborhood">· Icaraí</span></div>
+                  <div class="addr">R. Lopes Trovão, 49 — apto 802</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas</div>
+                  <div class="pill-row"><span class="stt">entregue</span><span class="fixed-state">13h12</span></div>
+                </div>
+              </div>
+              <div class="mb-deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">João Vasconcelos <span class="neighborhood">· Centro</span></div>
+                  <div class="addr">Av. Quintino Bocaiúva, 122 — sala 4</div>
+                  <div class="composition">2 Originais · 2 cestas</div>
+                  <div class="pill-row"><span class="stt">entregue</span><span class="fixed-state">13h28</span></div>
+                </div>
+              </div>
+              <div class="mb-deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">+ 7 outras entregues</div>
+                  <div class="composition">Camila F., Daniela R., Eduardo M., Fernanda P., Gabriel L., Henrique S., Isabela T.</div>
+                  <div class="pill-row"><span class="stt">entregue</span><span class="fixed-state">expandir ›</span></div>
+                </div>
+              </div>
+              <div class="mb-deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Lúcia Almeida <span class="neighborhood">· S. Domingos</span></div>
+                  <div class="addr">R. Tiradentes, 198 — casa</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                  <div class="pill-row">
+                    <span class="stt">em rota</span>
+                    <div class="actions">
+                      <button class="btn-act success">Entregue</button>
+                      <button class="btn-act danger" onclick="openMbSheet('Lúcia Almeida','21 99876-5432','S. Domingos · R. Tiradentes, 198')">Problema</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Marcos Pereira <span class="neighborhood">· Icaraí</span></div>
+                  <div class="addr">R. Gavião Peixoto, 304 — apto 1102</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas</div>
+                  <div class="pill-row">
+                    <span class="stt">em rota</span>
+                    <div class="actions">
+                      <button class="btn-act success">Entregue</button>
+                      <button class="btn-act danger" onclick="openMbSheet('Marcos Pereira','21 98765-4321','Icaraí · R. Gavião Peixoto, 304')">Problema</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Natália Costa <span class="neighborhood">· Centro</span></div>
+                  <div class="addr">R. Visconde de Sepetiba, 519 — sala 12</div>
+                  <div class="composition">1 Integral · 1 cesta</div>
+                  <div class="pill-row"><span class="stt">em rota</span><span class="fixed-state">aguardando confirmar</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 2 · 3—7 km</div><div class="meta">16 entregas · saiu forno 13h45</div></div>
+              <div class="R"><button class="btn-primary">→ Liberar todas</button></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Otávio Mendes <span class="neighborhood">· Charitas</span></div>
+                  <div class="addr">R. Joaquim Eugênio, 88 — casa</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                  <div class="pill-row">
+                    <span class="stt">programada</span>
+                    <div class="actions"><button class="btn-act primary">→ Liberar</button></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">+ 15 outras programadas</div>
+                  <div class="composition">aguardando liberação · use "→ Liberar todas" no header ↑</div>
+                  <div class="pill-row"><span class="stt">programada</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 3 · 7+ km</div><div class="meta">4 entregas · ainda no forno</div></div>
+              <div class="R"><span class="progress">sai 14h50</span></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">4 entregas programadas</div>
+                  <div class="composition">aguarda forno · cocção termina 14h50</div>
+                  <div class="pill-row"><span class="stt">programada</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIO -->
+        <div class="mb-city">
+          <div class="mb-city-head">
+            <div class="nm">Rio de Janeiro <span class="ct">14 · 1 ✓ · 4 rota · 9 prog</span></div>
+            <div class="origin">Cora · Rio</div>
+            <div class="origin-sub">Conde de Irajá, 439 · Botafogo</div>
+          </div>
+
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona Conde · até 2 km</div><div class="meta">7 entregas · 12 cestas</div></div>
+              <div class="R"><span class="progress">1/7</span><button class="btn-primary success">✓ Marcar 4</button></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv entregue">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Tatiana Borges <span class="neighborhood">· Botafogo</span></div>
+                  <div class="addr">R. Conde de Irajá, 401 — apto 902</div>
+                  <div class="composition">1 Integral · 1 cesta</div>
+                  <div class="pill-row"><span class="stt">entregue</span><span class="fixed-state">14h05</span></div>
+                </div>
+              </div>
+              <div class="mb-deliv problema">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Vera Lúcia Pinto <span class="neighborhood">· Urca</span></div>
+                  <div class="addr">Av. Pasteur, 333 — bl 2, apto 1004</div>
+                  <div class="composition">1 Original, 1 Integral · 2 cestas</div>
+                  <div class="pill-row"><span class="stt">problema</span><span class="fixed-state problem">↗ ver WA</span></div>
+                </div>
+              </div>
+              <div class="mb-deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Ulisses Carvalho <span class="neighborhood">· Humaitá</span></div>
+                  <div class="addr">R. Capitão Salomão, 71 — apto 203</div>
+                  <div class="composition">1 Original · 1 cesta</div>
+                  <div class="pill-row">
+                    <span class="stt">em rota</span>
+                    <div class="actions">
+                      <button class="btn-act success">Entregue</button>
+                      <button class="btn-act danger" onclick="openMbSheet('Ulisses Carvalho','21 99555-1212','Humaitá · R. Capitão Salomão, 71')">Problema</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-deliv pendente">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">+ 3 outras em rota</div>
+                  <div class="composition">Wagner T., Yasmin C., Zeca M.</div>
+                  <div class="pill-row"><span class="stt">em rota</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona Sul · 2—5 km</div><div class="meta">5 entregas · aguardando lote</div></div>
+              <div class="R"><button class="btn-primary">→ Liberar</button></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">5 entregas programadas</div>
+                  <div class="composition">5 cestas</div>
+                  <div class="pill-row"><span class="stt">programada</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Outras · 5+ km</div><div class="meta">2 entregas · motoboy</div></div>
+              <div class="R"><button class="btn-primary">→ Liberar</button></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv programada">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">2 entregas programadas</div>
+                  <div class="composition">Centro (1) · Tijuca (1)</div>
+                  <div class="pill-row"><span class="stt">programada</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-bot">
+        <a href="#"><span class="ico">SE</span> Semana</a>
+        <a href="#"><span class="ico">PR</span> Produção</a>
+        <a href="#" class="on"><span class="ico">EX</span> Expedição</a>
+        <a href="#"><span class="ico">▾</span> Mais</a>
+      </div>
+
+      <!-- BOTTOM SHEET PROBLEMA -->
+      <div class="mb-sheet-overlay" id="mb-sheet-problem" onclick="if(event.target===this) closeMbSheet()">
+        <div class="mb-sheet">
+          <div class="grip"></div>
+          <div class="sh-head">
+            <h2>Marcar problema</h2>
+            <div class="who"><strong id="mb-sheet-name">Lúcia Almeida</strong> · <span id="mb-sheet-addr">S. Domingos · R. Tiradentes, 198</span></div>
+          </div>
+          <div class="sh-body">
+            <div class="field">
+              <label class="lbl">O que aconteceu? <span style="color:var(--warm-500);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+              <textarea placeholder="ex: porteiro recusou, ninguém em casa...">porteiro recusou recebimento</textarea>
+              <div class="hint">vai junto na mensagem do WhatsApp</div>
+            </div>
+            <div class="preview">
+              <div class="pl"><span class="wa-icon">WA</span> Pré-visualização</div>
+              Oi <em>Lúcia</em>, aqui é o Hugo da Cora. Tivemos um problema com a sua entrega de hoje: <em>porteiro recusou recebimento</em>. Vamos resolver juntos. Me chama quando puder. <span class="copy-todo">// COPY a definir</span>
+            </div>
+          </div>
+          <div class="sh-foot">
+            <button class="btn-primary" style="background:#25D366" onclick="closeMbSheet()">Enviar no WhatsApp ↗</button>
+            <button class="btn-secondary" onclick="closeMbSheet()" style="width:100%">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTADO C · MOBILE -->
+  <div class="stage mobile" data-stage="C-mobile">
+    <div class="mb">
+      <div class="mb-top">
+        <div class="hmb">≡</div>
+        <div class="brand">cora</div>
+        <div class="nv">⌕ ⚙</div>
+      </div>
+      <div class="mb-head">
+        <div class="eyebrow">Expedição · 16h47</div>
+        <h1>Expedição</h1>
+        <div class="sub">Semana 14 · fechada</div>
+        <div class="row">
+          <div class="wnav">
+            <button>‹</button>
+            <span class="curr">Semana 14</span>
+            <button>›</button>
+          </div>
+          <span class="status-pill done">concluída ✓</span>
+        </div>
+      </div>
+      <div class="mb-body">
+        <div class="mb-banner success"><div><strong>✓ Concluída ·</strong> 45 entregues, 1 problema · <a href="#">Semana 15 →</a></div></div>
+
+        <div class="mb-sumcards">
+          <div class="c"><div class="v">46</div><div class="k">Hoje</div><div class="d">32 NIT · 14 RIO</div></div>
+          <div class="c"><div class="v dim">0</div><div class="k">Em rota</div><div class="d">tudo confirmado</div></div>
+          <div class="c"><div class="v ok">45</div><div class="k">Entregues</div><div class="d">98%</div></div>
+          <div class="c"><div class="v wn">1</div><div class="k">Problema</div><div class="d">Vera Lúcia ›</div></div>
+        </div>
+
+        <div class="mb-city">
+          <div class="mb-city-head">
+            <div class="nm">Niterói <span class="ct">32/32 ✓</span></div>
+            <div class="origin">Cora · Niterói</div>
+            <div class="origin-sub">Trav. Ari Pinto Lima, 41A · Fonseca</div>
+          </div>
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 1 · até 3 km</div><div class="meta">12 entregas · 22 cestas</div></div>
+              <div class="R"><span class="progress">12/12 ✓</span></div>
+            </div>
+          </div>
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 2 · 3—7 km</div><div class="meta">16 entregas · 28 cestas</div></div>
+              <div class="R"><span class="progress">16/16 ✓</span></div>
+            </div>
+          </div>
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona 3 · 7+ km</div><div class="meta">4 entregas · 8 cestas</div></div>
+              <div class="R"><span class="progress">4/4 ✓</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-city">
+          <div class="mb-city-head">
+            <div class="nm">Rio de Janeiro <span class="ct">13/14 · 1 problema</span></div>
+            <div class="origin">Cora · Rio</div>
+            <div class="origin-sub">Conde de Irajá, 439 · Botafogo</div>
+          </div>
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona Conde · até 2 km</div><div class="meta">7 entregas · 1 problema</div></div>
+              <div class="R"><span class="progress">6/7</span></div>
+            </div>
+            <div class="deliv-list">
+              <div class="mb-deliv problema">
+                <span class="stt-dot"></span>
+                <div class="body">
+                  <div class="nm">Vera Lúcia Pinto <span class="neighborhood">· Urca</span></div>
+                  <div class="addr">Av. Pasteur, 333 — bl 2, apto 1004</div>
+                  <div class="composition">"porteiro recusou recebimento"</div>
+                  <div class="pill-row"><span class="stt">problema</span><span class="fixed-state problem">↗ ver WhatsApp</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Zona Sul · 2—5 km</div><div class="meta">5 entregas · 9 cestas</div></div>
+              <div class="R"><span class="progress">5/5 ✓</span></div>
+            </div>
+          </div>
+          <div class="mb-zone">
+            <div class="mb-zone-head">
+              <div class="L"><div class="nm">Outras · 5+ km</div><div class="meta">2 entregas · 3 cestas</div></div>
+              <div class="R"><span class="progress">2/2 ✓</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-bot">
+        <a href="#"><span class="ico">SE</span> Semana</a>
+        <a href="#"><span class="ico">PR</span> Produção</a>
+        <a href="#" class="on"><span class="ico">EX</span> Expedição</a>
+        <a href="#"><span class="ico">▾</span> Mais</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // tabs: estado + plataforma
+  const stTabs = document.querySelectorAll('#tabs-state button');
+  const plTabs = document.querySelectorAll('#tabs-platform button');
+  let curSt = 'B', curPl = 'desktop';
+
+  function syncStages(){
+    document.querySelectorAll('.stage').forEach(s=>s.classList.remove('on'));
+    const target = document.querySelector(`.stage[data-stage="${curSt}-${curPl}"]`);
+    if(target){
+      if(curPl==='mobile') target.classList.add('on');
+      else target.classList.add('on');
+    }
+  }
+  stTabs.forEach(b=>b.addEventListener('click',()=>{
+    stTabs.forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    curSt = b.dataset.st;
+    syncStages();
+  }));
+  plTabs.forEach(b=>b.addEventListener('click',()=>{
+    plTabs.forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    curPl = b.dataset.pl;
+    syncStages();
+  }));
+
+  // modal problema · desktop
+  function openModal(name, phone, addr){
+    const m = document.getElementById('modal-problem');
+    document.getElementById('modal-name').textContent = name;
+    document.getElementById('modal-phone').textContent = phone;
+    document.getElementById('modal-addr').textContent = addr;
+    document.getElementById('prev-name').textContent = name.split(' ')[0];
+    const relato = document.getElementById('modal-relato');
+    document.getElementById('prev-relato').textContent = relato.value || '[descreva o que aconteceu]';
+    relato.oninput = ()=>{ document.getElementById('prev-relato').textContent = relato.value || '[descreva o que aconteceu]'; };
+    m.classList.add('on');
+  }
+  function closeModal(){ document.getElementById('modal-problem').classList.remove('on'); }
+
+  // sheet problema · mobile
+  function openMbSheet(name, phone, addr){
+    document.getElementById('mb-sheet-name').textContent = name;
+    document.getElementById('mb-sheet-addr').textContent = addr;
+    document.getElementById('mb-sheet-problem').classList.add('on');
+  }
+  function closeMbSheet(){ document.getElementById('mb-sheet-problem').classList.remove('on'); }
+</script>
+
+</body>
+</html>

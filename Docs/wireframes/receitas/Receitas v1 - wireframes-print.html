@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cora Backoffice — Receitas v1 (wireframes)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<template id="__bundler_thumbnail" data-bg-color="#FAFAF8">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#FAFAF8"/>
+    <g transform="translate(380,210)" fill="#2E55CD" opacity=".88">
+      <rect x="0" y="0" width="180" height="22" rx="3"/>
+      <rect x="0" y="50" width="320" height="14" rx="3" opacity=".5"/>
+      <rect x="0" y="76" width="260" height="14" rx="3" opacity=".5"/>
+      <rect x="0" y="118" width="140" height="14" rx="3" opacity=".4"/>
+      <rect x="160" y="118" width="80" height="14" rx="3" opacity=".4"/>
+      <rect x="0" y="148" width="140" height="14" rx="3" opacity=".4"/>
+      <rect x="160" y="148" width="80" height="14" rx="3" opacity=".4"/>
+    </g>
+    <text x="600" y="470" text-anchor="middle" font-family="Georgia,serif" font-size="36" fill="#172E6E" letter-spacing="4">RECEITAS v1 — WIREFRAMES</text>
+    <text x="600" y="510" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#7A766E">cora backoffice · low-fi</text>
+  </svg>
+</template>
+<link rel="stylesheet" href="colors_and_type.css">
+<link rel="stylesheet" href="receitas.css">
+<style>
+  /* ── PRINT MODE ──────────────────────────────────────── */
+  @page { size: A3 landscape; margin: 1cm; }
+  @media print {
+    html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .shell { max-width: none !important; padding: 0 !important; }
+    .shell-head .tabs-wrap, .tabs-label { display: none !important; }
+    .legend { break-after: page; }
+    /* Force every stage visible, one per page */
+    .stage { display: block !important; break-before: page; break-inside: avoid; padding: 0 !important; margin: 0 !important; }
+    .stage.mobile { display: flex !important; justify-content: center; }
+    /* Avoid overlay/panel z-index issues */
+    .panel-overlay, .ficha, .mb-ficha, .modal-overlay, .modal { display: none !important; }
+    /* Tighten the desktop frame to fit A3 landscape */
+    .dk { min-height: auto !important; box-shadow: none !important; }
+    .dk main { padding: 18px 20px 30px !important; }
+    /* Footbar should not be sticky in print */
+    .footbar, .mb-foot, .mb-bot { position: static !important; }
+    /* Mobile frame: keep it compact */
+    .mb { min-height: auto !important; }
+    /* Hide load-error placeholder if present */
+    #more-stages > div[style*="warning-bg"] { display: none !important; }
+    /* Page label (small caption) */
+    .stage::before {
+      content: attr(data-screen-label);
+      display: block;
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--warm-500);
+      padding: 0 0 8px 0;
+    }
+  }
+  /* Screen mode: behave as before (the auto-print script will trigger print) */
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="shell-head">
+    <div>
+      <h1>RECEITAS v1 — WIREFRAMES <span class="wf-tag">low-fi</span></h1>
+      <div class="sub">Lista + Ficha (3 modos) + Histórico × 2 plataformas. Tokens da Cora, sem refinamento visual. Briefing: <code>Backoffice / Receitas v1 · 09 mai 2026</code>. Ref. visual: Planejamento v2, Produção v4.</div>
+    </div>
+    <div class="tabs-wrap">
+      <div>
+        <div class="tabs-label">Tela</div>
+        <div class="tabs" id="tabs-screen">
+          <button data-sc="list" class="on">Lista</button>
+          <button data-sc="ficha-pub">Ficha · publicada</button>
+          <button data-sc="ficha-draft">Ficha · rascunho</button>
+          <button data-sc="ficha-new">Ficha · nova</button>
+          <button data-sc="historico">Histórico</button>
+        </div>
+      </div>
+      <div>
+        <div class="tabs-label">Plataforma</div>
+        <div class="tabs" id="tabs-platform">
+          <button data-pl="desktop" class="on">Desktop</button>
+          <button data-pl="mobile">Mobile 375</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="sw"><i style="background:var(--warm-50);border-style:dashed"></i><strong>fundo</strong> warm-50</span>
+    <span class="sw"><i style="background:var(--warm-100);border-style:dashed"></i><strong>card</strong> warm-100</span>
+    <span class="sw"><i style="background:var(--brand-50);border-color:var(--brand-200)"></i><strong>destaque</strong> brand-50</span>
+    <span class="sw"><i style="background:var(--brand-500);border-color:var(--brand-500)"></i><strong>ação</strong> brand-500</span>
+    <span class="sw"><i style="background:var(--warning-bg);border-color:var(--warning-border)"></i><strong>rascunho</strong> warning</span>
+    <span class="sw"><i style="background:var(--success-bg);border-color:var(--success-border)"></i><strong>publicada</strong> success</span>
+    <span style="margin-left:auto"><code>[icon]</code> placeholder · <span class="copy-todo">// COPY</span> revisar</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       STAGE 1 · LISTA · DESKTOP
+       ════════════════════════════════════════════════════════ -->
+  <div class="stage desktop on" data-sc="list" data-pl="desktop" data-screen-label="01 Receitas · Lista · Desktop">
+    <div class="dk">
+      <aside>
+        <div class="brand">CORA <span class="tag">backoffice</span></div>
+        <div class="nav-label">MVP</div>
+        <nav>
+          <a href="#"><span class="ico">cal</span>Semana</a>
+          <a href="#"><span class="ico">plan</span>Planejamento</a>
+          <a href="#"><span class="ico">prod</span>Produção</a>
+          <a href="#"><span class="ico">exp</span>Expedição</a>
+          <a href="#" class="on"><span class="ico">rec</span>Receitas</a>
+        </nav>
+        <div class="nav-label">Em breve</div>
+        <nav>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">box</span>Estoque</span><span class="pill">em breve</span></a>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">ass</span>Assinantes</span><span class="pill">em breve</span></a>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">$</span>Financeiro</span><span class="pill">em breve</span></a>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">cfg</span>Configurações</span><span class="pill">em breve</span></a>
+        </nav>
+        <div class="foot"><div class="av">H</div><div>Hugo<br><span style="color:var(--warm-400);font-size:11px">padeiro</span></div></div>
+      </aside>
+
+      <main>
+        <div class="wk-head">
+          <div>
+            <div class="eyebrow">biblioteca</div>
+            <h1>RECEITAS</h1>
+            <div class="sub">6 produtos no catálogo · 5 publicadas · 1 em teste · 1 com rascunho não publicado</div>
+          </div>
+          <div class="head-right">
+            <button class="btn ghost sm"><span class="ico" style="font-family:var(--font-body)">⌕</span> Buscar</button>
+            <button class="btn primary create-btn"><span class="plus">+</span> Criar nova receita</button>
+            <div class="av">H</div>
+          </div>
+        </div>
+
+        <div class="sec-head">
+          <div class="label">Catálogo · 5 grupos</div>
+          <div class="meta">2 da Base · 0 sempre no Cardápio · 4 rotativas · 1 em teste · 0 arquivadas</div>
+        </div>
+
+        <!-- Base da Assinatura -->
+        <div class="group-head"><span class="nm">Base da Assinatura</span><span class="ct">imutável no MVP · 2 produtos</span></div>
+        <div class="plist">
+          <div class="pcard click">
+            <div>
+              <div class="pn">Pão Original <span class="badge base">base</span></div>
+              <div class="pmeta">615 g<span class="sep">·</span>banneton com farinha de arroz<span class="sep">·</span>v3 desde 28/abr</div>
+              <div class="lock-note">base imutável no MVP — papel não pode ser alterado</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>70%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>400 g</strong></div>
+            <div><span class="status-pill pub"><span class="dot"></span>publicada</span></div>
+            <div class="pmenu disabled" title="ação parcialmente indisponível pra base imutável">⋯</div>
+          </div>
+          <div class="pcard click">
+            <div>
+              <div class="pn">Pão Integral <span class="badge base">base</span> <span class="alert-icon" title="rascunho não publicado">!</span></div>
+              <div class="pmeta">615 g<span class="sep">·</span>couche<span class="sep">·</span>v3 publicada · rascunho desde 02/mai</div>
+              <div class="lock-note">base imutável no MVP — papel não pode ser alterado</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>75%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>400 g</strong></div>
+            <div><span class="status-pill draft"><span class="dot"></span>publicada + rascunho</span></div>
+            <div class="pmenu disabled" title="ação parcialmente indisponível pra base imutável">⋯</div>
+          </div>
+        </div>
+
+        <!-- Sempre no Cardápio (empty) -->
+        <div class="group-head"><span class="nm">Sempre no Cardápio</span><span class="ct">fixos não-base · 0 produtos</span></div>
+        <div class="plist empty">
+          Nenhum produto fixo no Cardápio. Pra fixar uma rotativa, abra o menu <code>⋯</code> da receita e escolha <strong>"Tornar fixo do Cardápio"</strong>.
+        </div>
+
+        <!-- Rotativas -->
+        <div class="group-head"><span class="nm">Rotativas</span><span class="ct">disponíveis pro Planejamento marcar · 4 produtos</span></div>
+        <div class="plist">
+          <div class="pcard click">
+            <div>
+              <div class="pn">Multigrãos</div>
+              <div class="pmeta">615 g<span class="sep">·</span>couche<span class="sep">·</span>v2 desde 14/abr</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>78%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>360 g</strong></div>
+            <div><span class="status-pill pub"><span class="dot"></span>publicada</span></div>
+            <div class="pmenu" title="editar · tornar fixo · arquivar · duplicar · histórico">⋯</div>
+          </div>
+          <div class="pcard click">
+            <div>
+              <div class="pn">Focaccia Genovesa</div>
+              <div class="pmeta">430 g (1/6 tab. 60×40)<span class="sep">·</span>tabuleiro<span class="sep">·</span>v4 desde 02/abr</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>75%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>1.200 g</strong></div>
+            <div><span class="status-pill pub"><span class="dot"></span>publicada</span></div>
+            <div class="pmenu" title="editar · tornar fixo · arquivar · duplicar · histórico">⋯</div>
+          </div>
+          <div class="pcard click">
+            <div>
+              <div class="pn">Brioche</div>
+              <div class="pmeta">256 g<span class="sep">·</span>forma<span class="sep">·</span>v1 desde 18/mar</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>50%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>500 g</strong></div>
+            <div><span class="status-pill pub"><span class="dot"></span>publicada</span></div>
+            <div class="pmenu" title="editar · tornar fixo · arquivar · duplicar · histórico">⋯</div>
+          </div>
+          <div class="pcard click">
+            <div>
+              <div class="pn">Ciabatta</div>
+              <div class="pmeta">533 g<span class="sep">·</span>tabuleiro<span class="sep">·</span>v2 desde 09/abr</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>80%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>500 g</strong></div>
+            <div><span class="status-pill pub"><span class="dot"></span>publicada</span></div>
+            <div class="pmenu" title="editar · tornar fixo · arquivar · duplicar · histórico">⋯</div>
+          </div>
+        </div>
+
+        <!-- Em teste -->
+        <div class="group-head"><span class="nm">Em teste</span><span class="ct">rascunho sem versão publicada · 1 produto</span></div>
+        <div class="plist">
+          <div class="pcard click">
+            <div>
+              <div class="pn">Pão de Azeitonas <span class="badge test">teste</span></div>
+              <div class="pmeta">615 g<span class="sep">·</span>couche<span class="sep">·</span>rascunho desde 02/mai · sem v1 publicada</div>
+            </div>
+            <div class="hyd"><span class="lbl">hidratação</span><strong>72%</strong></div>
+            <div class="hyd"><span class="lbl">farinha total</span><strong>400 g</strong></div>
+            <div><span class="status-pill test"><span class="dot"></span>em teste</span></div>
+            <div class="pmenu" title="editar · publicar como v1 · arquivar · histórico">⋯</div>
+          </div>
+        </div>
+
+        <!-- Arquivadas -->
+        <div class="group-head"><span class="nm">Arquivadas</span><span class="ct">fora do catálogo · histórico preservado · 0 produtos</span></div>
+        <div class="plist empty">
+          Nenhuma receita arquivada. <span class="copy-todo">// COPY</span>
+        </div>
+
+        <div class="wf-note"><strong>Lista populada (estado A único):</strong> 5 grupos com cabeçalho próprio, separados visualmente. Mesma lógica do Planejamento v2 mas <em>sem ciclo semanal</em>: aqui não há toggle de "incluir na semana" — Receitas é biblioteca. Cada linha mostra <strong>nome</strong>, peso/forma, versão publicada, % hidratação, farinha total e <strong>status pill</strong>. Clique na linha → Ficha em modo visualização. Clique em <code>⋯</code> → menu de ações (editar, arquivar, mudar papel, duplicar, histórico). Base da Assinatura tem ícone <code>⋯</code> parcialmente desabilitado (pode editar e ver histórico, mas não pode arquivar nem mudar papel). Pão Integral exibe <span class="alert-icon" style="display:inline-flex;font-size:9px;width:14px;height:14px">!</span> porque tem rascunho não publicado.</div>
+        <div class="wf-note" style="border-left-color:var(--warning-border);background:var(--warning-bg);color:var(--warning-text);margin-top:10px"><span class="copy-todo">// crítico</span> Comportamento exato dos itens do menu <code>⋯</code> (modais de confirmação? toast?), busca/filtro, paginação se &gt;30 receitas: <strong>fora do escopo deste WF</strong>. Marcar pra revisão.</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       STAGE 1 · LISTA · MOBILE
+       ════════════════════════════════════════════════════════ -->
+  <div class="stage mobile" data-sc="list" data-pl="mobile" data-screen-label="01 Receitas · Lista · Mobile">
+    <div class="mb">
+      <div class="mb-top">
+        <div class="hmb">[≡]</div>
+        <div class="brand">RECEITAS</div>
+        <div class="nv">[⌕]</div>
+      </div>
+      <div class="mb-head">
+        <div class="eyebrow">biblioteca</div>
+        <h1>RECEITAS</h1>
+        <div class="sub">6 produtos no catálogo · 1 com rascunho ⚠</div>
+      </div>
+      <div class="mb-body">
+
+        <div class="mb-group"><span>Base da Assinatura</span><span class="ct">2 produtos</span></div>
+        <div class="mb-plist">
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Pão Original <span class="badge base">base</span></div>
+                <div class="meta">615 g · banneton · v3 desde 28/abr</div>
+              </div>
+              <div class="status-pill pub" style="font-size:9px;padding:3px 7px"><span class="dot"></span>publicada</div>
+            </div>
+            <div class="row">
+              <span>hidratação <strong style="color:var(--warm-800);font-weight:700">70%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">400 g</strong></span>
+              <span class="pmenu-mb disabled">⋯ base</span>
+            </div>
+          </div>
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Pão Integral <span class="badge base">base</span> <span class="alert-icon">!</span></div>
+                <div class="meta">615 g · couche · v3 publicada + rascunho</div>
+              </div>
+              <div class="status-pill draft" style="font-size:9px;padding:3px 7px"><span class="dot"></span>+ rascunho</div>
+            </div>
+            <div class="row">
+              <span>hidratação <strong style="color:var(--warm-800);font-weight:700">75%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">400 g</strong></span>
+              <span class="pmenu-mb disabled">⋯ base</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-group"><span>Sempre no Cardápio</span><span class="ct">0 produtos</span></div>
+        <div class="mb-empty">Nenhum produto fixo no Cardápio. Pra fixar uma rotativa, use o menu <code>⋯</code> da receita.</div>
+
+        <div class="mb-group"><span>Rotativas</span><span class="ct">4 produtos</span></div>
+        <div class="mb-plist">
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Multigrãos</div>
+                <div class="meta">615 g · couche · v2 desde 14/abr</div>
+              </div>
+              <div class="status-pill pub" style="font-size:9px;padding:3px 7px"><span class="dot"></span>publicada</div>
+            </div>
+            <div class="row"><span>hidr. <strong style="color:var(--warm-800);font-weight:700">78%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">360 g</strong></span><span class="pmenu-mb">⋯</span></div>
+          </div>
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Focaccia Genovesa</div>
+                <div class="meta">430 g (1/6 tab.) · v4 desde 02/abr</div>
+              </div>
+              <div class="status-pill pub" style="font-size:9px;padding:3px 7px"><span class="dot"></span>publicada</div>
+            </div>
+            <div class="row"><span>hidr. <strong style="color:var(--warm-800);font-weight:700">75%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">1,2 kg</strong></span><span class="pmenu-mb">⋯</span></div>
+          </div>
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Brioche</div>
+                <div class="meta">256 g · forma · v1 desde 18/mar</div>
+              </div>
+              <div class="status-pill pub" style="font-size:9px;padding:3px 7px"><span class="dot"></span>publicada</div>
+            </div>
+            <div class="row"><span>hidr. <strong style="color:var(--warm-800);font-weight:700">50%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">500 g</strong></span><span class="pmenu-mb">⋯</span></div>
+          </div>
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Ciabatta</div>
+                <div class="meta">533 g · tabuleiro · v2 desde 09/abr</div>
+              </div>
+              <div class="status-pill pub" style="font-size:9px;padding:3px 7px"><span class="dot"></span>publicada</div>
+            </div>
+            <div class="row"><span>hidr. <strong style="color:var(--warm-800);font-weight:700">80%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">500 g</strong></span><span class="pmenu-mb">⋯</span></div>
+          </div>
+        </div>
+
+        <div class="mb-group"><span>Em teste</span><span class="ct">1 produto</span></div>
+        <div class="mb-plist">
+          <div class="mb-pc">
+            <div class="top">
+              <div>
+                <div class="nm">Pão de Azeitonas <span class="badge test">teste</span></div>
+                <div class="meta">615 g · couche · rascunho desde 02/mai</div>
+              </div>
+              <div class="status-pill test" style="font-size:9px;padding:3px 7px"><span class="dot"></span>em teste</div>
+            </div>
+            <div class="row"><span>hidr. <strong style="color:var(--warm-800);font-weight:700">72%</strong> · farinha <strong style="color:var(--warm-800);font-weight:700">400 g</strong></span><span class="pmenu-mb">⋯</span></div>
+          </div>
+        </div>
+
+        <div class="mb-group"><span>Arquivadas</span><span class="ct">0 produtos</span></div>
+        <div class="mb-empty">Nenhuma receita arquivada.</div>
+
+        <div class="wf-note" style="margin-top:18px"><strong>Mobile:</strong> mesma estrutura de 5 grupos. FAB azul fixo no canto inferior direito leva a "Criar nova receita". Bottom nav com 4 itens — Receitas dentro de "Mais" no MVP.</div>
+      </div>
+
+      <div class="mb-fab"><span class="plus">+</span>Nova receita</div>
+
+      <div class="mb-bot">
+        <a href="#"><span class="ico">cal</span>Semana</a>
+        <a href="#"><span class="ico">prod</span>Produção</a>
+        <a href="#"><span class="ico">exp</span>Expedição</a>
+        <a href="#" class="on"><span class="ico">⋯</span>Mais</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     ARQUIVOS PARTICIONADOS — restante das telas em receitas-stages.html
+     incluído via include client-side abaixo
+     ════════════════════════════════════════════════════════════════════ -->
+<div id="more-stages"></div>
+
+<script>
+  // injetar fragment de stages
+  fetch('receitas-stages.html').then(r=>r.text()).then(t=>{
+    document.getElementById('more-stages').innerHTML = t;
+    bindHistButtons();
+    // print mode: show all stages, then auto-print
+    document.querySelectorAll('.stage').forEach(s=>s.classList.add('on'));
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(()=> setTimeout(()=>window.print(), 500));
+    } else {
+      setTimeout(()=>window.print(), 800);
+    }
+  }).catch(()=>{
+    document.getElementById('more-stages').innerHTML =
+      '<div style="padding:20px;color:var(--warning-text);background:var(--warning-bg);border:1px dashed var(--warning-border);border-radius:8px;font-family:var(--font-body);font-size:13px;margin:20px 0">Não foi possível carregar receitas-stages.html. Verifique se o arquivo existe na pasta ao lado deste.</div>';
+  });
+
+  function setActive(group, val){
+    document.querySelectorAll('#tabs-'+group+' button').forEach(b=>{
+      b.classList.toggle('on', b.dataset[group==='screen'?'sc':'pl']===val);
+    });
+    showStage();
+  }
+  function showStage(){
+    const sc = document.querySelector('#tabs-screen button.on').dataset.sc;
+    const pl = document.querySelector('#tabs-platform button.on').dataset.pl;
+    document.querySelectorAll('.stage').forEach(s=>{
+      s.classList.toggle('on', s.dataset.sc===sc && s.dataset.pl===pl);
+    });
+  }
+  document.getElementById('tabs-screen').addEventListener('click', e=>{
+    if(e.target.tagName==='BUTTON') setActive('screen', e.target.dataset.sc);
+  });
+  document.getElementById('tabs-platform').addEventListener('click', e=>{
+    if(e.target.tagName==='BUTTON') setActive('platform', e.target.dataset.pl);
+  });
+
+  function bindHistButtons(){
+    document.querySelectorAll('[data-hist-toggle]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const target = el.getAttribute('data-hist-toggle');
+        document.querySelectorAll(target).forEach(t=>t.classList.toggle('on'));
+      });
+    });
+    document.querySelectorAll('[data-temp-toggle]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        el.closest('.temp-card').classList.toggle('open');
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
