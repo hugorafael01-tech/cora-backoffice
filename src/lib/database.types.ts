@@ -1,0 +1,720 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  public: {
+    Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      coverage_waitlist: {
+        Row: {
+          bairro: string | null
+          cep: string
+          cidade: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          estado: string | null
+          id: string
+          nome: string | null
+          whatsapp: string
+        }
+        Insert: {
+          bairro?: string | null
+          cep: string
+          cidade?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string | null
+          whatsapp: string
+        }
+        Update: {
+          bairro?: string | null
+          cep?: string
+          cidade?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          estado?: string | null
+          id?: string
+          nome?: string | null
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      coverage_whitelist: {
+        Row: {
+          cep: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          note: string | null
+        }
+        Insert: {
+          cep?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          cep?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
+      etapas_receita: {
+        Row: {
+          duracao_min: number | null
+          id: string
+          nome: string
+          notas: string | null
+          ordem: number
+          versao_receita_id: string
+        }
+        Insert: {
+          duracao_min?: number | null
+          id?: string
+          nome: string
+          notas?: string | null
+          ordem: number
+          versao_receita_id: string
+        }
+        Update: {
+          duracao_min?: number | null
+          id?: string
+          nome?: string
+          notas?: string | null
+          ordem?: number
+          versao_receita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etapas_receita_versao_receita_id_fkey"
+            columns: ["versao_receita_id"]
+            isOneToOne: false
+            referencedRelation: "versoes_receita"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fornecedores: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          notas: string | null
+          prazo_entrega_dias: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          notas?: string | null
+          prazo_entrega_dias?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          notas?: string | null
+          prazo_entrega_dias?: number | null
+        }
+        Relationships: []
+      }
+      ingredientes: {
+        Row: {
+          created_at: string
+          fornecedor_id: string | null
+          id: string
+          nome: string
+          notas: string | null
+          preco_por_kg: number | null
+          slug: string
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fornecedor_id?: string | null
+          id?: string
+          nome: string
+          notas?: string | null
+          preco_por_kg?: number | null
+          slug: string
+          unidade?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fornecedor_id?: string | null
+          id?: string
+          nome?: string
+          notas?: string | null
+          preco_por_kg?: number | null
+          slug?: string
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredientes_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingredientes_receita: {
+        Row: {
+          id: string
+          ingrediente_id: string
+          notas: string | null
+          ordem: number
+          percentual_baker: number
+          versao_receita_id: string
+        }
+        Insert: {
+          id?: string
+          ingrediente_id: string
+          notas?: string | null
+          ordem?: number
+          percentual_baker: number
+          versao_receita_id: string
+        }
+        Update: {
+          id?: string
+          ingrediente_id?: string
+          notas?: string | null
+          ordem?: number
+          percentual_baker?: number
+          versao_receita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredientes_receita_ingrediente_id_fkey"
+            columns: ["ingrediente_id"]
+            isOneToOne: false
+            referencedRelation: "ingredientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredientes_receita_versao_receita_id_fkey"
+            columns: ["versao_receita_id"]
+            isOneToOne: false
+            referencedRelation: "versoes_receita"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_produtos: {
+        Row: {
+          created_at: string
+          id: string
+          papel: Database["public"]["Enums"]["plan_produto_papel"]
+          plano_id: string
+          produto_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          papel: Database["public"]["Enums"]["plan_produto_papel"]
+          plano_id: string
+          produto_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          papel?: Database["public"]["Enums"]["plan_produto_papel"]
+          plano_id?: string
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_produtos_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_produtos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          preco_frete: number
+          preco_por_pao: number
+          slug: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          preco_frete: number
+          preco_por_pao: number
+          slug: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          preco_frete?: number
+          preco_por_pao?: number
+          slug?: string
+        }
+        Relationships: []
+      }
+      produtos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          formato: Database["public"]["Enums"]["produto_formato"] | null
+          id: string
+          nome: string
+          peso_alvo_g: number | null
+          preco_avulso: number | null
+          slug: string
+          tipo: Database["public"]["Enums"]["produto_tipo"]
+          unidade: Database["public"]["Enums"]["produto_unidade"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          formato?: Database["public"]["Enums"]["produto_formato"] | null
+          id?: string
+          nome: string
+          peso_alvo_g?: number | null
+          preco_avulso?: number | null
+          slug: string
+          tipo?: Database["public"]["Enums"]["produto_tipo"]
+          unidade?: Database["public"]["Enums"]["produto_unidade"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          formato?: Database["public"]["Enums"]["produto_formato"] | null
+          id?: string
+          nome?: string
+          peso_alvo_g?: number | null
+          preco_avulso?: number | null
+          slug?: string
+          tipo?: Database["public"]["Enums"]["produto_tipo"]
+          unidade?: Database["public"]["Enums"]["produto_unidade"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      receitas: {
+        Row: {
+          created_at: string
+          formato: Database["public"]["Enums"]["produto_formato"]
+          grupo_sugerido: number
+          id: string
+          produto_id: string
+          updated_at: string
+          versao_ativa_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          formato: Database["public"]["Enums"]["produto_formato"]
+          grupo_sugerido?: number
+          id?: string
+          produto_id: string
+          updated_at?: string
+          versao_ativa_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          formato?: Database["public"]["Enums"]["produto_formato"]
+          grupo_sugerido?: number
+          id?: string
+          produto_id?: string
+          updated_at?: string
+          versao_ativa_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receitas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: true
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receitas_versao_ativa_fk"
+            columns: ["versao_ativa_id"]
+            isOneToOne: false
+            referencedRelation: "versoes_receita"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          bairro: string
+          cep: string
+          cidade: string
+          complemento: string | null
+          coverage_unconfirmed: boolean
+          cpf: string
+          created_at: string
+          email: string
+          estado: string
+          id: string
+          itens: Json
+          nome: string
+          numero: string
+          rua: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          total_paes: number
+          updated_at: string
+          valor_frete: number
+          valor_mensal: number
+          valor_paes: number
+          whatsapp: string
+        }
+        Insert: {
+          bairro: string
+          cep: string
+          cidade: string
+          complemento?: string | null
+          coverage_unconfirmed?: boolean
+          cpf: string
+          created_at?: string
+          email: string
+          estado: string
+          id?: string
+          itens: Json
+          nome: string
+          numero: string
+          rua: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          total_paes: number
+          updated_at?: string
+          valor_frete: number
+          valor_mensal: number
+          valor_paes: number
+          whatsapp: string
+        }
+        Update: {
+          bairro?: string
+          cep?: string
+          cidade?: string
+          complemento?: string | null
+          coverage_unconfirmed?: boolean
+          cpf?: string
+          created_at?: string
+          email?: string
+          estado?: string
+          id?: string
+          itens?: Json
+          nome?: string
+          numero?: string
+          rua?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          total_paes?: number
+          updated_at?: string
+          valor_frete?: number
+          valor_mensal?: number
+          valor_paes?: number
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      versoes_receita: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          hidratacao_alvo: number | null
+          id: string
+          notas: string | null
+          numero_versao: number
+          perda_coccao: number | null
+          peso_massa_g: number | null
+          receita_id: string
+          status: Database["public"]["Enums"]["versao_receita_status"]
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          hidratacao_alvo?: number | null
+          id?: string
+          notas?: string | null
+          numero_versao: number
+          perda_coccao?: number | null
+          peso_massa_g?: number | null
+          receita_id: string
+          status?: Database["public"]["Enums"]["versao_receita_status"]
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          hidratacao_alvo?: number | null
+          id?: string
+          notas?: string | null
+          numero_versao?: number
+          perda_coccao?: number | null
+          peso_massa_g?: number | null
+          receita_id?: string
+          status?: Database["public"]["Enums"]["versao_receita_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "versoes_receita_receita_id_fkey"
+            columns: ["receita_id"]
+            isOneToOne: false
+            referencedRelation: "receitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      v_assinatura_itens: {
+        Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          produto_slug: string | null
+          quantidade: number | null
+          status: Database["public"]["Enums"]["subscription_status"] | null
+          subscription_id: string | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      ativar_versao_receita: {
+        Args: { p_versao_id: string }
+        Returns: undefined
+      }
+      fork_versao_receita: {
+        Args: {
+          p_status?: Database["public"]["Enums"]["versao_receita_status"]
+          p_versao_origem_id: string
+        }
+        Returns: string
+      }
+      is_admin: { Args: never; Returns: boolean }
+    }
+    Enums: {
+      plan_produto_papel: "base" | "rotativa" | "extra"
+      produto_formato: "banneton" | "couche" | "tabuleiro" | "forma"
+      produto_tipo: "fabricado" | "revenda"
+      produto_unidade: "un" | "kg"
+      subscription_status: "pending_payment" | "active" | "paused" | "cancelled"
+      versao_receita_status: "rascunho" | "teste" | "ativa" | "arquivada"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {
+      plan_produto_papel: ["base", "rotativa", "extra"],
+      produto_formato: ["banneton", "couche", "tabuleiro", "forma"],
+      produto_tipo: ["fabricado", "revenda"],
+      produto_unidade: ["un", "kg"],
+      subscription_status: ["pending_payment", "active", "paused", "cancelled"],
+      versao_receita_status: ["rascunho", "teste", "ativa", "arquivada"],
+    },
+  },
+} as const

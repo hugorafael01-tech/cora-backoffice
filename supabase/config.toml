@@ -1,0 +1,5 @@
+# Supabase CLI config for cora-backoffice.
+# Mesmo projeto Supabase do Portal (não criar projeto novo).
+# Project-ref vem do `supabase link --project-ref <ref>`.
+
+project_id = "cora-backoffice"
