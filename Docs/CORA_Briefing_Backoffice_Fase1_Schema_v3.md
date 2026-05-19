@@ -1,5 +1,17 @@
 # CORA — Briefing Técnico Backoffice Fase 1 (Schema + Sequência) — v3
 
+> **ERRATA (19/mai/2026 — pós-implementação)**
+>
+> A migration 0012 desta seção 6 mostra as funções `peso_farinha_por_pao()` e `mise_en_place_semana()` usando o divisor `/100.0` sobre `percentual_baker`. Isso assume que o valor está armazenado em pontos percentuais (85 = 85%), mas a Fase 0 (migration 0006) gravou os dados em **decimal** (0.85 = 85%). Com `/100.0`, o resultado fica 100× errado.
+>
+> **Convenção fechada:** `ingredientes_receita.percentual_baker` é decimal. Soma dos baker decimais = total relativo à farinha (farinha = 1.0). Fórmula: `peso_farinha = peso_massa / soma_baker`.
+>
+> **Caminho aplicado (a) — corrigir as funções, manter dados decimais:**
+> - `peso_farinha_por_pao()`: `RETURN v_peso_massa / v_soma_baker;` (sem dividir por 100)
+> - `mise_en_place_semana()`: `peso_farinha_por_pao(...) * ir.percentual_baker * qty` (sem dividir por 100)
+>
+> Validação pós-migration: para o Original (peso_massa=820, soma_baker=1.72), `peso_farinha_por_pao` retorna 476.7g — bate com o esperado. Sanity passa para os 6 produtos seedados.
+
 **Versão:** 3.0 (definitiva)
 **Data:** 18/mai/2026
 **Substitui:** v2 de 18/mai (refinamentos após validação dos nomes de `etapas_receita` e slugs de `produtos`)
