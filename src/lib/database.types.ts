@@ -57,6 +57,185 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          id: number
+          subscriptions_open: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          subscriptions_open?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          subscriptions_open?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      capacity_waitlist: {
+        Row: {
+          cep: string
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          whatsapp: string
+        }
+        Insert: {
+          cep: string
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          whatsapp: string
+        }
+        Update: {
+          cep?: string
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      cardapios: {
+        Row: {
+          created_at: string
+          id: string
+          preco_avulso: number
+          produto_id: string
+          semana_id: string
+          tipo: Database["public"]["Enums"]["tipo_cardapio_enum"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preco_avulso: number
+          produto_id: string
+          semana_id: string
+          tipo: Database["public"]["Enums"]["tipo_cardapio_enum"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preco_avulso?: number
+          produto_id?: string
+          semana_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_cardapio_enum"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cardapios_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cardapios_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contextos_dia: {
+        Row: {
+          created_at: string
+          dia: string
+          id: string
+          lote_farinha_principal_id: string | null
+          notas: string | null
+          semana_id: string
+          temp_ambiente_max_c: number | null
+          ultimo_refresh_levain_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dia: string
+          id?: string
+          lote_farinha_principal_id?: string | null
+          notas?: string | null
+          semana_id: string
+          temp_ambiente_max_c?: number | null
+          ultimo_refresh_levain_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dia?: string
+          id?: string
+          lote_farinha_principal_id?: string | null
+          notas?: string | null
+          semana_id?: string
+          temp_ambiente_max_c?: number | null
+          ultimo_refresh_levain_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contextos_dia_lote_farinha_principal_id_fkey"
+            columns: ["lote_farinha_principal_id"]
+            isOneToOne: false
+            referencedRelation: "lotes_insumo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contextos_dia_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contextos_producao: {
+        Row: {
+          created_at: string
+          hidratacao_ajustada_pct: number | null
+          id: string
+          notas: string | null
+          producao_id: string
+          temp_agua_autolise_c: number | null
+          temp_massa_pos_batimento_c: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hidratacao_ajustada_pct?: number | null
+          id?: string
+          notas?: string | null
+          producao_id: string
+          temp_agua_autolise_c?: number | null
+          temp_massa_pos_batimento_c?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hidratacao_ajustada_pct?: number | null
+          id?: string
+          notas?: string | null
+          producao_id?: string
+          temp_agua_autolise_c?: number | null
+          temp_massa_pos_batimento_c?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contextos_producao_producao_id_fkey"
+            columns: ["producao_id"]
+            isOneToOne: true
+            referencedRelation: "producoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coverage_waitlist: {
         Row: {
           bairro: string | null
@@ -123,6 +302,75 @@ export type Database = {
         }
         Relationships: []
       }
+      etapas_producao: {
+        Row: {
+          concluida_at: string | null
+          created_at: string
+          detalhes: Json | null
+          dobra_numero: number | null
+          etapa_receita_id: string | null
+          id: string
+          iniciada_at: string | null
+          notas: string | null
+          ordem: number
+          prevista_at: string | null
+          producao_id: string
+          status: Database["public"]["Enums"]["etapa_status_enum"]
+          temp_c: number | null
+          tipo: Database["public"]["Enums"]["etapa_tipo_enum"]
+          updated_at: string
+        }
+        Insert: {
+          concluida_at?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          dobra_numero?: number | null
+          etapa_receita_id?: string | null
+          id?: string
+          iniciada_at?: string | null
+          notas?: string | null
+          ordem: number
+          prevista_at?: string | null
+          producao_id: string
+          status?: Database["public"]["Enums"]["etapa_status_enum"]
+          temp_c?: number | null
+          tipo: Database["public"]["Enums"]["etapa_tipo_enum"]
+          updated_at?: string
+        }
+        Update: {
+          concluida_at?: string | null
+          created_at?: string
+          detalhes?: Json | null
+          dobra_numero?: number | null
+          etapa_receita_id?: string | null
+          id?: string
+          iniciada_at?: string | null
+          notas?: string | null
+          ordem?: number
+          prevista_at?: string | null
+          producao_id?: string
+          status?: Database["public"]["Enums"]["etapa_status_enum"]
+          temp_c?: number | null
+          tipo?: Database["public"]["Enums"]["etapa_tipo_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etapas_producao_etapa_receita_id_fkey"
+            columns: ["etapa_receita_id"]
+            isOneToOne: false
+            referencedRelation: "etapas_receita"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "etapas_producao_producao_id_fkey"
+            columns: ["producao_id"]
+            isOneToOne: false
+            referencedRelation: "producoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       etapas_receita: {
         Row: {
           duracao_min: number | null
@@ -130,6 +378,7 @@ export type Database = {
           nome: string
           notas: string | null
           ordem: number
+          tipo: Database["public"]["Enums"]["etapa_tipo_enum"] | null
           versao_receita_id: string
         }
         Insert: {
@@ -138,6 +387,7 @@ export type Database = {
           nome: string
           notas?: string | null
           ordem: number
+          tipo?: Database["public"]["Enums"]["etapa_tipo_enum"] | null
           versao_receita_id: string
         }
         Update: {
@@ -146,6 +396,7 @@ export type Database = {
           nome?: string
           notas?: string | null
           ordem?: number
+          tipo?: Database["public"]["Enums"]["etapa_tipo_enum"] | null
           versao_receita_id?: string
         }
         Relationships: [
@@ -190,6 +441,8 @@ export type Database = {
           nome: string
           notas: string | null
           preco_por_kg: number | null
+          quantidade_atual_g: number
+          quantidade_minima_g: number
           slug: string
           unidade: string
           updated_at: string
@@ -201,6 +454,8 @@ export type Database = {
           nome: string
           notas?: string | null
           preco_por_kg?: number | null
+          quantidade_atual_g?: number
+          quantidade_minima_g?: number
           slug: string
           unidade?: string
           updated_at?: string
@@ -212,6 +467,8 @@ export type Database = {
           nome?: string
           notas?: string | null
           preco_por_kg?: number | null
+          quantidade_atual_g?: number
+          quantidade_minima_g?: number
           slug?: string
           unidade?: string
           updated_at?: string
@@ -264,6 +521,161 @@ export type Database = {
             columns: ["versao_receita_id"]
             isOneToOne: false
             referencedRelation: "versoes_receita"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lotes_insumo: {
+        Row: {
+          created_at: string
+          data_recebimento: string
+          fornecedor_id: string | null
+          id: string
+          identificador: string
+          ingrediente_id: string
+          notas: string | null
+          quantidade_recebida_g: number
+          updated_at: string
+          validade: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_recebimento: string
+          fornecedor_id?: string | null
+          id?: string
+          identificador: string
+          ingrediente_id: string
+          notas?: string | null
+          quantidade_recebida_g: number
+          updated_at?: string
+          validade?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_recebimento?: string
+          fornecedor_id?: string | null
+          id?: string
+          identificador?: string
+          ingrediente_id?: string
+          notas?: string | null
+          quantidade_recebida_g?: number
+          updated_at?: string
+          validade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lotes_insumo_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lotes_insumo_ingrediente_id_fkey"
+            columns: ["ingrediente_id"]
+            isOneToOne: false
+            referencedRelation: "ingredientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos_pontuais: {
+        Row: {
+          composicao: Json
+          confirmado_at: string | null
+          created_at: string
+          destinatario_nome: string | null
+          destinatario_whatsapp: string | null
+          endereco_bairro: string
+          endereco_cep: string
+          endereco_cidade: string
+          endereco_complemento: string | null
+          endereco_estado: string
+          endereco_numero: string
+          endereco_rua: string
+          entregue_at: string | null
+          id: string
+          metodo_pagamento:
+            | Database["public"]["Enums"]["metodo_pagamento_enum"]
+            | null
+          motivo: string
+          observacoes: string | null
+          pagador_cpf_cnpj: string | null
+          pagador_email: string | null
+          pagador_nome: string
+          pagador_whatsapp: string | null
+          referencia_externa: string | null
+          semana_id: string
+          status: string
+          updated_at: string
+          valor_total: number | null
+        }
+        Insert: {
+          composicao?: Json
+          confirmado_at?: string | null
+          created_at?: string
+          destinatario_nome?: string | null
+          destinatario_whatsapp?: string | null
+          endereco_bairro: string
+          endereco_cep: string
+          endereco_cidade: string
+          endereco_complemento?: string | null
+          endereco_estado: string
+          endereco_numero: string
+          endereco_rua: string
+          entregue_at?: string | null
+          id?: string
+          metodo_pagamento?:
+            | Database["public"]["Enums"]["metodo_pagamento_enum"]
+            | null
+          motivo: string
+          observacoes?: string | null
+          pagador_cpf_cnpj?: string | null
+          pagador_email?: string | null
+          pagador_nome: string
+          pagador_whatsapp?: string | null
+          referencia_externa?: string | null
+          semana_id: string
+          status?: string
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Update: {
+          composicao?: Json
+          confirmado_at?: string | null
+          created_at?: string
+          destinatario_nome?: string | null
+          destinatario_whatsapp?: string | null
+          endereco_bairro?: string
+          endereco_cep?: string
+          endereco_cidade?: string
+          endereco_complemento?: string | null
+          endereco_estado?: string
+          endereco_numero?: string
+          endereco_rua?: string
+          entregue_at?: string | null
+          id?: string
+          metodo_pagamento?:
+            | Database["public"]["Enums"]["metodo_pagamento_enum"]
+            | null
+          motivo?: string
+          observacoes?: string | null
+          pagador_cpf_cnpj?: string | null
+          pagador_email?: string | null
+          pagador_nome?: string
+          pagador_whatsapp?: string | null
+          referencia_externa?: string | null
+          semana_id?: string
+          status?: string
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_pontuais_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas"
             referencedColumns: ["id"]
           },
         ]
@@ -337,6 +749,75 @@ export type Database = {
         }
         Relationships: []
       }
+      producoes: {
+        Row: {
+          concluida_at: string | null
+          created_at: string
+          id: string
+          iniciada_at: string | null
+          levain_consumido_kg: number | null
+          levain_previsto_kg: number | null
+          massa_prevista_kg: number | null
+          massa_realizada_kg: number | null
+          multiplicador: number
+          qty_paes_prevista: number | null
+          qty_paes_realizada: number | null
+          semana_id: string
+          status: Database["public"]["Enums"]["producao_status_enum"]
+          updated_at: string
+          versao_receita_id: string
+        }
+        Insert: {
+          concluida_at?: string | null
+          created_at?: string
+          id?: string
+          iniciada_at?: string | null
+          levain_consumido_kg?: number | null
+          levain_previsto_kg?: number | null
+          massa_prevista_kg?: number | null
+          massa_realizada_kg?: number | null
+          multiplicador?: number
+          qty_paes_prevista?: number | null
+          qty_paes_realizada?: number | null
+          semana_id: string
+          status?: Database["public"]["Enums"]["producao_status_enum"]
+          updated_at?: string
+          versao_receita_id: string
+        }
+        Update: {
+          concluida_at?: string | null
+          created_at?: string
+          id?: string
+          iniciada_at?: string | null
+          levain_consumido_kg?: number | null
+          levain_previsto_kg?: number | null
+          massa_prevista_kg?: number | null
+          massa_realizada_kg?: number | null
+          multiplicador?: number
+          qty_paes_prevista?: number | null
+          qty_paes_realizada?: number | null
+          semana_id?: string
+          status?: Database["public"]["Enums"]["producao_status_enum"]
+          updated_at?: string
+          versao_receita_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producoes_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producoes_versao_receita_id_fkey"
+            columns: ["versao_receita_id"]
+            isOneToOne: false
+            referencedRelation: "versoes_receita"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           ativo: boolean
@@ -348,6 +829,9 @@ export type Database = {
           preco_avulso: number | null
           slug: string
           tipo: Database["public"]["Enums"]["produto_tipo"]
+          tipo_cardapio:
+            | Database["public"]["Enums"]["tipo_cardapio_enum"]
+            | null
           unidade: Database["public"]["Enums"]["produto_unidade"]
           updated_at: string
         }
@@ -361,6 +845,9 @@ export type Database = {
           preco_avulso?: number | null
           slug: string
           tipo?: Database["public"]["Enums"]["produto_tipo"]
+          tipo_cardapio?:
+            | Database["public"]["Enums"]["tipo_cardapio_enum"]
+            | null
           unidade?: Database["public"]["Enums"]["produto_unidade"]
           updated_at?: string
         }
@@ -374,6 +861,9 @@ export type Database = {
           preco_avulso?: number | null
           slug?: string
           tipo?: Database["public"]["Enums"]["produto_tipo"]
+          tipo_cardapio?:
+            | Database["public"]["Enums"]["tipo_cardapio_enum"]
+            | null
           unidade?: Database["public"]["Enums"]["produto_unidade"]
           updated_at?: string
         }
@@ -423,6 +913,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      semanas: {
+        Row: {
+          ano: number
+          created_at: string
+          data_corte: string
+          data_entrega: string
+          data_fim: string
+          data_inicio: string
+          id: string
+          numero: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          data_corte: string
+          data_entrega: string
+          data_fim: string
+          data_inicio: string
+          id?: string
+          numero: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          data_corte?: string
+          data_entrega?: string
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          numero?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -543,8 +1072,79 @@ export type Database = {
           },
         ]
       }
+      weekly_orders: {
+        Row: {
+          abandonment_warning_sent_at: string | null
+          composition: Json | null
+          confirmed_at: string | null
+          created_at: string
+          delivery_date: string
+          extras: Json
+          first_extra_added_at: string | null
+          id: string
+          status: Database["public"]["Enums"]["weekly_order_status"]
+          subscription_id: string
+          total_extras: number
+          updated_at: string
+        }
+        Insert: {
+          abandonment_warning_sent_at?: string | null
+          composition?: Json | null
+          confirmed_at?: string | null
+          created_at?: string
+          delivery_date: string
+          extras?: Json
+          first_extra_added_at?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["weekly_order_status"]
+          subscription_id: string
+          total_extras?: number
+          updated_at?: string
+        }
+        Update: {
+          abandonment_warning_sent_at?: string | null
+          composition?: Json | null
+          confirmed_at?: string | null
+          created_at?: string
+          delivery_date?: string
+          extras?: Json
+          first_extra_added_at?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["weekly_order_status"]
+          subscription_id?: string
+          total_extras?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_orders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_orders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "v_assinatura_itens"
+            referencedColumns: ["subscription_id"]
+          },
+        ]
+      }
     }
     Views: {
+      planejamento_semana: {
+        Row: {
+          qty_pontual: number | null
+          qty_recorrente_base: number | null
+          qty_recorrente_extra: number | null
+          qty_total: number | null
+          semana_id: string | null
+          slug: string | null
+        }
+        Relationships: []
+      }
       v_assinatura_itens: {
         Row: {
           bairro: string | null
@@ -571,14 +1171,48 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: never; Returns: boolean }
+      mise_en_place_semana: {
+        Args: { p_semana_id: string }
+        Returns: {
+          ingrediente_id: string
+          ingrediente_nome: string
+          produto_id: string
+          produto_nome: string
+          qty_g: number
+        }[]
+      }
+      peso_farinha_por_pao: { Args: { p_versao_id: string }; Returns: number }
+      popular_cardapio_padrao: {
+        Args: { p_semana_id: string }
+        Returns: undefined
+      }
+      popular_etapas_producao: {
+        Args: { p_producao_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
+      etapa_status_enum: "aguardando" | "em_curso" | "concluida" | "pulada"
+      etapa_tipo_enum:
+        | "autolise_mistura"
+        | "batimento"
+        | "falsa_dobra"
+        | "dobra"
+        | "pre_shape"
+        | "shape"
+        | "descanso"
+        | "fermentacao_final"
+        | "coccao"
+      metodo_pagamento_enum: "pix" | "transferencia" | "boleto" | "asaas"
       plan_produto_papel: "base" | "rotativa" | "extra"
+      producao_status_enum: "planejada" | "em_curso" | "concluida" | "cancelada"
       produto_formato: "banneton" | "couche" | "tabuleiro" | "forma"
       produto_tipo: "fabricado" | "revenda"
       produto_unidade: "un" | "kg"
       subscription_status: "pending_payment" | "active" | "paused" | "cancelled"
+      tipo_cardapio_enum: "base" | "fixo" | "rotativo"
       versao_receita_status: "rascunho" | "teste" | "ativa" | "arquivada"
+      weekly_order_status: "rascunho" | "confirmado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -709,12 +1343,28 @@ export const Constants = {
   },
   public: {
     Enums: {
+      etapa_status_enum: ["aguardando", "em_curso", "concluida", "pulada"],
+      etapa_tipo_enum: [
+        "autolise_mistura",
+        "batimento",
+        "falsa_dobra",
+        "dobra",
+        "pre_shape",
+        "shape",
+        "descanso",
+        "fermentacao_final",
+        "coccao",
+      ],
+      metodo_pagamento_enum: ["pix", "transferencia", "boleto", "asaas"],
       plan_produto_papel: ["base", "rotativa", "extra"],
+      producao_status_enum: ["planejada", "em_curso", "concluida", "cancelada"],
       produto_formato: ["banneton", "couche", "tabuleiro", "forma"],
       produto_tipo: ["fabricado", "revenda"],
       produto_unidade: ["un", "kg"],
       subscription_status: ["pending_payment", "active", "paused", "cancelled"],
+      tipo_cardapio_enum: ["base", "fixo", "rotativo"],
       versao_receita_status: ["rascunho", "teste", "ativa", "arquivada"],
+      weekly_order_status: ["rascunho", "confirmado"],
     },
   },
 } as const
