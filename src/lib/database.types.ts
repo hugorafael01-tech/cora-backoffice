@@ -75,6 +75,36 @@ export type Database = {
         }
         Relationships: []
       }
+      bairros_atendidos: {
+        Row: {
+          ativo: boolean
+          bairro: string
+          cidade: string
+          created_at: string
+          id: string
+          notas: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          bairro: string
+          cidade: string
+          created_at?: string
+          id?: string
+          notas?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          bairro?: string
+          cidade?: string
+          created_at?: string
+          id?: string
+          notas?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       capacity_waitlist: {
         Row: {
           cep: string
@@ -966,6 +996,8 @@ export type Database = {
           estado: string
           id: string
           itens: Json
+          next_billing_change_date: string | null
+          next_billing_value: number | null
           nome: string
           numero: string
           rua: string
@@ -989,6 +1021,8 @@ export type Database = {
           estado: string
           id?: string
           itens: Json
+          next_billing_change_date?: string | null
+          next_billing_value?: number | null
           nome: string
           numero: string
           rua: string
@@ -1012,6 +1046,8 @@ export type Database = {
           estado?: string
           id?: string
           itens?: Json
+          next_billing_change_date?: string | null
+          next_billing_value?: number | null
           nome?: string
           numero?: string
           rua?: string

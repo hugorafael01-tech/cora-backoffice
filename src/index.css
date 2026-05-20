@@ -1,24 +1,76 @@
 @import "tailwindcss";
 
-/* Cora Design System v1 — tokens convertidos pro @theme do Tailwind v4 */
+/* ============================================================
+   Cora Design System v1 / wireframes Semana v5
+   Tokens expostos como utilities do Tailwind v4 via @theme.
+   ============================================================ */
 @theme {
-  --color-brand-50: #EEF2FF;
-  --color-brand-100: #DEE6FE;
-  --color-brand-200: #BDCAFD;
+  /* Brand (azul Cora) */
+  --color-brand-50:  #EBEEFB;
+  --color-brand-100: #C4CDF4;
+  --color-brand-200: #8B9BE6;
+  --color-brand-400: #5670D8;
   --color-brand-500: #2E55CD;
-  --color-brand-600: #2548A8;
-  --color-brand-700: #1D3A85;
+  --color-brand-600: #2545A8;
+  --color-brand-700: #1D3787;
+  --color-brand-800: #172E6E;
+  --color-brand-900: #0F1E49;
 
-  --color-warm-50: #FAF8F5;
-  --color-warm-100: #F2EEE7;
-  --color-warm-200: #E5DFD3;
-  --color-warm-600: #3D3934;
-  --color-warm-700: #2A2723;
+  /* Warm (neutros quentes) */
+  --color-warm-50:  #FAFAF8;
+  --color-warm-100: #F5F4F0;
+  --color-warm-200: #E8E6E1;
+  --color-warm-300: #D4D1CA;
+  --color-warm-400: #A8A49C;
+  --color-warm-500: #7A766E;
+  --color-warm-600: #5C5850;
+  --color-warm-700: #3D3A34;
+  --color-warm-800: #2A2723;
 
-  --font-heading: "League Gothic", sans-serif;
-  --font-body: "Montagu Slab", serif;
+  /* Ink (texto forte) */
+  --color-ink-500: #1A2543;
+  --color-ink-700: #0B1532;
+  --color-ink-900: #050A1C;
+
+  /* Sand (acento neutro) */
+  --color-sand-50:  #F6F3EA;
+  --color-sand-200: #E2D9C0;
+  --color-sand-500: #BFB48F;
+  --color-sand-700: #8C8261;
+
+  /* Pink (acento) */
+  --color-pink-50:  #FFE6E9;
+  --color-pink-200: #FFB3BB;
+  --color-pink-500: #FF5362;
+  --color-pink-700: #C7303E;
+
+  /* Semantic */
+  --color-success-bg:     #D1FAE5;
+  --color-success-border: #6EE7B7;
+  --color-success-text:   #065F46;
+  --color-warning-bg:     #FEF3C7;
+  --color-warning-border: #FCD34D;
+  --color-warning-text:   #92400E;
+  --color-danger-bg:      #FEE2E2;
+  --color-danger-border:  #FCA5A5;
+  --color-danger-text:    #991B1B;
+  --color-info-bg:        #DBEAFE;
+  --color-info-border:    #93C5FD;
+  --color-info-text:      #1E40AF;
+
+  /* Tipografia */
+  --font-display: "League Gothic", Impact, "Arial Narrow", sans-serif;
+  --font-body: "Montagu Slab", Georgia, Palatino, serif;
+  --font-heading: "League Gothic", Impact, "Arial Narrow", sans-serif;
+
+  /* Raio */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
 }
 
 body {
-  @apply bg-warm-50 text-warm-600 font-body;
+  @apply bg-warm-50 text-warm-700 font-body;
 }

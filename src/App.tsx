@@ -1,8 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { AuthCallback } from './pages/AuthCallback';
-import { Home } from './pages/Home';
 import { RequireAuth } from './components/RequireAuth';
+import { SemanaAtualRedirect } from './pages/Semana/SemanaAtualRedirect';
+import { SemanaDetalhe } from './pages/Semana/SemanaDetalhe';
+import { SemanaCardapio } from './pages/Semana/SemanaCardapio';
 
 export default function App() {
   return (
@@ -10,11 +12,32 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/" element={
-          <RequireAuth>
-            <Home />
-          </RequireAuth>
-        } />
+        <Route path="/" element={<Navigate to="/semanas/atual" replace />} />
+        <Route path="/semanas" element={<Navigate to="/semanas/atual" replace />} />
+        <Route
+          path="/semanas/atual"
+          element={
+            <RequireAuth>
+              <SemanaAtualRedirect />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/semanas/:id"
+          element={
+            <RequireAuth>
+              <SemanaDetalhe />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/semanas/:id/cardapio"
+          element={
+            <RequireAuth>
+              <SemanaCardapio />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
