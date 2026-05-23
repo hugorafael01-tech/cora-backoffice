@@ -2,14 +2,14 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 20 de maio de 2026.
+**Última atualização:** 23 de maio de 2026.
 
 ---
 
 ## Estado do repositório
 
 - **Repositório:** `github.com/hugorafael01-tech/cora-backoffice`
-- **Branch principal:** `main` (commit `cf2ed9c`)
+- **Branch principal:** `main` (commit `8d7fb2b`)
 - **Subdomain:** `admin.acora.com.br`
 - **Stack:** Vite + React + TypeScript + Tailwind + Supabase Auth (magic link) + Vercel Functions
 - **Banco:** Supabase Postgres — **mesmo projeto** compartilhado com Portal (sem staging isolado)
@@ -37,23 +37,17 @@
 
 | Migration | Status remoto | Branch que aplicou | Observação |
 |---|---|---|---|
-| 0001 - 0013 | ✅ aplicada | `main` | Fase 1 Etapa 0 |
-| 0014 | ✅ aplicada | `main` (`fd57556`) | subscription_change_tracking |
-| 0015_bairros_atendidos | ✅ aplicada em PROD | **`fase-1-semana` (unmerged)** | Aplicada via db push direto da branch antes do merge. Arquivo SQL não existe em main. |
-| 0016_janelas_entrega | ✅ aplicada em PROD | **`feat/janelas-entrega` (unmerged, pushada)** | Desacopla data_entrega/cutoff de semanas. V1-V8 validados. |
-
-**Importante:** o remoto está à frente do `main`. Toda branch nova baseada em `main` que rodar `supabase db push` vai dar gap (CLI aborta silenciosamente). Mitigação: trazer 0015 e 0016 via `git checkout fase-1-semana -- supabase/migrations/0015_*.sql` e `git checkout feat/janelas-entrega -- supabase/migrations/0016_*.sql` antes de aplicar nova migration.
-
-A divergência se resolve quando as duas branches mergearem no main.
+| 0001 - 0013 | aplicada | `main` | Fase 1 Etapa 0 |
+| 0014 | aplicada | `main` (`fd57556`) | subscription_change_tracking |
+| 0015_bairros_atendidos | aplicada | `main` (`f66cc9a`, PR #2) | tabela bairros_atendidos |
+| 0016_janelas_entrega | aplicada | `main` (`42b389b`, PR #3) | desacopla data_entrega/cutoff de semanas |
+| 0017_subscriptions_user_id | aplicada | `main` (`e52519e`, PR #4) | FK que habilita integração com Supabase Auth no Portal (Frente A do briefing CORA_Briefing_Auth_MagicLink_SMS_Ready) |
 
 ---
 
 ## Branches em voo
 
-- **`fase-1-semana`** — Etapa 1 (UI Semana). Já tem 0015_bairros_atendidos aplicada em PROD. Aguardando finalização da UI antes do merge.
-- **`feat/janelas-entrega`** — pushada (`origin/feat/janelas-entrega`, commit `1438ae5`), pendente PR. Tem 0016_janelas_entrega aplicada em PROD. Aguardando merge de `fase-1-semana` no main pra rebasar e abrir PR.
-
-**Ordem ideal de merge:** fase-1-semana → main, rebasar feat/janelas-entrega, feat/janelas-entrega → main. Resultado: histórico de migration `0014, 0015, 0016` sequencial em main.
+Nenhum branch em voo no momento. Trabalhos do dia 23/05/2026 (PRs #2-#5) consolidados em main.
 
 ---
 
@@ -68,7 +62,7 @@ A divergência se resolve quando as duas branches mergearem no main.
 **Sequência padrão:**
 
 ```bash
-cd ~/Desktop/cora-backoffice
+cd ~/Developer/cora-backoffice
 git checkout -b feat/nome-da-mudanca
 # criar supabase/migrations/00XX_nome.sql
 supabase migration list   # ver o que vai aplicar
@@ -80,7 +74,7 @@ git push -u origin feat/nome-da-mudanca
 
 **Gotchas:**
 - Supabase SQL Editor só mostra o output do último SELECT quando você cola múltiplas queries. Rode uma por vez pra ver tudo.
-- Se `db push` silencia e não pede confirmação, há gap entre local e remoto. Trazer migrations faltantes via `git checkout` da branch correspondente.
+- Se `db push` silencia e não pede confirmação, há gap entre local e remoto.
 - `CHECK` constraint com subquery falha em Postgres. Use `BEFORE INSERT OR UPDATE` trigger.
 - Funções/triggers reutilizáveis já existem: `set_updated_at()`, `is_admin()`. Validar nome no DDL antes de assumir.
 
@@ -95,9 +89,8 @@ git push -u origin feat/nome-da-mudanca
 
 ### Tech debt registrada
 
-- Gap de migrations no main (0015, 0016 só em branches) — resolve com merge sequencial
 - `subscriptions.janela_padrao_id` não criado ainda — entra quando entrega regular for materializada em rows (provavelmente acompanhando UI Pedidos)
-- Drop de `semanas.data_entrega` e `semanas.data_corte` (deprecated) — migration separada quando todos os consumidores migrarem (UI Semana, UI Produção, UI Pedidos, Portal)
+- Drop de `semanas.data_entrega` e `semanas.data_corte` (deprecated) — migration separada quando todos os consumidores migrarem (UI Semana, UI Produção, UI Pedidos, Portal). Módulo Semana UI já está em main; auditoria de uso dessas colunas no módulo é pré-requisito do drop.
 
 ---
 
