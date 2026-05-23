@@ -164,6 +164,9 @@ Tudo abaixo foi validado contra o Supabase em produção (project ref `kjzuvmhed
 | 0011 | `0011_pedidos_pontuais.sql` | Tabela `pedidos_pontuais` + enum `metodo_pagamento_enum`. |
 | 0012 | `0012_producao.sql` | Tabelas `producoes`, `contextos_dia`, `contextos_producao`, `etapas_producao` + enums + ALTER em `etapas_receita` + funções. |
 | 0013 | `0013_view_planejamento_semana.sql` | View agregadora. |
+| 0016 | `0016_janelas_entrega.sql` | Tabela `janelas_entrega` + enum `janela_status_enum` + triggers (validação de range, auto-criação por semana) + backfill + DEPRECATED em `semanas.data_entrega`/`data_corte`. |
+
+> Nota: `0014` (change tracking de assinatura) e `0015` (bairros atendidos) existem no repositório mas vivem na branch `fase-1-semana`; entram neste overview quando aquela branch for mergeada. O `0016` foi tirado de `main` e numerado acima do `0015` pra não colidir.
 
 ### 0007 — Policies admin em tabelas do Portal
 
@@ -353,6 +356,7 @@ $$ LANGUAGE plpgsql;
 - Snapshot de preço (`cardapios.preco_avulso`) protege contra reajustes retroativos.
 - Função é chamada explicitamente — sem trigger silencioso.
 - Status `rascunho` → semana criada mas não aberta. `aberta` → operando (assinantes podem editar weekly_orders). `congelada` → pós-corte de terça. `concluida` → pós-entrega de quinta.
+- ⚠ **`data_entrega` e `data_corte` estão DEPRECATED desde 0016** (maio/2026). A fonte canônica de data/cutoff passou a ser `janelas_entrega` (1 janela por semana no MVP). Campos mantidos por compatibilidade (Portal ainda lê `data_entrega`); drop vira migration separada. Ver §0016.
 
 ### 0011 — Pedidos pontuais
 
@@ -765,6 +769,56 @@ GROUP BY semana_id, slug;
 - View read-only. Se ficar lenta com volume, vira `MATERIALIZED VIEW` com refresh manual (não fazer agora).
 - Considerar índice `weekly_orders(delivery_date, status)` se perf degradar.
 - Quebra qty por origem (base/extra/pontual) — útil pra debug e pro Estado A do wireframe de Semana mostrar "45 base + 2 pontuais = 47 Original".
+
+### 0016 — Janelas de entrega
+
+Desacopla `data_entrega` e o cutoff de `semanas`, introduzindo a entidade **janela de entrega**. No MVP segue 1 janela por semana (mesma data e cutoff que a semana tinha); o schema fica preparado pra N janelas/semana **sem nova migration** (Rio quinta / Niterói sexta, capacidade dividida). Comportamento visível: nenhum — Portal e Backoffice continuam lendo `semanas.data_entrega` (agora DEPRECATED). Briefing completo: `Docs/CORA_Briefing_Backoffice_Janelas_Entrega.md`.
+
+```sql
+CREATE TYPE janela_status_enum AS ENUM (
+  'planejamento', 'congelada', 'em_expedicao', 'concluida', 'cancelada'
+);
+
+CREATE TABLE janelas_entrega (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  semana_id       uuid NOT NULL REFERENCES semanas(id) ON DELETE CASCADE,
+  data_entrega    date NOT NULL,
+  cutoff_at       timestamptz NOT NULL,        -- backfill copiou de semanas.data_corte
+  label           text NOT NULL DEFAULT 'Padrão',
+  regiao          text,                        -- 'niteroi' | 'rio' | NULL (reservado)
+  capacidade_alvo integer,                     -- meta de pedidos (reservado)
+  status          janela_status_enum NOT NULL DEFAULT 'planejamento',
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now()
+);
+-- índices: idx_janelas_entrega_semana / _data_entrega / _status
+-- RLS:     admin_all_janelas_entrega (is_admin()) — igual às demais tabelas operacionais
+-- trigger: trg_janelas_entrega_updated_at -> set_updated_at()
+
+-- pedidos_pontuais ganha a FK pra janela:
+ALTER TABLE pedidos_pontuais
+  ADD COLUMN janela_entrega_id uuid REFERENCES janelas_entrega(id) ON DELETE RESTRICT;
+-- backfill (0 pedidos hoje) -> ALTER COLUMN janela_entrega_id SET NOT NULL
+```
+
+**Triggers:**
+- `trg_valida_janela_dentro_semana` (`BEFORE INSERT OR UPDATE`): rejeita `data_entrega` fora de `[semanas.data_inicio, semanas.data_fim]`. Substitui o CHECK com subquery do briefing (Postgres não aceita subquery em CHECK).
+- `trg_cria_janela_padrao` (`AFTER INSERT ON semanas`): toda nova semana nasce com 1 janela `'Padrão'` automaticamente, preservando o fluxo atual.
+
+**Regras e notas:**
+- **1 janela por semana no MVP.** Janelas adicionais viram `INSERT` de linha, não migration.
+- Backfill criou 1 janela por semana existente, copiando `data_entrega`/`data_corte` e mapeando o status textual da semana → enum da janela (`rascunho`/`aberta` → `planejamento`, `congelada` → `congelada`, `concluida` → `concluida`).
+- Dos 4 consumidores de `semanas` (`cardapios`, `pedidos_pontuais`, `producoes`, `contextos_dia`), só `pedidos_pontuais` ganha FK pra janela nesta migration; os demais seguem ligados à semana.
+- **Efeito colateral:** criar semana com `data_entrega` fora do próprio range passa a falhar (a auto-criação da janela dispara a validação em cascata). Comportamento desejado (consistência).
+- `pedidos_pontuais.janela_entrega_id` é `NOT NULL` — qualquer caminho de insert futuro (UI Pedidos) precisa preencher a janela.
+- Validado contra prod (`kjzuvmhedicxbuynfqev`) em 20/mai/2026: 2 semanas → 2 janelas, 0 pedidos órfãos, ambos triggers comprovados.
+
+**Campos DEPRECATED em `semanas` (não dropados):**
+- `semanas.data_entrega` e `semanas.data_corte` ganharam `COMMENT ... DEPRECATED`. Fonte canônica passou a ser `janelas_entrega`. Mantidos enquanto o Portal (em produção) ainda lê `data_entrega`. Drop = migration separada (`0XYZ_drop_semanas_delivery_legacy.sql`) quando UI Semana/Produção/Pedidos e Portal lerem todos da janela.
+
+**Decisões registradas pro futuro:**
+- `subscriptions` **não** ganha `janela_padrao_id` agora — vem quando o ciclo da assinatura for materializado em pedidos semanais.
+- `regiao`/`capacidade_alvo` ficam nullable até Niterói/Rio virarem janelas separadas ou a capacidade ser dividida.
 
 ---
 
