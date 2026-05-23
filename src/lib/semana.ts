@@ -1,0 +1,92 @@
+import type { Database } from './database.types';
+import { dataSpStr, formataHa } from './date';
+
+type Semana = Database['public']['Tables']['semanas']['Row'];
+
+export type EstadoSemana = 'rascunho' | 'A' | 'B' | 'C';
+
+/**
+ * Deriva o estado de exibicao a partir da semana e do "agora".
+ *
+ * - status='rascunho' -> 'rascunho' (banner amarelo, render como A)
+ * - status='concluida' -> 'C' (retrospectivo)
+ * - status in ('aberta','congelada'):
+ *     agora < data_corte -> 'A' (previsao com ~)
+ *     data_corte <= agora <= fim do dia de data_entrega -> 'B' (definitivo)
+ *     agora > data_entrega -> 'C' (delta realizado)
+ *
+ * Timezone: A/B usa o instante exato de data_corte (timestamptz);
+ * B/C compara a data calendario em America/Sao_Paulo contra data_entrega.
+ */
+export function derivaEstado(semana: Semana, agora: Date = new Date()): EstadoSemana {
+  if (semana.status === 'rascunho') return 'rascunho';
+  if (semana.status === 'concluida') return 'C';
+
+  const corte = new Date(semana.data_corte);
+  if (agora < corte) return 'A';
+
+  // Pos-corte: ainda 'B' enquanto a data de hoje (SP) nao passar a entrega.
+  if (dataSpStr(agora) <= semana.data_entrega) return 'B';
+  return 'C';
+}
+
+export interface EtapaAgora {
+  label: string;
+  ha: string | null;
+  tom: 'brand' | 'warm' | 'mute';
+}
+
+interface EtapaProducaoLite {
+  iniciada_at: string | null;
+  concluida_at: string | null;
+  ordem: number;
+  dobra_numero: number | null;
+  // nome vem do join com etapas_receita (etapas_producao nao tem coluna nome)
+  etapas_receita: { nome: string } | null;
+}
+
+export interface ProducaoComEtapas {
+  status: string;
+  etapas_producao: EtapaProducaoLite[];
+}
+
+const DUAS_HORAS_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Etapa "agora" de uma producao da semana (coluna do Estado B).
+ *
+ * - etapa com iniciada_at, sem concluida_at, iniciada_at > now - 2h -> mostra
+ *   o nome (de etapas_receita), com "ha X min".
+ * - producao 'em_curso' sem etapa recente -> 'em producao' (generico).
+ * - sem producao ou nao em_curso -> 'aguardando'.
+ *
+ * Ate a Etapa 2 popular etapas_producao, sempre retorna 'aguardando'.
+ */
+export function etapaAgora(
+  producao: ProducaoComEtapas | null | undefined,
+  agora: Date = new Date()
+): EtapaAgora {
+  if (!producao) return { label: 'aguardando', ha: null, tom: 'mute' };
+  if (producao.status !== 'em_curso') return { label: 'aguardando', ha: null, tom: 'mute' };
+
+  const recente = producao.etapas_producao
+    .filter((e) => e.concluida_at == null && e.iniciada_at != null)
+    .filter((e) => agora.getTime() - new Date(e.iniciada_at as string).getTime() < DUAS_HORAS_MS)
+    .sort((a, b) => (b.iniciada_at as string).localeCompare(a.iniciada_at as string))[0];
+
+  if (recente) {
+    const minutos = Math.floor(
+      (agora.getTime() - new Date(recente.iniciada_at as string).getTime()) / 60000
+    );
+    const base = recente.etapas_receita?.nome ?? 'etapa';
+    const label = recente.dobra_numero != null ? `${base} ${recente.dobra_numero}` : base;
+    return { label, ha: formataHa(minutos), tom: 'brand' };
+  }
+
+  return { label: 'em produção', ha: null, tom: 'warm' };
+}
+
+/** Mapeia grupo_sugerido (smallint 1-3) -> rotulo "G1"/"G2"/"G3". */
+export function grupoLabel(grupo: number | null | undefined): string {
+  return grupo ? `G${grupo}` : '-';
+}

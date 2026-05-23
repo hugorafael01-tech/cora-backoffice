@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest run",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/database.types.ts",
     "db:reset": "echo 'NÃO RODAR — base é compartilhada com Portal' && exit 1"
@@ -15,6 +16,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
     "clsx": "^2.1.1",
+    "date-fns": "^4.2.1",
+    "date-fns-tz": "^3.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0"
@@ -37,6 +40,7 @@
     "tailwindcss": "^4.3.0",
     "typescript": "6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "vitest": "^4.1.7"
   }
 }
