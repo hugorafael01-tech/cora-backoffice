@@ -75,6 +75,63 @@ export type Database = {
         }
         Relationships: []
       }
+      asaas_webhook_events: {
+        Row: {
+          asaas_customer_id: string | null
+          asaas_event_id: string
+          asaas_payment_id: string | null
+          event_type: string
+          external_reference: string | null
+          id: string
+          payload: Json
+          payment_status: string | null
+          processed_at: string | null
+          received_at: string
+          subscription_id: string | null
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          asaas_event_id: string
+          asaas_payment_id?: string | null
+          event_type: string
+          external_reference?: string | null
+          id?: string
+          payload: Json
+          payment_status?: string | null
+          processed_at?: string | null
+          received_at?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          asaas_event_id?: string
+          asaas_payment_id?: string | null
+          event_type?: string
+          external_reference?: string | null
+          id?: string
+          payload?: Json
+          payment_status?: string | null
+          processed_at?: string | null
+          received_at?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asaas_webhook_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asaas_webhook_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "v_assinatura_itens"
+            referencedColumns: ["subscription_id"]
+          },
+        ]
+      }
       bairros_atendidos: {
         Row: {
           ativo: boolean
@@ -555,6 +612,53 @@ export type Database = {
           },
         ]
       }
+      janelas_entrega: {
+        Row: {
+          capacidade_alvo: number | null
+          created_at: string
+          cutoff_at: string
+          data_entrega: string
+          id: string
+          label: string
+          regiao: string | null
+          semana_id: string
+          status: Database["public"]["Enums"]["janela_status_enum"]
+          updated_at: string
+        }
+        Insert: {
+          capacidade_alvo?: number | null
+          created_at?: string
+          cutoff_at: string
+          data_entrega: string
+          id?: string
+          label?: string
+          regiao?: string | null
+          semana_id: string
+          status?: Database["public"]["Enums"]["janela_status_enum"]
+          updated_at?: string
+        }
+        Update: {
+          capacidade_alvo?: number | null
+          created_at?: string
+          cutoff_at?: string
+          data_entrega?: string
+          id?: string
+          label?: string
+          regiao?: string | null
+          semana_id?: string
+          status?: Database["public"]["Enums"]["janela_status_enum"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "janelas_entrega_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lotes_insumo: {
         Row: {
           created_at: string
@@ -625,6 +729,7 @@ export type Database = {
           endereco_rua: string
           entregue_at: string | null
           id: string
+          janela_entrega_id: string
           metodo_pagamento:
             | Database["public"]["Enums"]["metodo_pagamento_enum"]
             | null
@@ -655,6 +760,7 @@ export type Database = {
           endereco_rua: string
           entregue_at?: string | null
           id?: string
+          janela_entrega_id: string
           metodo_pagamento?:
             | Database["public"]["Enums"]["metodo_pagamento_enum"]
             | null
@@ -685,6 +791,7 @@ export type Database = {
           endereco_rua?: string
           entregue_at?: string | null
           id?: string
+          janela_entrega_id?: string
           metodo_pagamento?:
             | Database["public"]["Enums"]["metodo_pagamento_enum"]
             | null
@@ -701,6 +808,13 @@ export type Database = {
           valor_total?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pedidos_pontuais_janela_entrega_id_fkey"
+            columns: ["janela_entrega_id"]
+            isOneToOne: false
+            referencedRelation: "janelas_entrega"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pedidos_pontuais_semana_id_fkey"
             columns: ["semana_id"]
@@ -899,6 +1013,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          cpf: string
+          created_at: string
+          nome: string
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          cpf: string
+          created_at?: string
+          nome: string
+          updated_at?: string
+          user_id: string
+          whatsapp: string
+        }
+        Update: {
+          cpf?: string
+          created_at?: string
+          nome?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       receitas: {
         Row: {
           created_at: string
@@ -985,7 +1126,11 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          activated_at: string | null
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
           bairro: string
+          cancelled_at: string | null
           cep: string
           cidade: string
           complemento: string | null
@@ -996,21 +1141,36 @@ export type Database = {
           estado: string
           id: string
           itens: Json
+          last_payment_at: string | null
+          last_payment_event: string | null
           next_billing_change_date: string | null
           next_billing_value: number | null
           nome: string
           numero: string
+          paused_at: string | null
+          payment_status:
+            | Database["public"]["Enums"]["payment_status_enum"]
+            | null
+          qty_integral: number | null
+          qty_original: number | null
+          qty_total: number | null
           rua: string
           status: Database["public"]["Enums"]["subscription_status"]
           total_paes: number
           updated_at: string
+          user_id: string | null
           valor_frete: number
           valor_mensal: number
           valor_paes: number
           whatsapp: string
+          zona_entrega: string | null
         }
         Insert: {
+          activated_at?: string | null
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           bairro: string
+          cancelled_at?: string | null
           cep: string
           cidade: string
           complemento?: string | null
@@ -1021,21 +1181,36 @@ export type Database = {
           estado: string
           id?: string
           itens: Json
+          last_payment_at?: string | null
+          last_payment_event?: string | null
           next_billing_change_date?: string | null
           next_billing_value?: number | null
           nome: string
           numero: string
+          paused_at?: string | null
+          payment_status?:
+            | Database["public"]["Enums"]["payment_status_enum"]
+            | null
+          qty_integral?: number | null
+          qty_original?: number | null
+          qty_total?: number | null
           rua: string
           status?: Database["public"]["Enums"]["subscription_status"]
           total_paes: number
           updated_at?: string
+          user_id?: string | null
           valor_frete: number
           valor_mensal: number
           valor_paes: number
           whatsapp: string
+          zona_entrega?: string | null
         }
         Update: {
+          activated_at?: string | null
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           bairro?: string
+          cancelled_at?: string | null
           cep?: string
           cidade?: string
           complemento?: string | null
@@ -1046,18 +1221,29 @@ export type Database = {
           estado?: string
           id?: string
           itens?: Json
+          last_payment_at?: string | null
+          last_payment_event?: string | null
           next_billing_change_date?: string | null
           next_billing_value?: number | null
           nome?: string
           numero?: string
+          paused_at?: string | null
+          payment_status?:
+            | Database["public"]["Enums"]["payment_status_enum"]
+            | null
+          qty_integral?: number | null
+          qty_original?: number | null
+          qty_total?: number | null
           rua?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           total_paes?: number
           updated_at?: string
+          user_id?: string | null
           valor_frete?: number
           valor_mensal?: number
           valor_paes?: number
           whatsapp?: string
+          zona_entrega?: string | null
         }
         Relationships: []
       }
@@ -1239,7 +1425,14 @@ export type Database = {
         | "descanso"
         | "fermentacao_final"
         | "coccao"
+      janela_status_enum:
+        | "planejamento"
+        | "congelada"
+        | "em_expedicao"
+        | "concluida"
+        | "cancelada"
       metodo_pagamento_enum: "pix" | "transferencia" | "boleto" | "asaas"
+      payment_status_enum: "em_dia" | "pendente" | "vencido"
       plan_produto_papel: "base" | "rotativa" | "extra"
       producao_status_enum: "planejada" | "em_curso" | "concluida" | "cancelada"
       produto_formato: "banneton" | "couche" | "tabuleiro" | "forma"
@@ -1391,7 +1584,15 @@ export const Constants = {
         "fermentacao_final",
         "coccao",
       ],
+      janela_status_enum: [
+        "planejamento",
+        "congelada",
+        "em_expedicao",
+        "concluida",
+        "cancelada",
+      ],
       metodo_pagamento_enum: ["pix", "transferencia", "boleto", "asaas"],
+      payment_status_enum: ["em_dia", "pendente", "vencido"],
       plan_produto_papel: ["base", "rotativa", "extra"],
       producao_status_enum: ["planejada", "em_curso", "concluida", "cancelada"],
       produto_formato: ["banneton", "couche", "tabuleiro", "forma"],
