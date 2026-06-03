@@ -7,7 +7,7 @@ const SIDEBAR_ITENS: { label: string; to?: string; emBreve?: boolean }[] = [
   { label: 'Planejamento', emBreve: true },
   { label: 'Estoque', emBreve: true },
   { label: 'Assinantes', emBreve: true },
-  { label: 'Financeiro', emBreve: true },
+  { label: 'Financeiro', to: '/financeiro' },
   { label: 'Configurações', emBreve: true },
 ];
 
@@ -101,6 +101,19 @@ export function Shell({ children }: { children: ReactNode }) {
               Mais ▾
             </button>
             <ul className="space-y-1">
+              <li>
+                <NavLink
+                  to="/financeiro"
+                  onClick={() => setMaisAberto(false)}
+                  className={({ isActive }) =>
+                    `block rounded-md px-3 py-3 ${
+                      isActive ? 'bg-brand-500 text-white' : 'text-warm-700 hover:bg-warm-200'
+                    }`
+                  }
+                >
+                  Financeiro
+                </NavLink>
+              </li>
               {MAIS_ITENS.map((label) => (
                 <li
                   key={label}

@@ -5,6 +5,7 @@ import { RequireAuth } from './components/RequireAuth';
 import { SemanaAtualRedirect } from './pages/Semana/SemanaAtualRedirect';
 import { SemanaDetalhe } from './pages/Semana/SemanaDetalhe';
 import { SemanaCardapio } from './pages/Semana/SemanaCardapio';
+import { Financeiro } from './pages/Financeiro/Financeiro';
 
 export default function App() {
   return (
@@ -35,6 +36,14 @@ export default function App() {
           element={
             <RequireAuth>
               <SemanaCardapio />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/financeiro"
+          element={
+            <RequireAuth>
+              <Financeiro />
             </RequireAuth>
           }
         />
