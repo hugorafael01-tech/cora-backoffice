@@ -5,7 +5,7 @@ import { PanoramaTabela } from './components/PanoramaTabela';
 import { OrfaosLista } from './components/OrfaosLista';
 
 export function Financeiro() {
-  const { subscriptions, orfaos, resumo, loading, error } = useFinanceiro();
+  const { subscriptions, orfaos, resumo, loading, error, refetch } = useFinanceiro();
 
   if (loading) {
     return (
@@ -34,7 +34,7 @@ export function Financeiro() {
 
       <ResumoCards resumo={resumo} />
       <PanoramaTabela subscriptions={subscriptions} />
-      <OrfaosLista orfaos={orfaos} />
+      <OrfaosLista orfaos={orfaos} subscriptions={subscriptions} onVinculado={refetch} />
     </Shell>
   );
 }
