@@ -9,7 +9,7 @@
 ## Estado do repositório
 
 - **Repositório:** `github.com/hugorafael01-tech/cora-backoffice`
-- **Branch principal:** `main` (commit `7879935`)
+- **Branch principal:** `main` (commit `787f159`)
 - **Subdomain:** `admin.acora.com.br`
 - **Stack:** Vite + React + TypeScript + Tailwind + Supabase Auth (magic link) + Vercel Functions
 - **Banco:** Supabase Postgres — **mesmo projeto** compartilhado com Portal (sem staging isolado)
@@ -50,7 +50,7 @@
 
 ## Branches em voo
 
-Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 03/06/2026: atualização de documentação (este STATUS) — sem mudança de schema.
+Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessões de 03/06/2026: módulo Financeiro Peça C mergeado (PR #16 read-only, PR #17 ação de vincular) + atualizações de documentação deste STATUS — sem mudança de schema.
 
 ---
 
@@ -99,15 +99,17 @@ git push -u origin feat/nome-da-mudanca
 - **Gate de segurança (ClickUp 86e1mcyuz):** migration 0019 fecha a escrita direta do client em `subscriptions`/`profiles` (furo da `update_own`). Mergeada em `main` (PR #11) e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun) — gate fechado. D.2 mantém SELECT own do `authenticated`.
 - **Migration de contract (ClickUp 86e1mc0ta):** dropa as colunas mortas de `subscriptions` (nome, email, whatsapp, cpf, itens, total_paes, valor_paes, valor_mensal, valor_frete, coverage_unconfirmed, next_billing_change_date, next_billing_value) e vira `qty_*`/`user_id` NOT NULL após backfill. **Só roda depois** do cutover D.2/D.3/D.4. Não escrever antes.
 
-### Asaas webhooks (ClickUp 86e1mk8c0) — em andamento
+### Asaas webhooks (ClickUp 86e1mk8c0) — concluída (resta só pendência operacional)
 
 - **Perna 1 (SCHEMA) concluída e aplicada** via migration 0020 (expand). Enum `payment_status_enum`, 3 colunas de pagamento em `subscriptions` e tabela `asaas_webhook_events` no schema; mergeada (PR #13) e **aplicada no banco** (SQL Editor; verificada por probe em 03/jun).
 - **Perna 2 (endpoint) — cora-portal, NÃO neste repo: NO AR e validada.** `/api/webhooks/asaas` que valida `asaas-access-token`, grava o evento cru na `asaas_webhook_events` (via service_role), responde 200, e reflete `payment_status` na `subscription` (derivado da tabela). Idempotência pela UNIQUE em `asaas_event_id`. **Provada ponta a ponta com evento real do Asaas em 02/jun** (PR #35 + fix #37).
 - **Perna 3 (painel + vínculo) — cora-backoffice + cora-portal:**
   - **Peça A (endpoint de vínculo) — cora-portal: NO AR e validada em produção em 03/jun** (PR #39). `POST /api/asaas/vincular` que o backoffice chama pra gravar `subscriptions.asaas_customer_id` (escrita via service_role, já que a 0019 revogou a escrita do client). Autorização por JWT do admin + checagem `is_admin` server-side por email contra `admin_users` (à prova de bypass: email vem de `authData.user.email`, nunca do body). Validado em 8 casos via curl com JWT admin real.
-  - **Peça C (UI no backoffice) — cora-backoffice: ÚNICA PEÇA PENDENTE da integração.** Tela de quem pagou / pendente / vencido, lendo `asaas_webhook_events` + `subscriptions.payment_status` via client autenticado (`is_admin()`), com destaque pros eventos não-casados (`subscription_id` null) e a ação de vincular (chama a Peça A). Próxima sessão. (Ver ClickUp 86e1pfph9.)
+  - **Peça C (UI no backoffice) — cora-backoffice: NO AR** em `admin.acora.com.br/financeiro` (ClickUp 86e1pfph9 / 86e1pwnhv).
+    - **C1 (read-only, PR #16):** cards de resumo (em dia / vencidas / sem status / pra identificar), panorama de assinaturas com filtros e busca, pagamentos órfãos agrupados por cliente, e estados vazios. Lê `subscriptions` + `asaas_webhook_events` via client autenticado (`is_admin()`).
+    - **C2 (ação de vincular, PR #17): validada em produção.** Modal de busca de assinante que chama `POST /api/asaas/vincular` no portal (cross-origin; CORS resolvido no portal, PR #41), usando o access_token da sessão atual do admin. Trata 200/409/404/400/401. Não escreve em `subscriptions` direto (respeita 0019; escrita via service_role no portal). URL do portal via `VITE_PORTAL_URL`. Ao vincular, o endpoint **reconcilia todos os órfãos daquele `asaas_customer_id`** (carimba `subscription_id`; PR #42 no portal), então o pagamento sai de "pra identificar" e não reaparece num reload.
 - **Recorte fase 1:** cobrança criada manualmente no painel do Asaas. O painel **não expõe `externalReference`** na criação manual de cobrança (só via API), então o casamento evento→assinante **NÃO** é por `externalReference`. Na fase 1 o casamento é por **`asaas_customer_id`**: o endpoint de webhook (Perna 2) casa o evento pelo `asaas_customer_id` do pagador (fallback já implementado e testado), e o vínculo `assinante ↔ cliente-Asaas` é gravado em `subscriptions.asaas_customer_id` pelo endpoint da Peça A (a UI da Peça C é onde o Hugo dispara esse vínculo). "Pago" dispara com PAYMENT_CONFIRMED **ou** PAYMENT_RECEIVED (cartão só vira RECEIVED 32 dias após CONFIRMED); "Vencido" com PAYMENT_OVERDUE.
-- **Pendência operacional do Hugo:** criar o webhook em **produção** do Asaas (hoje só o Sandbox existe). Destrava quando a Peça C estiver pronta.
+- **Pendência operacional do Hugo (única coisa que falta):** criar o webhook em **produção** do Asaas (hoje só o Sandbox existe). Com a Peça C no ar, é o último passo pra ligar o fluxo no Alpha — fecha a Perna 3 e a integração Asaas inteira.
 
 ### Tech debt registrada
 
