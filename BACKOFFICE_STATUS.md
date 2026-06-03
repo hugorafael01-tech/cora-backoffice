@@ -2,14 +2,14 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 1 de junho de 2026.
+**Última atualização:** 3 de junho de 2026.
 
 ---
 
 ## Estado do repositório
 
 - **Repositório:** `github.com/hugorafael01-tech/cora-backoffice`
-- **Branch principal:** `main` (commit `f5daadd`)
+- **Branch principal:** `main` (commit `7879935`)
 - **Subdomain:** `admin.acora.com.br`
 - **Stack:** Vite + React + TypeScript + Tailwind + Supabase Auth (magic link) + Vercel Functions
 - **Banco:** Supabase Postgres — **mesmo projeto** compartilhado com Portal (sem staging isolado)
@@ -43,14 +43,14 @@
 | 0016_janelas_entrega | aplicada | `main` (`42b389b`, PR #3) | desacopla data_entrega/cutoff de semanas |
 | 0017_subscriptions_user_id | aplicada | `main` (`e52519e`, PR #4) | FK que habilita integração com Supabase Auth no Portal (Frente A do briefing CORA_Briefing_Auth_MagicLink_SMS_Ready) |
 | 0018_profiles_e_expand_subscriptions | aplicada | `main` (`1453270`, PR #7) | Frente D / D.1 — fase **expand**. Cria `profiles` (1:1 c/ auth.users, RLS select-own) + 9 colunas nullable e 2 CHECKs de qty em `subscriptions`. Sem drop/rename do shape legado. |
-| 0019_revoke_escrita_subscriptions_profiles | **mergeada, escrita pendente** | `main` (`f5daadd`, PR #11) | Segurança (ClickUp 86e1mcyuz). Revoga INSERT/UPDATE/DELETE de `authenticated`+`anon` em `subscriptions` e `profiles`, revoga SELECT de `anon`, dropa policy `subscriptions_update_own`. SELECT own do `authenticated` e `service_role` mantidos. **NÃO aplicada no banco ainda** (db push/SQL pendente do Hugo). |
-| 0020_asaas_webhooks_schema | **mergeada, aplicação no banco a confirmar** | `main` (`57ab4be`, PR #13) | Asaas webhooks Perna 1 / SCHEMA (ClickUp 86e1mk8c0). Expand-only. Cria enum `payment_status_enum` (`em_dia`/`pendente`/`vencido`), +3 colunas nullable em `subscriptions` (`payment_status`, `last_payment_at`, `last_payment_event`), e tabela `asaas_webhook_events` (caixa-preta de eventos crus: UNIQUE em `asaas_event_id`, FK nullable → `subscriptions`, índices em `subscription_id`/`event_type`, `payload jsonb`). RLS: SELECT pro `authenticated` via `is_admin()` (painel lê via client autenticado); escrita só `service_role` (REVOKE write de `authenticated`/`anon`, SELECT de `anon`). Não toca `status`/`subscription_status`. Aplicar via SQL Editor (não db push); queries pré/pós em `0020_asaas_webhooks_schema.verificacao.sql`. |
+| 0019_revoke_escrita_subscriptions_profiles | **aplicada** (via SQL Editor) | `main` (`f5daadd`, PR #11) | Segurança (ClickUp 86e1mcyuz). Revoga INSERT/UPDATE/DELETE de `authenticated`+`anon` em `subscriptions` e `profiles`, revoga SELECT de `anon`, dropa policy `subscriptions_update_own`. SELECT own do `authenticated` e `service_role` mantidos. **Aplicada no banco** (SQL Editor, não db push). Verificada por probe anônimo em 03/jun: anon `SELECT` em `subscriptions` e `profiles` retorna `42501` (permission denied), provando que o REVOKE de SELECT do `anon` está de pé; como a migration roda em bloco único, os REVOKEs de write do `authenticated` e o DROP da policy `subscriptions_update_own` foram aplicados junto. Corroborada pelo endpoint de vínculo da Perna 3 Peça A, que só existe porque a escrita do client foi revogada. |
+| 0020_asaas_webhooks_schema | **aplicada** (via SQL Editor) | `main` (`57ab4be`, PR #13) | Asaas webhooks Perna 1 / SCHEMA (ClickUp 86e1mk8c0). Expand-only. Cria enum `payment_status_enum` (`em_dia`/`pendente`/`vencido`), +3 colunas nullable em `subscriptions` (`payment_status`, `last_payment_at`, `last_payment_event`), e tabela `asaas_webhook_events` (caixa-preta de eventos crus: UNIQUE em `asaas_event_id`, FK nullable → `subscriptions`, índices em `subscription_id`/`event_type`, `payload jsonb`). RLS: SELECT pro `authenticated` via `is_admin()` (painel lê via client autenticado); escrita só `service_role` (REVOKE write de `authenticated`/`anon`, SELECT de `anon`). Não toca `status`/`subscription_status`. **Aplicada no banco** (SQL Editor, não db push; queries pré/pós em `0020_asaas_webhooks_schema.verificacao.sql`). Verificada por probe em 03/jun: tabela `asaas_webhook_events` existe (coluna inexistente → `42703`, não erro de tabela); as 3 colunas em `subscriptions` existem (`42501`, não `42703`); enum `payment_status_enum` existe (é o tipo de `payment_status`). Corroborada pela Perna 2 provada ponta a ponta com evento real do Asaas em 02/jun. |
 
 ---
 
 ## Branches em voo
 
-Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada — **falta aplicar a 0019 no banco** (db push/SQL pendente do Hugo). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada — **confirmar aplicação da 0020 no banco** (SQL Editor).
+Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 03/06/2026: atualização de documentação (este STATUS) — sem mudança de schema.
 
 ---
 
@@ -60,7 +60,7 @@ Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #
 - Sem Docker
 - Sem psql/credenciais locais
 - `supabase login` via personal access token (90 dias)
-- Toda migration é aplicada pelo Hugo no terminal via `supabase db push`
+- Toda migration é aplicada pelo Hugo via `supabase db push` **quando** o histórico local bate com o remoto. **Exceção (lição 0019/0020):** quando o histórico local está dessincronizado da CLI, `db push` não enxerga as migrations novas como pendentes (`supabase migration list` mostra a coluna Remote em branco pra elas). Nesse caso o caminho é colar o SQL no **SQL Editor** do Supabase. As migrations 0019 e 0020 foram aplicadas assim. Consequência: `supabase migration list` não é fonte de verdade do que existe no banco quando se usa SQL Editor — confirmar o schema direto (ex: probe na REST API).
 
 **Sequência padrão:**
 
@@ -96,15 +96,18 @@ git push -u origin feat/nome-da-mudanca
 
 - **D.1 (schema) concluída** nesta sessão via migration 0018 (expand). `profiles` e colunas novas de `subscriptions` no banco; shape legado intacto.
 - **D.2 a D.5** (cutover de código: read-path, onboarding real, popular qty_*, etc.) são sessões separadas, ainda não iniciadas.
-- **Gate de segurança (ClickUp 86e1mcyuz):** migration 0019 fecha a escrita direta do client em `subscriptions`/`profiles` (furo da `update_own`). Mergeada em `main` (PR #11); aplicar no banco **antes da D.3 ir pra prod** (quando passam a existir subscriptions reais). D.2 mantém SELECT own do `authenticated`.
+- **Gate de segurança (ClickUp 86e1mcyuz):** migration 0019 fecha a escrita direta do client em `subscriptions`/`profiles` (furo da `update_own`). Mergeada em `main` (PR #11) e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun) — gate fechado. D.2 mantém SELECT own do `authenticated`.
 - **Migration de contract (ClickUp 86e1mc0ta):** dropa as colunas mortas de `subscriptions` (nome, email, whatsapp, cpf, itens, total_paes, valor_paes, valor_mensal, valor_frete, coverage_unconfirmed, next_billing_change_date, next_billing_value) e vira `qty_*`/`user_id` NOT NULL após backfill. **Só roda depois** do cutover D.2/D.3/D.4. Não escrever antes.
 
 ### Asaas webhooks (ClickUp 86e1mk8c0) — em andamento
 
-- **Perna 1 (SCHEMA) concluída** nesta sessão via migration 0020 (expand). Enum `payment_status_enum`, 3 colunas de pagamento em `subscriptions` e tabela `asaas_webhook_events` no schema; mergeada (PR #13). **Confirmar aplicação no banco** (SQL Editor) antes da Perna 2.
-- **Perna 2 (endpoint) — cora-portal, NÃO neste repo:** `/api/webhooks/asaas` que valida `asaas-access-token`, grava o evento cru na `asaas_webhook_events` (via service_role), responde 200, e reflete `payment_status` na `subscription` (derivado da tabela). Idempotência pela UNIQUE em `asaas_event_id`. Sessão separada.
-- **Perna 3 (painel) — cora-backoffice:** tela de quem pagou / pendente / vencido, lendo `asaas_webhook_events` + `subscriptions.payment_status` via client autenticado (`is_admin()`). Sessão separada.
-- **Recorte fase 1:** cobrança criada manualmente no painel do Asaas; casamento evento→assinante via `externalReference` = id da subscription (Hugo seta ao criar a cobrança). "Pago" dispara com PAYMENT_CONFIRMED **ou** PAYMENT_RECEIVED (cartão só vira RECEIVED 32 dias após CONFIRMED).
+- **Perna 1 (SCHEMA) concluída e aplicada** via migration 0020 (expand). Enum `payment_status_enum`, 3 colunas de pagamento em `subscriptions` e tabela `asaas_webhook_events` no schema; mergeada (PR #13) e **aplicada no banco** (SQL Editor; verificada por probe em 03/jun).
+- **Perna 2 (endpoint) — cora-portal, NÃO neste repo: NO AR e validada.** `/api/webhooks/asaas` que valida `asaas-access-token`, grava o evento cru na `asaas_webhook_events` (via service_role), responde 200, e reflete `payment_status` na `subscription` (derivado da tabela). Idempotência pela UNIQUE em `asaas_event_id`. **Provada ponta a ponta com evento real do Asaas em 02/jun** (PR #35 + fix #37).
+- **Perna 3 (painel + vínculo) — cora-backoffice + cora-portal:**
+  - **Peça A (endpoint de vínculo) — cora-portal: NO AR e validada em produção em 03/jun** (PR #39). `POST /api/asaas/vincular` que o backoffice chama pra gravar `subscriptions.asaas_customer_id` (escrita via service_role, já que a 0019 revogou a escrita do client). Autorização por JWT do admin + checagem `is_admin` server-side por email contra `admin_users` (à prova de bypass: email vem de `authData.user.email`, nunca do body). Validado em 8 casos via curl com JWT admin real.
+  - **Peça C (UI no backoffice) — cora-backoffice: ÚNICA PEÇA PENDENTE da integração.** Tela de quem pagou / pendente / vencido, lendo `asaas_webhook_events` + `subscriptions.payment_status` via client autenticado (`is_admin()`), com destaque pros eventos não-casados (`subscription_id` null) e a ação de vincular (chama a Peça A). Próxima sessão. (Ver ClickUp 86e1pfph9.)
+- **Recorte fase 1:** cobrança criada manualmente no painel do Asaas. O painel **não expõe `externalReference`** na criação manual de cobrança (só via API), então o casamento evento→assinante **NÃO** é por `externalReference`. Na fase 1 o casamento é por **`asaas_customer_id`**: o endpoint de webhook (Perna 2) casa o evento pelo `asaas_customer_id` do pagador (fallback já implementado e testado), e o vínculo `assinante ↔ cliente-Asaas` é gravado em `subscriptions.asaas_customer_id` pelo endpoint da Peça A (a UI da Peça C é onde o Hugo dispara esse vínculo). "Pago" dispara com PAYMENT_CONFIRMED **ou** PAYMENT_RECEIVED (cartão só vira RECEIVED 32 dias após CONFIRMED); "Vencido" com PAYMENT_OVERDUE.
+- **Pendência operacional do Hugo:** criar o webhook em **produção** do Asaas (hoje só o Sandbox existe). Destrava quando a Peça C estiver pronta.
 
 ### Tech debt registrada
 
