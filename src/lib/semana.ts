@@ -90,3 +90,39 @@ export function etapaAgora(
 export function grupoLabel(grupo: number | null | undefined): string {
   return grupo ? `G${grupo}` : '-';
 }
+
+// ---- Resolucao da "semana atual" (compartilhada por Semana e Producao) ----
+
+export interface SemanaLite {
+  id: string;
+  data_entrega: string;
+  data_corte: string;
+}
+
+const DIA_MS = 86_400_000;
+
+function ymdLocal(ymd: string): number {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
+/** Escolhe a semana "atual" por prioridade (briefing v3 §10). */
+export function escolherAtual(semanas: SemanaLite[], agora: number): string | null {
+  // 1. viva: corte <= agora <= entrega + 3 dias
+  const viva = semanas.find((s) => {
+    const corte = new Date(s.data_corte).getTime();
+    const limite = ymdLocal(s.data_entrega) + 3 * DIA_MS;
+    return corte <= agora && agora <= limite;
+  });
+  if (viva) return viva.id;
+
+  // 2. proxima futura (menor data_entrega >= hoje)
+  const futuras = semanas
+    .filter((s) => ymdLocal(s.data_entrega) >= agora - DIA_MS)
+    .sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
+  if (futuras[0]) return futuras[0].id;
+
+  // 3. mais recente passada
+  const passadas = [...semanas].sort((a, b) => b.data_entrega.localeCompare(a.data_entrega));
+  return passadas[0]?.id ?? null;
+}

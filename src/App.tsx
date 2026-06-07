@@ -5,6 +5,8 @@ import { RequireAuth } from './components/RequireAuth';
 import { SemanaAtualRedirect } from './pages/Semana/SemanaAtualRedirect';
 import { SemanaDetalhe } from './pages/Semana/SemanaDetalhe';
 import { SemanaCardapio } from './pages/Semana/SemanaCardapio';
+import { ProducaoAtualRedirect } from './pages/Producao/ProducaoAtualRedirect';
+import { ProducaoDefinirVolume } from './pages/Producao/ProducaoDefinirVolume';
 import { Financeiro } from './pages/Financeiro/Financeiro';
 
 export default function App() {
@@ -36,6 +38,23 @@ export default function App() {
           element={
             <RequireAuth>
               <SemanaCardapio />
+            </RequireAuth>
+          }
+        />
+        <Route path="/producao" element={<Navigate to="/producao/atual" replace />} />
+        <Route
+          path="/producao/atual"
+          element={
+            <RequireAuth>
+              <ProducaoAtualRedirect />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/producao/:id"
+          element={
+            <RequireAuth>
+              <ProducaoDefinirVolume />
             </RequireAuth>
           }
         />

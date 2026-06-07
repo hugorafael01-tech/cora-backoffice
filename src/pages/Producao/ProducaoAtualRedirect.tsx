@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { escolherAtual, type SemanaLite } from '../../lib/semana';
-import { Shell } from './components/Shell';
-import { ModalCriarSemana } from './components/ModalCriarSemana';
+import { Shell } from '../Semana/components/Shell';
 
-export function SemanaAtualRedirect() {
+/** Resolve a semana "atual" e redireciona pra /producao/:id. Espelha SemanaAtualRedirect. */
+export function ProducaoAtualRedirect() {
   const navigate = useNavigate();
   const [vazio, setVazio] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [modalAberto, setModalAberto] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -25,7 +24,7 @@ export function SemanaAtualRedirect() {
         return;
       }
       const id = escolherAtual((data ?? []) as SemanaLite[], Date.now());
-      if (id) navigate(`/semanas/${id}`, { replace: true });
+      if (id) navigate(`/producao/${id}`, { replace: true });
       else setVazio(true);
     }
     resolver();
@@ -46,19 +45,10 @@ export function SemanaAtualRedirect() {
     return (
       <Shell>
         <div className="grid min-h-[60vh] place-items-center p-8 text-center">
-          <div>
-            <p className="font-display text-2xl text-ink-700">
-              Você ainda não criou nenhuma semana.
-            </p>
-            <button
-              onClick={() => setModalAberto(true)}
-              className="mt-4 h-11 rounded-md bg-brand-500 px-5 text-white hover:bg-brand-600"
-            >
-              Criar semana
-            </button>
-          </div>
+          <p className="font-display text-2xl text-ink-700">
+            Crie uma semana primeiro (no modulo Semana) pra definir o volume de producao.
+          </p>
         </div>
-        {modalAberto && <ModalCriarSemana onClose={() => setModalAberto(false)} />}
       </Shell>
     );
   }

@@ -904,6 +904,7 @@ export type Database = {
           massa_prevista_kg: number | null
           massa_realizada_kg: number | null
           multiplicador: number
+          origem: Database["public"]["Enums"]["producao_origem_enum"]
           qty_paes_prevista: number | null
           qty_paes_realizada: number | null
           semana_id: string
@@ -921,6 +922,7 @@ export type Database = {
           massa_prevista_kg?: number | null
           massa_realizada_kg?: number | null
           multiplicador?: number
+          origem?: Database["public"]["Enums"]["producao_origem_enum"]
           qty_paes_prevista?: number | null
           qty_paes_realizada?: number | null
           semana_id: string
@@ -938,6 +940,7 @@ export type Database = {
           massa_prevista_kg?: number | null
           massa_realizada_kg?: number | null
           multiplicador?: number
+          origem?: Database["public"]["Enums"]["producao_origem_enum"]
           qty_paes_prevista?: number | null
           qty_paes_realizada?: number | null
           semana_id?: string
@@ -1434,8 +1437,15 @@ export type Database = {
       metodo_pagamento_enum: "pix" | "transferencia" | "boleto" | "asaas"
       payment_status_enum: "em_dia" | "pendente" | "vencido"
       plan_produto_papel: "base" | "rotativa" | "extra"
+      producao_origem_enum: "pedido" | "manual" | "teste"
       producao_status_enum: "planejada" | "em_curso" | "concluida" | "cancelada"
-      produto_formato: "banneton" | "couche" | "tabuleiro" | "forma"
+      produto_formato:
+        | "banneton"
+        | "couche"
+        | "tabuleiro"
+        | "forma"
+        | "disco"
+        | "bola"
       produto_tipo: "fabricado" | "revenda"
       produto_unidade: "un" | "kg"
       subscription_status: "pending_payment" | "active" | "paused" | "cancelled"
@@ -1594,8 +1604,9 @@ export const Constants = {
       metodo_pagamento_enum: ["pix", "transferencia", "boleto", "asaas"],
       payment_status_enum: ["em_dia", "pendente", "vencido"],
       plan_produto_papel: ["base", "rotativa", "extra"],
+      producao_origem_enum: ["pedido", "manual", "teste"],
       producao_status_enum: ["planejada", "em_curso", "concluida", "cancelada"],
-      produto_formato: ["banneton", "couche", "tabuleiro", "forma"],
+      produto_formato: ["banneton", "couche", "tabuleiro", "forma", "disco", "bola"],
       produto_tipo: ["fabricado", "revenda"],
       produto_unidade: ["un", "kg"],
       subscription_status: ["pending_payment", "active", "paused", "cancelled"],

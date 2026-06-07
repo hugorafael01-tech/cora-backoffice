@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Cora Backoffice — Produção · Definir volume (Estado A)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<template id="__bundler_thumbnail" data-bg-color="#FAFAF8">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#FAFAF8"/>
+    <g transform="translate(430,250)" fill="#2E55CD">
+      <rect x="0" y="0" width="60" height="60" rx="8" opacity=".25"/>
+      <text x="30" y="44" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#2E55CD">−</text>
+      <rect x="90" y="0" width="80" height="60" rx="8" opacity=".5"/>
+      <rect x="200" y="0" width="60" height="60" rx="8" opacity=".25"/>
+      <text x="230" y="44" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#2E55CD">+</text>
+    </g>
+    <text x="600" y="470" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#172E6E" letter-spacing="3">DEFINIR VOLUME</text>
+    <text x="600" y="508" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="#7A766E">cora backoffice · pré-produção</text>
+  </svg>
+</template>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--warm-50);min-height:100vh;color:var(--warm-700)}
+
+  /* ── EXPLORER CHROME ── */
+  .shell{max-width:1500px;margin:0 auto;padding:24px 24px 80px}
+  .shell-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:24px;flex-wrap:wrap}
+  .shell-head h1{font-family:var(--font-display);font-size:24px;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0}
+  .shell-head .sub{font-family:var(--font-body);font-size:13px;color:var(--warm-500);margin-top:4px;max-width:64ch;line-height:1.5}
+  .wf-tag{font-family:var(--font-body);font-size:10px;color:var(--warm-400);text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border:1px dashed var(--warm-300);border-radius:3px;background:var(--warm-100);display:inline-block;margin-left:8px;vertical-align:middle}
+  .tabs-wrap{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .tabs-label{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-400);margin-bottom:4px}
+  .tabs{display:inline-flex;gap:0;background:var(--warm-100);padding:3px;border-radius:8px;border:1px solid var(--warm-200)}
+  .tabs button{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.04em;font-size:12px;background:transparent;border:0;padding:8px 12px;border-radius:6px;color:var(--warm-500);cursor:pointer;min-height:36px}
+  .tabs button.on{background:#fff;color:var(--brand-500)}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-bottom:18px;padding:10px 14px;background:var(--warm-100);border:1px dashed var(--warm-300);border-radius:8px}
+  .legend strong{font-weight:600;color:var(--warm-700)}
+  .legend .sw{display:inline-flex;align-items:center;gap:6px}
+  .legend .sw i{width:12px;height:12px;border-radius:2px;display:inline-block;border:1px solid var(--warm-300)}
+  .legend code{font-family:ui-monospace,monospace;font-size:11px;color:var(--warm-700);background:#fff;padding:1px 4px;border-radius:3px}
+
+  .stage{display:none}
+  .stage.on{display:block}
+  .stage.mobile{display:none;justify-content:center;padding:24px 0}
+  .stage.mobile.on{display:flex}
+
+  /* ── DESKTOP SHELL ── */
+  .dk{display:grid;grid-template-columns:220px 1fr;background:var(--warm-50);border:1px dashed var(--warm-300);border-radius:8px;overflow:hidden;min-height:920px;position:relative}
+  .dk aside{background:#fff;border-right:1px dashed var(--warm-300);padding:18px 0 20px;display:flex;flex-direction:column}
+  .dk aside .brand{padding:0 18px 14px;margin-bottom:6px;border-bottom:1px dashed var(--warm-300);font-family:var(--font-display);font-size:18px;color:var(--brand-500);letter-spacing:.04em;text-transform:uppercase}
+  .dk aside .brand .tag{font-family:var(--font-body);font-size:11px;color:var(--warm-400);text-transform:none;letter-spacing:0;margin-left:6px}
+  .dk aside .nav-label{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-400);padding:14px 18px 6px}
+  .dk aside nav a{display:flex;align-items:center;gap:10px;padding:9px 18px;color:var(--warm-600);font-family:var(--font-body);font-size:14px;text-decoration:none;border-left:3px solid transparent}
+  .dk aside nav a .ico{font-family:var(--font-body);font-size:11px;color:var(--warm-400);background:var(--warm-100);border:1px dashed var(--warm-300);padding:1px 5px;border-radius:3px;letter-spacing:.04em}
+  .dk aside nav a.on{color:var(--brand-500);background:var(--brand-50);border-left-color:var(--brand-500);font-weight:600}
+  .dk aside nav a.on .ico{background:#fff;border-color:var(--brand-200);color:var(--brand-500)}
+  .dk aside nav a.disabled{color:var(--warm-400);justify-content:space-between;padding-right:14px;cursor:not-allowed}
+  .dk aside nav a.disabled .pill{font-family:var(--font-body);font-size:10px;color:var(--warm-400);background:var(--warm-100);padding:1px 6px;border-radius:3px}
+  .dk aside .foot{margin-top:auto;padding:14px 18px;border-top:1px dashed var(--warm-300);font-family:var(--font-body);font-size:12px;color:var(--warm-500);display:flex;align-items:center;gap:10px}
+  .dk aside .foot .av{width:26px;height:26px;border-radius:50%;background:var(--warm-200);border:1px dashed var(--warm-400);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;color:var(--warm-600)}
+  .dk main{padding:24px 28px 60px;min-width:0;overflow:hidden;position:relative}
+
+  /* header */
+  .wk-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:16px;border-bottom:1px dashed var(--warm-300)}
+  .wk-head .eyebrow{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:4px}
+  .wk-head h1{font-family:var(--font-display);font-size:34px;line-height:1;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0}
+  .wk-head .sub{font-family:var(--font-body);font-size:13px;color:var(--warm-500);margin-top:6px}
+  .head-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .wk-nav{display:inline-flex;align-items:center;gap:0;border:1px dashed var(--warm-300);border-radius:8px;background:#fff;padding:3px}
+  .wk-nav button{font-family:var(--font-body);font-size:13px;background:transparent;border:0;padding:7px 10px;border-radius:6px;color:var(--warm-600);cursor:pointer;min-height:36px;min-width:36px}
+  .wk-nav button:hover{background:var(--warm-50)}
+  .wk-head .av{width:34px;height:34px;border-radius:50%;background:var(--warm-200);border:1px dashed var(--warm-400);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;color:var(--warm-600)}
+  .status-pill{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px dashed var(--warm-300);background:var(--warm-100);color:var(--warm-600)}
+  .test-tag{font-family:var(--font-body);font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid var(--warning-border);background:var(--warning-bg);color:var(--warning-text)}
+
+  /* banner */
+  .banner{padding:11px 14px;border-radius:6px;font-family:var(--font-body);font-size:13px;margin-bottom:18px;display:flex;gap:12px;align-items:center;justify-content:space-between;line-height:1.45}
+  .banner.info{background:var(--brand-50);border:1px solid var(--brand-200);color:var(--brand-700)}
+  .banner.info strong{color:var(--brand-800);font-weight:600}
+  .banner.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+  .banner.success strong{color:var(--success-text);font-weight:700}
+  .banner.success a{color:var(--brand-500);font-weight:600;text-decoration:none}
+  .banner.success a:hover{text-decoration:underline}
+  .banner .b-eyebrow{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0}
+  .banner.hide{display:none}
+
+  /* day tabs */
+  .day-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+  .day-tab{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:12px 14px;position:relative;text-align:left}
+  .day-tab .head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+  .day-tab .nm{font-family:var(--font-display);font-size:20px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-500)}
+  .day-tab .dt{font-family:var(--font-body);font-size:12px;color:var(--warm-500);font-variant-numeric:tabular-nums}
+  .day-tab .what{font-family:var(--font-body);font-size:13px;color:var(--warm-600);line-height:1.4}
+  .day-tab.active{background:var(--brand-50);border:1px solid var(--brand-200);border-style:solid}
+  .day-tab.future{opacity:.6}
+
+  /* sec head */
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px;gap:12px;flex-wrap:wrap}
+  .sec-head .label{font-family:var(--font-display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-600)}
+  .sec-head .meta{font-family:var(--font-body);font-size:12px;color:var(--warm-500)}
+  .sec-head .actions{display:flex;gap:8px;margin-left:auto}
+  .btn-ghost{font-family:var(--font-body);font-size:13px;background:transparent;border:1px dashed var(--brand-200);color:var(--brand-500);border-radius:8px;padding:8px 12px;cursor:pointer;min-height:38px}
+  .btn-ghost:hover{background:var(--brand-50)}
+
+  /* ── VOLUME LIST (counters) ── */
+  .vol-list{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;overflow:hidden}
+  .vol-row{display:grid;grid-template-columns:1fr auto;gap:18px;padding:15px 18px;border-bottom:1px dashed var(--warm-200);align-items:center}
+  .vol-row:last-child{border-bottom:0}
+  .vol-row .nm{font-family:var(--font-body);font-weight:600;color:var(--warm-800);font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .vol-row .sub{font-family:var(--font-body);font-size:12.5px;color:var(--warm-500);margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.5}
+  .vol-row .sub .sep{color:var(--warm-300);margin:0 6px}
+  .vol-row .sub .add{color:var(--brand-600);font-weight:600}
+  .vol-row .sub .add.zero{color:var(--warm-400)}
+  .grp{display:inline-flex;padding:1px 7px;border-radius:3px;background:var(--warm-100);color:var(--warm-600);font-size:12px;font-weight:500;border:1px dashed var(--warm-300)}
+  .grp.teste{background:var(--warning-bg);border-color:var(--warning-border);color:var(--warning-text);border-style:solid}
+  .grp.rascunho{background:#fff;border-style:solid;border-color:var(--warm-300);color:var(--warm-500)}
+  .counter{display:inline-flex;align-items:center;border:1.5px solid var(--warm-300);border-radius:8px;background:#fff;overflow:hidden}
+  .counter button{width:42px;height:42px;border:0;background:transparent;font-size:22px;line-height:1;color:var(--brand-500);cursor:pointer;font-family:var(--font-body)}
+  .counter button:hover{background:var(--brand-50)}
+  .counter button:disabled{color:var(--warm-300);cursor:not-allowed;background:transparent}
+  .counter .n{min-width:52px;text-align:center;font-family:var(--font-display);font-size:24px;color:var(--warm-800);font-variant-numeric:tabular-nums}
+  .counter.zero .n{color:var(--warm-400)}
+  .vol-row .del{margin-left:12px;width:34px;height:34px;border:1px dashed var(--warm-300);background:#fff;border-radius:6px;color:var(--warm-400);cursor:pointer;font-family:var(--font-body);font-size:13px}
+  .vol-row .del:hover{border-color:var(--danger-border);color:var(--danger-text)}
+  .vol-right{display:flex;align-items:center}
+
+  .vol-empty{padding:34px 18px;text-align:center;font-family:var(--font-body);color:var(--warm-500);font-size:14px;line-height:1.6;border-top:1px dashed var(--warm-200)}
+  .vol-empty .big{font-family:var(--font-display);font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--warm-500);margin-bottom:6px}
+  .vol-empty.hide{display:none}
+
+  /* ── LEVAIN CARD ── */
+  .levain{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:16px 18px;margin-bottom:14px}
+  .levain .L .top{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .levain .L .nm{font-family:var(--font-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-500)}
+  .profile-sel{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--brand-200);background:var(--brand-50);border-radius:6px;padding:3px 4px 3px 9px}
+  .profile-sel .pl{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-500)}
+  .profile-sel select{font-family:var(--font-body);font-size:12.5px;color:var(--brand-700);font-weight:600;border:0;background:#fff;border-radius:4px;padding:3px 6px;cursor:pointer}
+  .levain .L .meta{font-family:var(--font-body);font-size:13px;color:var(--warm-600);line-height:1.5;margin-top:4px}
+  .levain .L .meta .sep{color:var(--warm-300);margin:0 5px}
+  .levain .L .caption{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);font-style:italic;margin-top:7px;line-height:1.4}
+  .levain .R{border-left:1px dashed var(--warm-200);padding-left:14px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+  .levain .R .label{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:2px}
+  .levain .R .row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-body);font-size:13px;color:var(--warm-600)}
+  .levain .R .row strong{color:var(--brand-500);font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--font-display);font-size:22px;letter-spacing:.02em}
+
+  .calc{grid-column:1 / -1;border:1px solid var(--warm-200);border-radius:6px;background:var(--warm-50);margin-top:14px;padding:14px 16px}
+  .calc .calc-h{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+  .calc .calc-h .ratio{color:var(--warm-500);font-weight:400;letter-spacing:.04em;font-size:10.5px}
+  .calc .inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px;padding-bottom:11px;border-bottom:1px dashed var(--warm-300)}
+  @media (max-width:980px){.calc .inputs{grid-template-columns:1fr}}
+  .calc .ipt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-family:var(--font-body);font-size:13px;color:var(--warm-700)}
+  .calc .ipt .lbl{color:var(--warm-600)}
+  .calc .ipt .v-fixed{font-weight:700;color:var(--warm-800);font-variant-numeric:tabular-nums}
+  .calc .ipt .v-input{display:inline-flex;align-items:baseline;gap:3px;border:1px solid var(--warm-300);background:#fff;border-radius:4px;padding:3px 8px;font-variant-numeric:tabular-nums;font-weight:600;color:var(--warm-800)}
+  .calc .ipt .v-input input{font:inherit;color:inherit;border:0;background:transparent;outline:none;width:60px;text-align:right;padding:0}
+  .calc .ipt .v-input .u{font-size:11px;color:var(--warm-500);font-weight:400}
+  .calc .outputs{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-family:var(--font-body);font-size:13px;color:var(--warm-700);font-variant-numeric:tabular-nums}
+  @media (max-width:980px){.calc .outputs{grid-template-columns:1fr}}
+  .calc .out{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:3px 0}
+  .calc .out .lbl{color:var(--warm-600)}
+  .calc .out .v{font-weight:600;color:var(--warm-800)}
+  .calc .out.total{grid-column:1 / -1;border-top:1px dashed var(--warm-300);padding-top:7px;margin-top:3px}
+  .calc .out.total .lbl{font-family:var(--font-display);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600}
+  .calc .out.total .v{color:var(--brand-500);font-size:14px}
+
+  .lev-warn{grid-column:1 / -1;display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:9px 12px;background:var(--warning-bg);border:1px dashed var(--warning-border);border-radius:5px;font-family:var(--font-body);font-size:12px;color:var(--warning-text);line-height:1.4}
+  .lev-warn .ico{flex-shrink:0;font-size:13px;line-height:1.2}
+
+  /* ── RESUMO ── */
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 14px}
+  .summary .c{background:var(--warm-100);border:1px dashed var(--warm-300);border-radius:8px;padding:16px 18px}
+  .summary .c .k{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:8px}
+  .summary .c .v{font-family:var(--font-display);font-size:34px;color:var(--brand-500);line-height:1;letter-spacing:.02em}
+  .summary .c .v .u{font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-left:4px;font-weight:400;text-transform:none;letter-spacing:0}
+  .summary .c .d{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);margin-top:6px;line-height:1.4}
+
+  .note-line{font-family:var(--font-body);font-size:12.5px;color:var(--warm-500);line-height:1.55;padding:10px 14px;background:var(--warm-100);border-left:3px solid var(--brand-200);border-radius:4px;margin-bottom:18px}
+  .note-line strong{color:var(--warm-700);font-weight:600}
+
+  .conclude{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .conclude .left{font-family:var(--font-body);font-size:12.5px;color:var(--warm-500)}
+  .conclude .right{display:flex;gap:12px;align-items:center}
+  .btn{font-family:var(--font-display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:13px 22px;border-radius:6px;cursor:pointer;border:0;min-height:48px}
+  .btn.primary{background:var(--brand-500);color:#fff}
+  .btn.primary:hover{background:var(--brand-600)}
+  .btn.primary:disabled{background:var(--warm-200);color:var(--warm-400);cursor:not-allowed}
+  .btn.secondary{background:transparent;color:var(--brand-500);border:1px dashed var(--brand-200)}
+  .btn.secondary:hover{background:var(--brand-50)}
+
+  /* ── MODAL · NOVA RECEITA DE TESTE ── */
+  .overlay{position:absolute;inset:0;background:rgba(26,24,21,0.5);z-index:20;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+  .overlay.on{display:flex}
+  .modal{width:560px;max-width:100%;background:#fff;border-radius:12px;border:1px solid var(--warm-200);overflow:hidden}
+  .modal .mh{padding:18px 22px;border-bottom:1px dashed var(--warm-300);display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+  .modal .mh .eyebrow{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:3px}
+  .modal .mh h2{font-family:var(--font-display);font-size:22px;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0;line-height:1}
+  .modal .mh .close{width:34px;height:34px;border:1px dashed var(--warm-300);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);font-size:17px;color:var(--warm-500);cursor:pointer;background:#fff;flex-shrink:0}
+  .modal .mb{padding:18px 22px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--warm-300);border-radius:8px;overflow:hidden;margin-bottom:18px}
+  .seg button{font-family:var(--font-body);font-size:13px;background:#fff;border:0;padding:11px 10px;cursor:pointer;color:var(--warm-600);min-height:44px;line-height:1.3}
+  .seg button + button{border-left:1.5px solid var(--warm-300)}
+  .seg button.on{background:var(--brand-50);color:var(--brand-700);font-weight:600}
+  .seg button .small{display:block;font-size:11px;color:var(--warm-500);font-weight:400;margin-top:2px}
+  .seg button.on .small{color:var(--brand-500)}
+  .field{margin-bottom:14px}
+  .field .lbl{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:6px}
+  .field input,.field select,.field textarea{width:100%;font-family:var(--font-body);font-size:14px;color:var(--warm-800);border:1.5px solid var(--warm-300);border-radius:8px;padding:10px 12px;background:#fff;min-height:44px}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:0;border-color:var(--brand-500);box-shadow:0 0 0 3px var(--brand-50)}
+  .field textarea{min-height:64px;resize:vertical;font-style:normal}
+  .field .hint{font-family:var(--font-body);font-size:11px;color:var(--warm-500);margin-top:5px;line-height:1.4}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field .with-u{display:flex;align-items:center;border:1.5px solid var(--warm-300);border-radius:8px;background:#fff;overflow:hidden}
+  .field .with-u input{border:0;box-shadow:none}
+  .field .with-u input:focus{box-shadow:none}
+  .field .with-u:focus-within{border-color:var(--brand-500);box-shadow:0 0 0 3px var(--brand-50)}
+  .field .with-u .u{font-family:var(--font-body);font-size:12px;color:var(--warm-500);padding:0 12px;white-space:nowrap}
+  .modal .mf{padding:16px 22px;border-top:1px dashed var(--warm-300);display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--warm-50)}
+  .modal .mf .status{font-family:var(--font-body);font-size:12px;color:var(--warm-500)}
+
+  /* WF note */
+  .wf-note{font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-top:18px;padding:10px 12px;background:var(--warm-100);border-left:3px solid var(--brand-200);border-radius:4px;line-height:1.55}
+  .wf-note strong{color:var(--warm-700);font-weight:600}
+  .wf-note code{font-family:ui-monospace,monospace;font-size:11px;color:var(--warm-700);background:#fff;padding:1px 4px;border-radius:3px}
+
+  /* ═══════════ MOBILE 375 ═══════════ */
+  .mb{width:375px;background:var(--warm-50);border:1px dashed var(--warm-300);border-radius:24px;overflow:hidden;min-height:860px;display:flex;flex-direction:column;position:relative}
+  .mb-top{background:#fff;padding:12px 14px 10px;border-bottom:1px dashed var(--warm-300);display:flex;justify-content:space-between;align-items:center}
+  .mb-top .hmb{width:36px;height:36px;border:1px dashed var(--warm-300);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);font-size:13px;color:var(--warm-500)}
+  .mb-top .brand{font-family:var(--font-display);font-size:16px;color:var(--brand-500);letter-spacing:.04em;text-transform:uppercase}
+  .mb-top .nv{font-family:var(--font-body);font-size:11px;color:var(--warm-500)}
+  .mb-head{padding:14px;background:#fff;border-bottom:1px dashed var(--warm-300)}
+  .mb-head .eyebrow{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500);margin-bottom:2px}
+  .mb-head h1{font-family:var(--font-display);font-size:22px;line-height:1;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0}
+  .mb-head .sub{font-family:var(--font-body);font-size:13px;color:var(--warm-500);margin-top:4px}
+  .mb-head .row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .mb-head .status-pill{font-size:10px}
+  .mb-head .test-tag{font-size:10px;padding:3px 8px}
+  .mb-days{display:flex;gap:6px;padding:10px 14px 0;background:#fff;border-bottom:1px dashed var(--warm-300)}
+  .mb-day{flex:1;background:var(--warm-50);border:1px dashed var(--warm-300);border-radius:8px 8px 0 0;padding:9px 8px 11px;text-align:left;border-bottom:0}
+  .mb-day .nm{font-family:var(--font-display);font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-500);line-height:1}
+  .mb-day .dt{font-family:var(--font-body);font-size:11px;color:var(--warm-500);margin-top:2px}
+  .mb-day .wh{font-family:var(--font-body);font-size:12px;color:var(--warm-600);margin-top:4px;line-height:1.35}
+  .mb-day.active{background:var(--brand-50);border:1px solid var(--brand-200);border-bottom:0;border-style:solid}
+  .mb-day.future{opacity:.55}
+  .mb-body{flex:1;overflow-y:auto;padding:14px 14px 16px}
+  .mb-banner{padding:9px 11px;border-radius:6px;font-family:var(--font-body);font-size:12px;margin-bottom:12px;line-height:1.45}
+  .mb-banner.info{background:var(--brand-50);border:1px solid var(--brand-200);color:var(--brand-700)}
+  .mb-banner.info strong{color:var(--brand-800);font-weight:600}
+  .mb-banner.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+  .mb-banner.success strong{color:var(--success-text);font-weight:700}
+  .mb-banner.hide{display:none}
+  .mb-sec{display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;gap:8px}
+  .mb-sec .label{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-500)}
+  .mb-sec .meta{font-family:var(--font-body);font-size:11px;color:var(--warm-500)}
+
+  .mb-vol{display:flex;flex-direction:column;gap:8px}
+  .mb-vol .it{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:12px 12px 12px 14px}
+  .mb-vol .it .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .mb-vol .it .nm{font-family:var(--font-body);font-weight:600;color:var(--warm-800);font-size:16px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;line-height:1.25}
+  .mb-vol .it .sub{font-family:var(--font-body);font-size:12px;color:var(--warm-500);margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.5}
+  .mb-vol .it .sub .add{color:var(--brand-600);font-weight:600}
+  .mb-vol .it .sub .add.zero{color:var(--warm-400)}
+  .mb-vol .counter button{width:44px;height:44px}
+  .mb-vol .counter .n{min-width:46px;font-size:22px}
+  .mb-addrow{display:flex;gap:8px;margin-top:10px}
+  .mb-addrow .btn-ghost{flex:1;text-align:center}
+  .mb-empty{padding:24px 14px;text-align:center;font-family:var(--font-body);color:var(--warm-500);font-size:13px;line-height:1.6;background:#fff;border:1px dashed var(--warm-300);border-radius:8px}
+  .mb-empty.hide{display:none}
+
+  .mb-levain{background:#fff;border:1px dashed var(--warm-300);border-radius:8px;padding:12px 14px;margin-bottom:12px}
+  .mb-levain .top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .mb-levain .nm{font-family:var(--font-display);font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--brand-500)}
+  .mb-levain .meta{font-family:var(--font-body);font-size:12.5px;color:var(--warm-600);line-height:1.5}
+  .mb-levain .meta .sep{color:var(--warm-300);margin:0 4px}
+  .mb-levain .demand{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:8px;border-top:1px dashed var(--warm-200);font-family:var(--font-body);font-size:12.5px;color:var(--warm-600)}
+  .mb-levain .demand strong{font-family:var(--font-display);font-size:20px;color:var(--brand-500);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .mb-profile{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--brand-200);background:var(--brand-50);border-radius:6px;padding:2px 4px 2px 8px}
+  .mb-profile .pl{font-family:var(--font-display);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-500)}
+  .mb-profile select{font-family:var(--font-body);font-size:11.5px;color:var(--brand-700);font-weight:600;border:0;background:#fff;border-radius:4px;padding:2px 4px}
+  .mb-calc{margin-top:10px;padding:10px 12px;background:var(--warm-50);border:1px solid var(--warm-200);border-radius:6px}
+  .mb-calc .h{font-family:var(--font-display);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+  .mb-calc .h .ratio{color:var(--warm-500);font-weight:400;font-size:10px}
+  .mb-calc .ipt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:var(--warm-700);font-family:var(--font-body);font-size:12px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--warm-300)}
+  .mb-calc .ipt .v-input{display:inline-flex;align-items:baseline;gap:3px;border:1px solid var(--warm-300);background:#fff;border-radius:4px;padding:2px 7px;font-variant-numeric:tabular-nums;font-weight:600;color:var(--warm-800)}
+  .mb-calc .ipt .v-input input{font:inherit;color:inherit;border:0;background:transparent;outline:none;width:48px;text-align:right;padding:0}
+  .mb-calc .ipt .v-input .u{font-size:10px;color:var(--warm-500);font-weight:400}
+  .mb-calc .outs{display:flex;flex-direction:column;gap:4px;font-family:var(--font-body);font-size:12px;color:var(--warm-700);font-variant-numeric:tabular-nums}
+  .mb-calc .out{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 0}
+  .mb-calc .out .lbl{color:var(--warm-600)}
+  .mb-calc .out .v{font-weight:600;color:var(--warm-800)}
+  .mb-calc .out.total{border-top:1px dashed var(--warm-300);padding-top:5px;margin-top:3px}
+  .mb-calc .out.total .lbl{font-family:var(--font-display);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--warm-700);font-weight:600}
+  .mb-calc .out.total .v{color:var(--brand-500);font-size:13px}
+  .mb-lev-warn{display:flex;align-items:flex-start;gap:6px;margin-top:8px;padding:7px 10px;background:var(--warning-bg);border:1px dashed var(--warning-border);border-radius:5px;font-family:var(--font-body);font-size:11px;color:var(--warning-text);line-height:1.4}
+
+  .mb-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 12px}
+  .mb-summary .c{background:var(--warm-100);border:1px dashed var(--warm-300);border-radius:8px;padding:11px 10px}
+  .mb-summary .c .k{font-family:var(--font-display);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--warm-500);margin-bottom:5px}
+  .mb-summary .c .v{font-family:var(--font-display);font-size:22px;color:var(--brand-500);line-height:1;letter-spacing:.02em}
+  .mb-summary .c .v .u{font-family:var(--font-body);font-size:10px;color:var(--warm-500);font-weight:400;margin-left:1px;text-transform:none;letter-spacing:0}
+  .mb-note{font-family:var(--font-body);font-size:11.5px;color:var(--warm-500);line-height:1.5;padding:9px 11px;background:var(--warm-100);border-left:3px solid var(--brand-200);border-radius:4px;margin-bottom:12px}
+  .mb-note strong{color:var(--warm-700);font-weight:600}
+
+  .mb-foot{position:sticky;bottom:0;background:#fff;border-top:1px dashed var(--warm-300);padding:10px 14px}
+  .mb-foot .btn{width:100%;justify-content:center;display:flex;align-items:center}
+  .mb-foot .hint{font-family:var(--font-body);font-size:11px;color:var(--warm-500);text-align:center;margin-top:6px}
+  .mb-bot{background:#fff;border-top:1px dashed var(--warm-300);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px 8px}
+  .mb-bot a{min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--warm-500);font-family:var(--font-body);font-size:10px;text-decoration:none}
+  .mb-bot a.on{color:var(--brand-500);font-weight:600}
+  .mb-bot a .ico{font-family:var(--font-body);font-size:10px;color:var(--warm-400);background:var(--warm-100);border:1px dashed var(--warm-300);padding:1px 5px;border-radius:3px;letter-spacing:.04em}
+  .mb-bot a.on .ico{color:var(--brand-500);background:#fff;border-color:var(--brand-200)}
+
+  /* mobile modal full-screen */
+  .mb-modal{position:absolute;inset:0;background:var(--warm-50);z-index:30;display:none;flex-direction:column;border-radius:24px;overflow:hidden}
+  .mb-modal.on{display:flex}
+  .mb-modal .mh{padding:12px 14px;background:#fff;border-bottom:1px dashed var(--warm-300);display:flex;align-items:center;gap:10px}
+  .mb-modal .mh .back{width:34px;height:34px;border:1px dashed var(--warm-300);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);font-size:14px;color:var(--warm-500);cursor:pointer;background:var(--warm-50);flex-shrink:0}
+  .mb-modal .mh h2{font-family:var(--font-display);font-size:17px;color:var(--brand-500);text-transform:uppercase;letter-spacing:.02em;margin:0;line-height:1.1}
+  .mb-modal .mbd{flex:1;overflow-y:auto;padding:14px}
+  .mb-modal .mf{padding:12px 14px;border-top:1px dashed var(--warm-300);background:#fff}
+  .mb-modal .mf .btn{width:100%;justify-content:center;display:flex}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="shell-head">
+    <div>
+      <h1>PRODUÇÃO · DEFINIR VOLUME <span class="wf-tag">low-fi · estende v5+3</span></h1>
+      <div class="sub">Estado A · pré-produção. Período de testes, sem assinante: o padeiro define o volume da semana na mão. Ao confirmar, criam-se as produções e geram-se as etapas; o levain é calculado a partir do volume.</div>
+    </div>
+    <div class="tabs-wrap">
+      <div>
+        <div class="tabs-label">Estado da tela</div>
+        <div class="tabs" id="tabs-state">
+          <button data-st="vazio">Vazio</button>
+          <button data-st="volume" class="on">Com volume</button>
+          <button data-st="nova">Nova receita</button>
+        </div>
+      </div>
+      <div>
+        <div class="tabs-label">Plataforma</div>
+        <div class="tabs" id="tabs-platform">
+          <button data-pl="desktop" class="on">Desktop</button>
+          <button data-pl="mobile">Mobile 375</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="sw"><i style="background:var(--warm-50);border-style:dashed"></i><strong>fundo</strong> warm-50</span>
+    <span class="sw"><i style="background:var(--warm-100);border-style:dashed"></i><strong>card</strong> warm-100</span>
+    <span class="sw"><i style="background:var(--brand-50);border-color:var(--brand-200)"></i><strong>destaque/ativo</strong></span>
+    <span class="sw"><i style="background:var(--brand-500);border-color:var(--brand-500)"></i><strong>ação</strong></span>
+    <span class="sw"><i style="background:var(--warning-bg);border-color:var(--warning-border)"></i><strong>teste / atenção</strong></span>
+    <span style="margin-left:auto"><code>[icon]</code> placeholder · contadores e levain recalculam ao vivo</span>
+  </div>
+
+  <!-- ═════════════ DESKTOP ═════════════ -->
+  <div class="stage desktop on" data-pl="desktop" data-screen-label="Produção · Definir volume · Desktop">
+    <div class="dk">
+      <aside>
+        <div class="brand">CORA <span class="tag">backoffice</span></div>
+        <div class="nav-label">MVP</div>
+        <nav>
+          <a href="#"><span class="ico">cal</span>Semana</a>
+          <a href="#"><span class="ico">plan</span>Planejamento</a>
+          <a href="#" class="on"><span class="ico">prod</span>Produção</a>
+          <a href="#"><span class="ico">exp</span>Expedição</a>
+          <a href="#"><span class="ico">rec</span>Receitas</a>
+          <a href="Cora Financeiro v1.html"><span class="ico">$</span>Financeiro</a>
+        </nav>
+        <div class="nav-label">Em breve</div>
+        <nav>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">box</span>Estoque</span><span class="pill">em breve</span></a>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">ass</span>Assinantes</span><span class="pill">em breve</span></a>
+          <a href="#" class="disabled"><span style="display:flex;align-items:center;gap:10px"><span class="ico">cfg</span>Configurações</span><span class="pill">em breve</span></a>
+        </nav>
+        <div class="foot"><div class="av">H</div><div>Hugo<br><span style="color:var(--warm-400);font-size:11px">padeiro</span></div></div>
+      </aside>
+
+      <main>
+        <div class="wk-head">
+          <div>
+            <div class="eyebrow">pré-produção · definir volume</div>
+            <h1>PRODUÇÃO · SEMANA 14</h1>
+            <div class="sub">30 mar — 5 abr · entrega quinta 3 abr</div>
+          </div>
+          <div class="head-right">
+            <div class="status-pill">pré-produção</div>
+            <div class="test-tag">período de testes</div>
+            <div class="wk-nav"><button>‹</button><button>›</button></div>
+            <div class="av">H</div>
+          </div>
+        </div>
+
+        <div class="banner info" id="dk-banner-test">
+          <span style="display:flex;align-items:center;gap:10px"><span class="b-eyebrow" style="color:var(--brand-500)">sem assinante</span><span>Você define o volume da semana na mão. Quando entrar cliente, <strong>pedidos</strong> populam aqui e a forma não muda.</span></span>
+        </div>
+
+        <div class="banner success hide" id="dk-banner-done">
+          <span><strong id="dk-done-msg">Produções criadas.</strong> Etapas geradas: autólise → … → cocção.</span>
+          <a href="Producao v4 - wireframes v5+3.html">Abrir acompanhamento →</a>
+        </div>
+
+        <!-- DAY TABS -->
+        <div class="day-tabs">
+          <div class="day-tab active">
+            <div class="head"><div class="nm">TER</div><div class="dt">1 abr</div></div>
+            <div class="what">Levain · prep · mise en place</div>
+          </div>
+          <div class="day-tab future">
+            <div class="head"><div class="nm">QUA</div><div class="dt">2 abr</div></div>
+            <div class="what">Autólise → batimento → dobras → shape</div>
+          </div>
+          <div class="day-tab future">
+            <div class="head"><div class="nm">QUI</div><div class="dt">3 abr</div></div>
+            <div class="what">Cocção · expedição · entregas</div>
+          </div>
+        </div>
+
+        <!-- 1 · DEFINIR VOLUME -->
+        <div class="sec-head">
+          <div class="label">Definir volume</div>
+          <div class="meta" id="dk-vol-meta">cardápio da semana · 4 receitas</div>
+          <div class="actions">
+            <button class="btn-ghost" onclick="openModal()">+ Adicionar receita</button>
+            <button class="btn-ghost" onclick="openModal('nova')">+ Nova receita de teste</button>
+          </div>
+        </div>
+        <div class="vol-list">
+          <div id="dk-vol-rows"></div>
+          <div class="vol-empty hide" id="dk-vol-empty">
+            <div class="big">Nenhum volume definido</div>
+            Use os contadores acima pra somar pães, ou adicione uma receita ao cardápio da semana.
+          </div>
+        </div>
+
+        <!-- 3 · LEVAIN -->
+        <div class="sec-head">
+          <div class="label">Levain</div>
+          <div class="meta">calculado a partir do volume · autólise quarta</div>
+        </div>
+        <div class="levain">
+          <div class="L">
+            <div class="top">
+              <div class="nm">Levain · semana 14</div>
+              <span class="profile-sel">
+                <span class="pl">perfil</span>
+                <select id="dk-profile">
+                  <option value="liquido">levain líquido 1:2:2</option>
+                  <option value="solido" disabled>levain sólido — em breve</option>
+                </select>
+              </span>
+            </div>
+            <div class="meta">isca + água 18°C + farinha Superiore (Le 5 Stagioni)<span class="sep">·</span>1 isca · 2 água · 2 farinha</div>
+            <div class="caption">Demanda = farinha de cada receita × % de prefermento, somada pra autólise de quarta.</div>
+          </div>
+          <div class="R">
+            <div class="label">Meta autólise</div>
+            <div class="row"><span>Pra quarta 2 abr</span><strong id="dk-lev-meta">—</strong></div>
+          </div>
+
+          <div class="calc" id="dk-calc">
+            <div class="calc-h"><span>Calculadora · build</span><span class="ratio">1 isca · 2 água · 2 farinha</span></div>
+            <div class="inputs">
+              <div class="ipt"><span class="lbl">Meta autólise</span><span class="v-fixed" id="dk-calc-meta">—</span></div>
+              <div class="ipt"><span class="lbl">Sobra desejada (mãe sem 15)</span><span class="v-input"><input type="number" id="dk-sobra" value="400" min="0" step="50"><span class="u">g</span></span></div>
+            </div>
+            <div class="outputs">
+              <div class="out"><span class="lbl">Isca (levain mãe)</span><span class="v" data-out="isca">—</span></div>
+              <div class="out"><span class="lbl">Água mineral 18°C</span><span class="v" data-out="agua">—</span></div>
+              <div class="out"><span class="lbl">Farinha Superiore</span><span class="v" data-out="farinha">—</span></div>
+              <div class="out total"><span class="lbl">Total a produzir</span><span class="v" data-out="total">—</span></div>
+            </div>
+          </div>
+
+          <div class="lev-warn"><span class="ico">⚠</span><span>Levain parado há mais de 3 dias? Faça 1 refresco a mais antes de usar.</span></div>
+        </div>
+
+        <!-- 4 · RESUMO + AÇÃO -->
+        <div class="sec-head">
+          <div class="label">Resumo da semana</div>
+          <div class="meta" id="dk-resumo-meta">pré-produção · planejada</div>
+        </div>
+        <div class="summary">
+          <div class="c"><div class="k">Pães</div><div class="v" id="dk-sum-paes">0<span class="u"> un</span></div><div class="d" id="dk-sum-paes-d">defina o volume</div></div>
+          <div class="c"><div class="k">Massa total</div><div class="v" id="dk-sum-massa">0<span class="u"> kg</span></div><div class="d">un × peso × 1,05</div></div>
+          <div class="c"><div class="k">Levain total</div><div class="v" id="dk-sum-lev">0<span class="u"> kg</span></div><div class="d">farinha × prefermento</div></div>
+        </div>
+        <div class="note-line">
+          <strong>Levain é refinável</strong> na calculadora acima a qualquer momento. <strong>Produções de teste</strong> podem ser limpas antes do Alpha — não contam pro histórico.
+        </div>
+        <div class="conclude">
+          <div class="left" id="dk-conclude-left">4 produções planejadas · 12 etapas a gerar</div>
+          <div class="right">
+            <button class="btn secondary" id="dk-clear-test" onclick="clearTests()" style="display:none">Limpar testes</button>
+            <button class="btn primary" id="dk-create" onclick="createProducoes()">Criar produções da semana</button>
+          </div>
+        </div>
+
+        <div class="wf-note"><strong>Ponte de dados:</strong> hoje <code>pedidos = 0</code> (sem assinante). O contador escreve <code>producao.qty_paes_prevista</code> · <code>origem: manual|teste</code>. Quando o cliente popula, a forma não muda — o "você adiciona" vira "pedidos N". "Criar produções" grava <code>producao.status: planejada</code> e gera as etapas.</div>
+      </main>
+
+      <!-- DESKTOP MODAL · NOVA RECEITA DE TESTE -->
+      <div class="overlay" id="dk-overlay">
+        <div class="modal">
+          <div class="mh">
+            <div>
+              <div class="eyebrow">mini-fluxo · status rascunho</div>
+              <h2>Nova receita de teste</h2>
+            </div>
+            <div class="close" onclick="closeModal()">✕</div>
+          </div>
+          <div class="mb">
+            <div class="seg" id="dk-seg">
+              <button class="on" data-mode="variacao">Variação de pão existente<span class="small">→ nova versão</span></button>
+              <button data-mode="novo">Pão novo<span class="small">→ novo produto + receita</span></button>
+            </div>
+
+            <!-- VARIAÇÃO -->
+            <div id="dk-form-variacao">
+              <div class="field">
+                <div class="lbl">Pão base</div>
+                <select id="dk-v-base">
+                  <option>Pão Original</option>
+                  <option>Pão Integral</option>
+                  <option>Focaccia Genovesa</option>
+                  <option>Multigrãos</option>
+                </select>
+                <div class="hint">A versão herda formato e grupo do pão base.</div>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <div class="lbl">Hidratação alvo</div>
+                  <div class="with-u"><input type="number" id="dk-v-hid" value="75" min="40" max="120"><span class="u">%</span></div>
+                </div>
+                <div class="field">
+                  <div class="lbl">% de prefermento</div>
+                  <div class="with-u"><input type="number" id="dk-v-pref" value="20" min="0" max="60"><span class="u">%</span></div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="lbl">Peso da massa / pão</div>
+                <div class="with-u"><input type="number" id="dk-v-peso" value="600" min="50" step="10"><span class="u">g</span></div>
+                <div class="hint">Peso da massa por unidade. Perda de cocção fica em 5% (padrão).</div>
+              </div>
+              <div class="field">
+                <div class="lbl">Notas</div>
+                <textarea id="dk-v-notas" placeholder="o que está testando nesta versão"></textarea>
+              </div>
+            </div>
+
+            <!-- NOVO -->
+            <div id="dk-form-novo" style="display:none">
+              <div class="field">
+                <div class="lbl">Nome do pão</div>
+                <input type="text" id="dk-n-nome" placeholder="ex.: Italiano de azeitonas">
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <div class="lbl">Formato</div>
+                  <select id="dk-n-form">
+                    <option>banneton</option>
+                    <option>couche</option>
+                    <option>tabuleiro 60×40</option>
+                    <option>forma</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <div class="lbl">Peso alvo</div>
+                  <div class="with-u"><input type="number" id="dk-n-peso" value="500" min="50" step="10"><span class="u">g</span></div>
+                </div>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <div class="lbl">Hidratação alvo</div>
+                  <div class="with-u"><input type="number" id="dk-n-hid" value="75" min="40" max="120"><span class="u">%</span></div>
+                </div>
+                <div class="field">
+                  <div class="lbl">% de prefermento</div>
+                  <div class="with-u"><input type="number" id="dk-n-pref" value="20" min="0" max="60"><span class="u">%</span></div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="lbl">Notas</div>
+                <textarea id="dk-n-notas" placeholder="o que está testando neste pão"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="mf">
+            <div class="status"><span class="grp rascunho">● rascunho</span> · origem teste</div>
+            <button class="btn primary" onclick="addTest()">Adicionar à semana</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════ MOBILE 375 ═════════════ -->
+  <div class="stage mobile" data-pl="mobile" data-screen-label="Produção · Definir volume · Mobile">
+    <div class="mb">
+      <div class="mb-top"><div class="hmb">≡</div><div class="brand">CORA</div><div class="nv">w14</div></div>
+      <div class="mb-head">
+        <div class="eyebrow">pré-produção · definir volume</div>
+        <h1>PRODUÇÃO</h1>
+        <div class="sub">sem 14 · entrega qui 3 abr</div>
+        <div class="row">
+          <div class="status-pill">pré-produção</div>
+          <div class="test-tag">período de testes</div>
+        </div>
+      </div>
+      <div class="mb-days">
+        <div class="mb-day active"><div class="nm">TER</div><div class="dt">1 abr</div><div class="wh">Levain · prep</div></div>
+        <div class="mb-day future"><div class="nm">QUA</div><div class="dt">2 abr</div><div class="wh">Autólise → shape</div></div>
+        <div class="mb-day future"><div class="nm">QUI</div><div class="dt">3 abr</div><div class="wh">Cocção · entrega</div></div>
+      </div>
+      <div class="mb-body">
+        <div class="mb-banner info" id="mb-banner-test"><span class="add" style="font-weight:600;color:var(--brand-800)">Sem assinante.</span> Você define o volume na mão. Quando entrar cliente, <strong>pedidos</strong> populam aqui.</div>
+        <div class="mb-banner success hide" id="mb-banner-done"><strong id="mb-done-msg">Produções criadas.</strong> Etapas geradas. <a href="Producao v4 - wireframes v5+3.html" style="color:var(--brand-500);font-weight:600">acompanhar →</a></div>
+
+        <div class="mb-sec"><div class="label">Definir volume</div><div class="meta" id="mb-vol-meta">cardápio · 4</div></div>
+        <div class="mb-vol" id="mb-vol-rows"></div>
+        <div class="mb-empty hide" id="mb-vol-empty">Nenhum volume definido ainda. Some pães nos contadores ou adicione uma receita.</div>
+        <div class="mb-addrow">
+          <button class="btn-ghost" onclick="openModal()">+ Receita</button>
+          <button class="btn-ghost" onclick="openModal('nova')">+ Nova de teste</button>
+        </div>
+
+        <div class="mb-sec"><div class="label">Levain</div><div class="meta">autólise quarta</div></div>
+        <div class="mb-levain">
+          <div class="top">
+            <div class="nm">Levain · sem 14</div>
+            <span class="mb-profile"><span class="pl">perfil</span>
+              <select id="mb-profile"><option value="liquido">líquido 1:2:2</option><option value="solido" disabled>sólido — em breve</option></select>
+            </span>
+          </div>
+          <div class="meta">isca + água 18°C + Superiore<span class="sep">·</span>1:2:2</div>
+          <div class="demand"><span>Meta autólise</span><strong id="mb-lev-meta">—</strong></div>
+          <div class="mb-calc" id="mb-calc">
+            <div class="h"><span>Build</span><span class="ratio">1·2·2</span></div>
+            <div class="ipt"><span class="lbl">Sobra desejada</span><span class="v-input"><input type="number" id="mb-sobra" value="400" min="0" step="50"><span class="u">g</span></span></div>
+            <div class="outs">
+              <div class="out"><span class="lbl">Isca</span><span class="v" data-mbout="isca">—</span></div>
+              <div class="out"><span class="lbl">Água 18°C</span><span class="v" data-mbout="agua">—</span></div>
+              <div class="out"><span class="lbl">Farinha Superiore</span><span class="v" data-mbout="farinha">—</span></div>
+              <div class="out total"><span class="lbl">Total</span><span class="v" data-mbout="total">—</span></div>
+            </div>
+          </div>
+          <div class="mb-lev-warn"><span>⚠</span><span>Levain parado 3+ dias? 1 refresco a mais antes de usar.</span></div>
+        </div>
+
+        <div class="mb-sec"><div class="label">Resumo</div></div>
+        <div class="mb-summary">
+          <div class="c"><div class="k">Pães</div><div class="v" id="mb-sum-paes">0<span class="u"> un</span></div></div>
+          <div class="c"><div class="k">Massa</div><div class="v" id="mb-sum-massa">0<span class="u"> kg</span></div></div>
+          <div class="c"><div class="k">Levain</div><div class="v" id="mb-sum-lev">0<span class="u"> kg</span></div></div>
+        </div>
+        <div class="mb-note"><strong>Levain refinável</strong> na calculadora · <strong>produções de teste</strong> limpáveis antes do Alpha.</div>
+      </div>
+      <div class="mb-foot">
+        <button class="btn primary" id="mb-create" onclick="createProducoes()">Criar produções da semana</button>
+        <div class="hint" id="mb-foot-hint">cria produções (planejada) + gera etapas</div>
+      </div>
+      <nav class="mb-bot">
+        <a href="#"><span class="ico">sem</span>Semana</a>
+        <a href="#" class="on"><span class="ico">prod</span>Produção</a>
+        <a href="#"><span class="ico">exp</span>Expedição</a>
+        <a href="#"><span class="ico">···</span>Mais ▾</a>
+      </nav>
+
+      <!-- MOBILE MODAL -->
+      <div class="mb-modal" id="mb-modal">
+        <div class="mh">
+          <div class="back" onclick="closeModal()">‹</div>
+          <h2>Nova receita de teste</h2>
+        </div>
+        <div class="mbd">
+          <div class="seg" id="mb-seg">
+            <button class="on" data-mode="variacao">Variação<span class="small">→ nova versão</span></button>
+            <button data-mode="novo">Pão novo<span class="small">→ produto + receita</span></button>
+          </div>
+          <div id="mb-form-variacao">
+            <div class="field"><div class="lbl">Pão base</div>
+              <select id="mb-v-base"><option>Pão Original</option><option>Pão Integral</option><option>Focaccia Genovesa</option><option>Multigrãos</option></select>
+            </div>
+            <div class="field-grid">
+              <div class="field"><div class="lbl">Hidratação alvo</div><div class="with-u"><input type="number" id="mb-v-hid" value="75"><span class="u">%</span></div></div>
+              <div class="field"><div class="lbl">Prefermento</div><div class="with-u"><input type="number" id="mb-v-pref" value="20"><span class="u">%</span></div></div>
+            </div>
+            <div class="field"><div class="lbl">Peso da massa / pão</div><div class="with-u"><input type="number" id="mb-v-peso" value="600" step="10"><span class="u">g</span></div></div>
+            <div class="field"><div class="lbl">Notas</div><textarea id="mb-v-notas" placeholder="o que está testando"></textarea></div>
+          </div>
+          <div id="mb-form-novo" style="display:none">
+            <div class="field"><div class="lbl">Nome do pão</div><input type="text" id="mb-n-nome" placeholder="ex.: Italiano de azeitonas"></div>
+            <div class="field-grid">
+              <div class="field"><div class="lbl">Formato</div><select id="mb-n-form"><option>banneton</option><option>couche</option><option>tabuleiro 60×40</option><option>forma</option></select></div>
+              <div class="field"><div class="lbl">Peso alvo</div><div class="with-u"><input type="number" id="mb-n-peso" value="500" step="10"><span class="u">g</span></div></div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><div class="lbl">Hidratação alvo</div><div class="with-u"><input type="number" id="mb-n-hid" value="75"><span class="u">%</span></div></div>
+              <div class="field"><div class="lbl">Prefermento</div><div class="with-u"><input type="number" id="mb-n-pref" value="20"><span class="u">%</span></div></div>
+            </div>
+            <div class="field"><div class="lbl">Notas</div><textarea id="mb-n-notas" placeholder="o que está testando"></textarea></div>
+          </div>
+        </div>
+        <div class="mf">
+          <button class="btn primary" onclick="addTest()">Adicionar à semana</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="definir-volume.js"></script>
+</body>
+</html>
