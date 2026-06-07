@@ -14,6 +14,8 @@ import { ResumoCards } from './components/ResumoCards';
 import { ConcludeBar } from './components/ConcludeBar';
 import { AdicionarReceitaModal } from './components/AdicionarReceitaModal';
 import { NovaReceitaTesteModal } from './components/NovaReceitaTesteModal';
+import { ProducaoTabs, type AbaProducao } from './components/ProducaoTabs';
+import { Preparacao } from './components/Preparacao';
 import type { LinhaVolume } from './types';
 
 type ModalAberto = 'adicionar' | 'novaTeste' | null;
@@ -23,6 +25,7 @@ export function ProducaoDefinirVolume() {
   const { dados, loading, naoEncontrada, error, refetch } = useProducaoVolume(id);
 
   const [linhas, setLinhas] = useState<LinhaVolume[]>([]);
+  const [aba, setAba] = useState<AbaProducao>('volume');
   const [sobra, setSobra] = useState(400);
   const [modal, setModal] = useState<ModalAberto>(null);
   const [salvando, setSalvando] = useState(false);
@@ -121,36 +124,46 @@ export function ProducaoDefinirVolume() {
   return (
     <Shell>
       <PrHeader semana={semana} anterior={semanaAnterior} proxima={semanaProxima} />
-      <BannerProducao sucesso={sucesso} />
-      <DayTabs dias={dias} />
+      <ProducaoTabs ativa={aba} onChange={setAba} />
 
-      <VolumeList
-        linhas={linhas}
-        onQty={setQty}
-        onRemover={removerLinha}
-        onAdicionar={() => setModal('adicionar')}
-        onNovaTeste={() => setModal('novaTeste')}
-      />
+      {aba === 'volume' && (
+        <>
+          <BannerProducao sucesso={sucesso} />
+          <DayTabs dias={dias} />
 
-      <LevainCard metaG={totais.levainKg * 1000} sobraG={sobra} onSobra={setSobra} />
+          <VolumeList
+            linhas={linhas}
+            onQty={setQty}
+            onRemover={removerLinha}
+            onAdicionar={() => setModal('adicionar')}
+            onNovaTeste={() => setModal('novaTeste')}
+          />
 
-      <ResumoCards paes={totais.paes} massaKg={totais.massaKg} levainKg={totais.levainKg} />
+          <LevainCard metaG={totais.levainKg * 1000} sobraG={sobra} onSobra={setSobra} />
 
-      {erroAcao && (
-        <p className="px-5 text-[13px] text-danger-text md:px-8">Erro: {erroAcao}</p>
+          <ResumoCards paes={totais.paes} massaKg={totais.massaKg} levainKg={totais.levainKg} />
+
+          {erroAcao && (
+            <p className="px-5 text-[13px] text-danger-text md:px-8">Erro: {erroAcao}</p>
+          )}
+
+          <ConcludeBar numProducoes={numProducoes} salvando={salvando} onCriar={criar} />
+
+          {modal === 'adicionar' && (
+            <AdicionarReceitaModal
+              excluirVersaoIds={excluirVersaoIds}
+              onAdd={adicionarLinha}
+              onClose={() => setModal(null)}
+            />
+          )}
+          {modal === 'novaTeste' && (
+            <NovaReceitaTesteModal onAdd={adicionarLinha} onClose={() => setModal(null)} />
+          )}
+        </>
       )}
 
-      <ConcludeBar numProducoes={numProducoes} salvando={salvando} onCriar={criar} />
-
-      {modal === 'adicionar' && (
-        <AdicionarReceitaModal
-          excluirVersaoIds={excluirVersaoIds}
-          onAdd={adicionarLinha}
-          onClose={() => setModal(null)}
-        />
-      )}
-      {modal === 'novaTeste' && (
-        <NovaReceitaTesteModal onAdd={adicionarLinha} onClose={() => setModal(null)} />
+      {aba === 'preparacao' && (
+        <Preparacao semanaId={semana.id} onIrParaVolume={() => setAba('volume')} />
       )}
     </Shell>
   );
