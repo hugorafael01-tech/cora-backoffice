@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabase';
 
 const SIDEBAR_ITENS: { label: string; to?: string; emBreve?: boolean }[] = [
   { label: 'Semana', to: '/semanas/atual' },
+  { label: 'Produção', to: '/producao/atual' },
   { label: 'Planejamento', emBreve: true },
   { label: 'Estoque', emBreve: true },
   { label: 'Assinantes', emBreve: true },
@@ -74,9 +75,15 @@ export function Shell({ children }: { children: ReactNode }) {
         >
           Semana
         </NavLink>
-        <span className="flex-1 py-3 text-center text-[12px] text-warm-300 select-none" style={{ minHeight: 44 }}>
+        <NavLink
+          to="/producao/atual"
+          className={({ isActive }) =>
+            `flex-1 py-3 text-center text-[12px] ${isActive ? 'text-brand-500 font-medium' : 'text-warm-600'}`
+          }
+          style={{ minHeight: 44 }}
+        >
           Produção
-        </span>
+        </NavLink>
         <span className="flex-1 py-3 text-center text-[12px] text-warm-300 select-none" style={{ minHeight: 44 }}>
           Expedição
         </span>
