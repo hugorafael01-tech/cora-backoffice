@@ -58,8 +58,7 @@ export function previewLinha(
 ): PreviewLinha {
   const massaKg = pesoMassaG == null ? null : round3((qty * pesoMassaG) / 1000);
 
-  const farinhaPorPao =
-    somaBaker > 0 && pesoMassaG != null ? pesoMassaG / somaBaker : null;
+  const farinhaPorPao = farinhaPorPaoG(pesoMassaG, somaBaker);
 
   const levainKg =
     farinhaPorPao == null || levainPct == null
@@ -67,6 +66,16 @@ export function previewLinha(
       : round3((qty * farinhaPorPao * levainPct) / 1000);
 
   return { massaKg, levainKg };
+}
+
+/**
+ * Farinha (g) por pao = peso_massa_g / soma_baker. Mesma formula e guard da
+ * funcao peso_farinha_por_pao() no banco: soma_baker == 0 OU peso nulo -> null
+ * (pao novo de teste sem ingredientes). Usado pela ficha pra derivar g/pao de
+ * cada ingrediente (farinha x baker%) sem chamar a rpc.
+ */
+export function farinhaPorPaoG(pesoMassaG: number | null, somaBaker: number): number | null {
+  return somaBaker > 0 && pesoMassaG != null ? pesoMassaG / somaBaker : null;
 }
 
 function round3(n: number): number {

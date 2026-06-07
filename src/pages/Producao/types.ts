@@ -33,3 +33,57 @@ export interface DadosProducao {
   semanaAnterior: string | null;
   semanaProxima: string | null;
 }
+
+// ---- Preparacao (read-only: mise en place + fichas) ----
+
+/** Linha de breakdown por produto dentro de um ingrediente (saida nativa da funcao). */
+export interface MiseProduto {
+  produtoId: string;
+  produtoNome: string;
+  qtyG: number;
+}
+
+/** Ingrediente agregado pro mise en place. totalG = soma dos qtyG dos produtos. */
+export interface MiseIngrediente {
+  ingredienteId: string;
+  nome: string;
+  unidade: string;
+  totalG: number;
+  porProduto: MiseProduto[];
+}
+
+/** Uma linha de ingrediente na formulacao da ficha. */
+export interface FichaIngrediente {
+  nome: string;
+  slug: string;
+  baker: number; // percentual_baker decimal (0.85 = 85%)
+  gramasPorPao: number | null; // farinha_por_pao x baker; null se sem farinha (Sigma 0)
+}
+
+/** Uma etapa do processo da ficha (template etapas_receita). */
+export interface FichaEtapa {
+  ordem: number;
+  nome: string;
+  tipo: string | null;
+  duracaoMin: number | null;
+  notas: string | null;
+}
+
+/** Ficha tecnica read-only de uma receita produzida na semana. */
+export interface Ficha {
+  versaoReceitaId: string;
+  nome: string;
+  grupo: number | null;
+  rascunho: boolean;
+  hidratacaoAlvo: number | null;
+  pesoMassaG: number | null;
+  qty: number;
+  ingredientes: FichaIngrediente[];
+  etapas: FichaEtapa[];
+}
+
+export interface DadosPreparacao {
+  miseEnPlace: MiseIngrediente[];
+  fichas: Ficha[];
+  totalPaes: number;
+}

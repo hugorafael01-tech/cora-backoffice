@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { calcLevainBuild, previewLinha, slugify } from './producao';
+import { calcLevainBuild, farinhaPorPaoG, previewLinha, slugify } from './producao';
+
+describe('farinhaPorPaoG (formula da ficha = peso_farinha_por_pao do banco)', () => {
+  it('peso_massa / soma_baker', () => {
+    expect(farinhaPorPaoG(820, 1.92)).toBeCloseTo(427.08, 2);
+  });
+  it('null quando soma_baker == 0 (sem ingredientes)', () => {
+    expect(farinhaPorPaoG(500, 0)).toBeNull();
+  });
+  it('null quando peso_massa nulo', () => {
+    expect(farinhaPorPaoG(null, 1.7)).toBeNull();
+  });
+});
 
 describe('calcLevainBuild (perfil liquido 1:2:2)', () => {
   it('reparte total = meta + sobra em isca 1 : agua 2 : farinha 2', () => {
