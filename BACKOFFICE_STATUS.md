@@ -2,14 +2,14 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 3 de junho de 2026.
+**Última atualização:** 7 de junho de 2026.
 
 ---
 
 ## Estado do repositório
 
 - **Repositório:** `github.com/hugorafael01-tech/cora-backoffice`
-- **Branch principal:** `main` (commit `787f159`)
+- **Branch principal:** `main` (commit `8d2492a`)
 - **Subdomain:** `admin.acora.com.br`
 - **Stack:** Vite + React + TypeScript + Tailwind + Supabase Auth (magic link) + Vercel Functions
 - **Banco:** Supabase Postgres — **mesmo projeto** compartilhado com Portal (sem staging isolado)
@@ -45,12 +45,15 @@
 | 0018_profiles_e_expand_subscriptions | aplicada | `main` (`1453270`, PR #7) | Frente D / D.1 — fase **expand**. Cria `profiles` (1:1 c/ auth.users, RLS select-own) + 9 colunas nullable e 2 CHECKs de qty em `subscriptions`. Sem drop/rename do shape legado. |
 | 0019_revoke_escrita_subscriptions_profiles | **aplicada** (via SQL Editor) | `main` (`f5daadd`, PR #11) | Segurança (ClickUp 86e1mcyuz). Revoga INSERT/UPDATE/DELETE de `authenticated`+`anon` em `subscriptions` e `profiles`, revoga SELECT de `anon`, dropa policy `subscriptions_update_own`. SELECT own do `authenticated` e `service_role` mantidos. **Aplicada no banco** (SQL Editor, não db push). Verificada por probe anônimo em 03/jun: anon `SELECT` em `subscriptions` e `profiles` retorna `42501` (permission denied), provando que o REVOKE de SELECT do `anon` está de pé; como a migration roda em bloco único, os REVOKEs de write do `authenticated` e o DROP da policy `subscriptions_update_own` foram aplicados junto. Corroborada pelo endpoint de vínculo da Perna 3 Peça A, que só existe porque a escrita do client foi revogada. |
 | 0020_asaas_webhooks_schema | **aplicada** (via SQL Editor) | `main` (`57ab4be`, PR #13) | Asaas webhooks Perna 1 / SCHEMA (ClickUp 86e1mk8c0). Expand-only. Cria enum `payment_status_enum` (`em_dia`/`pendente`/`vencido`), +3 colunas nullable em `subscriptions` (`payment_status`, `last_payment_at`, `last_payment_event`), e tabela `asaas_webhook_events` (caixa-preta de eventos crus: UNIQUE em `asaas_event_id`, FK nullable → `subscriptions`, índices em `subscription_id`/`event_type`, `payload jsonb`). RLS: SELECT pro `authenticated` via `is_admin()` (painel lê via client autenticado); escrita só `service_role` (REVOKE write de `authenticated`/`anon`, SELECT de `anon`). Não toca `status`/`subscription_status`. **Aplicada no banco** (SQL Editor, não db push; queries pré/pós em `0020_asaas_webhooks_schema.verificacao.sql`). Verificada por probe em 03/jun: tabela `asaas_webhook_events` existe (coluna inexistente → `42703`, não erro de tabela); as 3 colunas em `subscriptions` existem (`42501`, não `42703`); enum `payment_status_enum` existe (é o tipo de `payment_status`). Corroborada pela Perna 2 provada ponta a ponta com evento real do Asaas em 02/jun. |
+| 0021_producao_fatia1_levain_origem | **aplicada** (via SQL Editor) | `main` (`8028bfb`, PR #19) | Produção fatia 1. Expand-only. (1) **Levain como ingrediente** (não coluna): adiciona `levain` ao catálogo + 1 linha por versão com o `percentual_baker` validado do Alex (Original/Integral 0.20, Multigrãos 0.40, Ciabatta 0.25, Focaccia 0.30, Brioche 0.10). Corrige `peso_farinha_por_pao()`/`mise_en_place_semana()`, que superestimavam a farinha ~12% (Original: 820/1,72=477 errado → com levain no Sigma 820/1,92=427 correto). (2) `producoes.origem` enum `producao_origem_enum` {pedido, manual, teste}, default `teste`. (3) Trigger `trg_producoes_set_prevista` (fonte única) preenche `massa_prevista_kg` e `levain_previsto_kg`. RLS de `producoes` já era `admin_all` (0012). **Aplicada no banco** (SQL Editor; histórico CLI dessincronizado desde 0018). Verificada por probe em 07/jun: farinha Original=427, 7 linhas de levain, `origem` default `teste`. |
+| 0022_produto_formato_disco_bola | **aplicada** (via SQL Editor) | `main` (`8028bfb`, PR #19) | Adiciona `disco` e `bola` ao enum `produto_formato` (formatos de venda da pizza). Transação separada da 0023 (Postgres não usa valor de enum recém-adicionado na mesma transação). Verificada por probe em 07/jun (`enum_range` lista disco+bola). |
+| 0023_seed_pizza | **aplicada** (via SQL Editor) | `main` (`8028bfb`, PR #19) | Pizza Clássica (Levain) como receita real (formulação do Alex). Produto formato `disco`, versão rascunho, ingredientes com levain (farinha/un ~150g). Etapas NÃO seedadas (sem inventar tempos). `lemady` (melhorador 0,3%) no catálogo. Depende de 0021 (levain) e 0022 (disco/bola). Verificada por probe em 07/jun (farinha Pizza=150). |
 
 ---
 
 ## Branches em voo
 
-Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessões de 03/06/2026: módulo Financeiro Peça C mergeado (PR #16 read-only, PR #17 ação de vincular) + atualizações de documentação deste STATUS — sem mudança de schema.
+Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessões de 03/06/2026: módulo Financeiro Peça C mergeado (PR #16 read-only, PR #17 ação de vincular) + atualizações de documentação deste STATUS — sem mudança de schema. Sessão de 07/06/2026: Produção fatia 1 — schema (migrations 0021/0022/0023) mergeado (PR #19) e **aplicado no banco** (via SQL Editor; verificado por probe em 07/jun); frontend da tela "Definir volume" (Estado A) mergeado (PR #20). Pizza modelada como receita real.
 
 ---
 
@@ -110,6 +113,14 @@ git push -u origin feat/nome-da-mudanca
     - **C2 (ação de vincular, PR #17): validada em produção.** Modal de busca de assinante que chama `POST /api/asaas/vincular` no portal (cross-origin; CORS resolvido no portal, PR #41), usando o access_token da sessão atual do admin. Trata 200/409/404/400/401. Não escreve em `subscriptions` direto (respeita 0019; escrita via service_role no portal). URL do portal via `VITE_PORTAL_URL`. Ao vincular, o endpoint **reconcilia todos os órfãos daquele `asaas_customer_id`** (carimba `subscription_id`; PR #42 no portal), então o pagamento sai de "pra identificar" e não reaparece num reload.
 - **Recorte fase 1:** cobrança criada manualmente no painel do Asaas. O painel **não expõe `externalReference`** na criação manual de cobrança (só via API), então o casamento evento→assinante **NÃO** é por `externalReference`. Na fase 1 o casamento é por **`asaas_customer_id`**: o endpoint de webhook (Perna 2) casa o evento pelo `asaas_customer_id` do pagador (fallback já implementado e testado), e o vínculo `assinante ↔ cliente-Asaas` é gravado em `subscriptions.asaas_customer_id` pelo endpoint da Peça A (a UI da Peça C é onde o Hugo dispara esse vínculo). "Pago" dispara com PAYMENT_CONFIRMED **ou** PAYMENT_RECEIVED (cartão só vira RECEIVED 32 dias após CONFIRMED); "Vencido" com PAYMENT_OVERDUE.
 - **Pendência operacional do Hugo (única coisa que falta):** criar o webhook em **produção** do Asaas (hoje só o Sandbox existe). Com a Peça C no ar, é o último passo pra ligar o fluxo no Alpha — fecha a Perna 3 e a integração Asaas inteira.
+
+### Frente Produção — fatia 1 concluída
+
+- **Briefing:** `Docs/CORA_Briefing_Backoffice_Producao_Fatia1_DefinirVolume.md`. Wireframe: `Docs/wireframes/producao/Producao - Definir Volume v1.html` (estende o v5+3).
+- **Schema (PR #19):** migrations 0021/0022/0023 mergeadas e aplicadas (ver tabela de Migrations). **Levain é ingrediente, não coluna**; `peso_farinha_por_pao`/`mise_en_place` agora corretas. Trigger `producoes_set_prevista` é a **fonte única** de `massa_prevista_kg`/`levain_previsto_kg`.
+- **Frontend (PR #20):** tela "Definir volume" (Estado A) em `admin.acora.com.br/producao`, no padrão do módulo Semana. Rota `/producao` → `/producao/atual` → `/producao/:id` (reusa `escolherAtual`, extraído pra `lib/semana.ts`); Produção ligada no nav (sidebar + bottom nav). Lista de volume com contador; fontes = cardápio da semana + adicionar receita ativa + nova receita de teste (variação via `fork_versao_receita` com overrides; pão novo = produto+receita+versão rascunho, slug único). Preview ao vivo de massa/levain espelha o trigger (client só espelha; banco é a verdade). Calculadora de build do levain (perfil líquido 1:2:2). "Criar produções da semana": upsert em `producoes` (`ON CONFLICT semana_id+versao_receita_id`, `origem='teste'`, `status='planejada'`) + `popular_etapas_producao`; escrita direta do client como admin (RLS `admin_all`, sem endpoint/CORS). Remover produção tem guard `origem='teste'` (nunca apaga pedido/manual real). `database.types.ts` patchado à mão pra refletir 0021-0023 (CLI dessincronizada).
+- **Higiene de dados:** produções de teste têm `origem='teste'`, purgáveis antes do Alpha. Banco é compartilhado preview/prod — cuidado com dado de teste.
+- **Próximo:** fatia 2 (acompanhamento) e fatia 3 (registros); 4º estado "pedidos N" (futuro, trava semântica contador-vs-total). Etapas das receitas de teste e da Pizza, e reconciliação completa (hidratação/splits/perda) Excel vs banco: passe do módulo Receitas.
 
 ### Tech debt registrada
 
