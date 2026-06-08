@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { derivaEstado } from '../lib/semana';
-import type { DadosProducao, FonteLinha, LinhaVolume, Semana } from '../pages/Producao/types';
+import type {
+  DadosProducao,
+  FonteLinha,
+  LinhaVolume,
+  ProducaoStatus,
+  Semana,
+} from '../pages/Producao/types';
 
 const UUID_VAZIO = '00000000-0000-0000-0000-000000000000';
 
@@ -123,15 +129,17 @@ async function carregarLinhas(semanaId: string): Promise<LinhaVolume[]> {
       .filter((v): v is string => v != null)
   );
 
-  // 2. Producoes ja existentes na semana (prefill de qty)
+  // 2. Producoes ja existentes na semana (prefill de qty + status p/ trava de remocao)
   const { data: producoes } = await supabase
     .from('producoes')
-    .select('versao_receita_id, qty_paes_prevista')
+    .select('versao_receita_id, qty_paes_prevista, status')
     .eq('semana_id', semanaId);
 
   const qtyPorVersao = new Map<string, number>();
+  const statusPorVersao = new Map<string, ProducaoStatus>();
   for (const p of producoes ?? []) {
     qtyPorVersao.set(p.versao_receita_id as string, p.qty_paes_prevista ?? 0);
+    statusPorVersao.set(p.versao_receita_id as string, p.status);
   }
 
   // 3. Uniao de todas as versoes a exibir
@@ -212,6 +220,7 @@ async function carregarLinhas(semanaId: string): Promise<LinhaVolume[]> {
       levainPct: levainPctPorVersao.get(versaoId) ?? null,
       qty: qtyPorVersao.get(versaoId) ?? 0,
       temProducao,
+      producaoStatus: statusPorVersao.get(versaoId) ?? null,
     });
   }
 

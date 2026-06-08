@@ -71,6 +71,7 @@ export async function carregarLinhaVolume(
     levainPct,
     qty: 0,
     temProducao: false,
+    producaoStatus: null,
   };
 }
 
@@ -137,9 +138,11 @@ export async function criarProducoesSemana(
 }
 
 /**
- * Remove a producao de uma versao na semana. GUARD origem='teste': esta acao
- * NUNCA consegue apagar uma producao de pedido/manual real (futuro). Retorna
- * quantas linhas foram apagadas (0 = nada a apagar / nao era teste).
+ * Remove a producao de uma versao na semana. Dois guards:
+ *  - origem='teste': nunca apaga uma producao de pedido/manual real (futuro).
+ *  - status in (planejada, cancelada): nunca apaga uma producao ja em_curso ou
+ *    concluida (a FK e ON DELETE CASCADE — apagaria etapas, carimbos e capturas).
+ * Retorna quantas linhas foram apagadas (0 = nada a apagar / congelada / nao teste).
  */
 export async function removerProducao(
   semanaId: string,
@@ -151,6 +154,7 @@ export async function removerProducao(
     .eq('semana_id', semanaId)
     .eq('versao_receita_id', versaoReceitaId)
     .eq('origem', 'teste')
+    .in('status', ['planejada', 'cancelada'])
     .select('id');
   if (error) throw error;
   return (data ?? []).length;

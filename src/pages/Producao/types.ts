@@ -24,6 +24,7 @@ export interface LinhaVolume {
   levainPct: number | null; // baker% da linha de levain (null = sem levain)
   qty: number;
   temProducao: boolean; // ja existe producao desta versao na semana
+  producaoStatus: ProducaoStatus | null; // status da producao existente (null se temProducao=false)
 }
 
 export interface DadosProducao {

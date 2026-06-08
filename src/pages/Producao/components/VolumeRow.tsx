@@ -16,6 +16,10 @@ export function VolumeRow({ linha, onQty, onRemover }: Props) {
     linha.levainPct
   );
   const zero = linha.qty === 0;
+  // Producao ja iniciada/concluida: linha nao e editavel nem removivel por aqui
+  // (a FK e ON DELETE CASCADE; remover apagaria etapas/carimbos/capturas).
+  const congelada =
+    linha.producaoStatus === 'em_curso' || linha.producaoStatus === 'concluida';
 
   return (
     <div className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-warm-200 px-4 py-4 last:border-b-0 md:px-5">
@@ -48,31 +52,34 @@ export function VolumeRow({ linha, onQty, onRemover }: Props) {
         <div className="inline-flex items-center overflow-hidden rounded-md border-[1.5px] border-warm-300 bg-white">
           <button
             aria-label="Diminuir"
-            disabled={zero}
+            disabled={zero || congelada}
             onClick={() => onQty(linha.versaoReceitaId, Math.max(0, linha.qty - 1))}
-            className="h-11 w-11 text-[22px] leading-none text-brand-500 enabled:hover:bg-brand-50 disabled:text-warm-300"
+            className="h-11 w-11 text-[22px] leading-none text-brand-500 enabled:hover:bg-brand-50 disabled:cursor-not-allowed disabled:text-warm-300"
           >
             −
           </button>
           <span
             className={`min-w-[3rem] text-center font-display text-[22px] tabular-nums ${
-              zero ? 'text-warm-400' : 'text-warm-800'
+              zero || congelada ? 'text-warm-400' : 'text-warm-800'
             }`}
           >
             {linha.qty}
           </span>
           <button
             aria-label="Aumentar"
+            disabled={congelada}
             onClick={() => onQty(linha.versaoReceitaId, linha.qty + 1)}
-            className="h-11 w-11 text-[22px] leading-none text-brand-500 hover:bg-brand-50"
+            className="h-11 w-11 text-[22px] leading-none text-brand-500 enabled:hover:bg-brand-50 disabled:cursor-not-allowed disabled:text-warm-300"
           >
             +
           </button>
         </div>
         <button
           aria-label="Remover receita"
+          disabled={congelada}
+          title={congelada ? 'Producao ja iniciada' : undefined}
           onClick={() => onRemover(linha)}
-          className="ml-3 grid h-9 w-9 place-items-center rounded-md border border-warm-300 bg-white text-[13px] text-warm-400 hover:border-danger-border hover:text-danger-text"
+          className="ml-3 grid h-9 w-9 place-items-center rounded-md border border-warm-300 bg-white text-[13px] text-warm-400 enabled:hover:border-danger-border enabled:hover:text-danger-text disabled:cursor-not-allowed disabled:text-warm-300"
         >
           ✕
         </button>
