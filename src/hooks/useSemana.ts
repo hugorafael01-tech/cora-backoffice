@@ -79,8 +79,10 @@ export function useSemana(id: string | undefined): UseSemanaResult {
         const planejamento = await carregarPlanejamento(semanaId);
         const insumos = await carregarInsumos();
         const entregas = await carregarEntregas(semana.data_entrega);
-        const etapasAgora =
-          estado === 'B' ? await carregarEtapasAgora(semanaId) : new Map<string, EtapaAgora>();
+        // Sempre carrega (sem gate de estado): a funcao e escopada por semana e
+        // devolve Map vazio sem producoes, entao o estado A cai em 'aguardando'.
+        // Sem o gate, a Semana reflete producao em curso fora do Estado B.
+        const etapasAgora = await carregarEtapasAgora(semanaId);
 
         if (cancelado) return;
         setDados({

@@ -196,6 +196,22 @@ export function progressoEtapas(etapas: EtapaAcomp[]): { feitas: number; total: 
   return { feitas, total: etapas.length };
 }
 
+/**
+ * Etapa onde a massa e dividida em pecas (peso da peca = peso_massa_g, cru).
+ * Pao Original: a divisao e o 'Descanso e divisao' (passo 5, tipo 'pre_shape'),
+ * NAO o 'Shape' (passo 6). Na ficha da pra casar tambem por nome; no
+ * Acompanhamento (EtapaAcomp sem nome) so por tipo.
+ */
+export function ehEtapaDivisao(tipo: EtapaTipo | string | null, nome?: string | null): boolean {
+  return tipo === 'pre_shape' || (nome != null && /divis/i.test(nome));
+}
+
+/** Subtexto do tamanho da peca na etapa de divisao: "pecas de ~283 g". */
+export function fmtPecaDivisao(pesoMassaG: number | null): string | null {
+  if (pesoMassaG == null) return null;
+  return `pecas de ~${fmtG(pesoMassaG)}`;
+}
+
 /** Slugifica nome de pao novo: sem acento, sem espaco, kebab. */
 export function slugify(nome: string): string {
   return nome

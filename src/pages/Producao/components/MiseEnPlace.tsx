@@ -44,7 +44,7 @@ export function MiseEnPlace({ grupos }: Props) {
                   <span className="font-display text-[12px] uppercase tracking-[0.06em] text-warm-700">
                     {g.nome}
                   </span>
-                  <span className="font-display text-[15px] tabular-nums text-brand-500">
+                  <span className="font-display text-[18px] font-semibold tabular-nums text-brand-500">
                     {fmtQtd(g.totalG)}
                   </span>
                 </div>
