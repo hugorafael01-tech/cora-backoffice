@@ -16,6 +16,7 @@ import { AdicionarReceitaModal } from './components/AdicionarReceitaModal';
 import { NovaReceitaTesteModal } from './components/NovaReceitaTesteModal';
 import { ProducaoTabs, type AbaProducao } from './components/ProducaoTabs';
 import { Preparacao } from './components/Preparacao';
+import { Acompanhamento } from './components/Acompanhamento';
 import type { LinhaVolume } from './types';
 
 type ModalAberto = 'adicionar' | 'novaTeste' | null;
@@ -95,7 +96,13 @@ export function ProducaoDefinirVolume() {
     setErroAcao(null);
     try {
       if (linha.temProducao && id) {
-        await removerProducao(id, linha.versaoReceitaId);
+        const apagadas = await removerProducao(id, linha.versaoReceitaId);
+        if (apagadas === 0) {
+          // Backstop: producao ja congelada no banco (em_curso/concluida) — mantem
+          // a linha na UI pra nao desincronizar com o banco.
+          setErroAcao('Producao ja iniciada. Nao da pra remover por aqui.');
+          return;
+        }
       }
       setLinhas((prev) => prev.filter((l) => l.versaoReceitaId !== linha.versaoReceitaId));
     } catch (e) {
@@ -164,6 +171,10 @@ export function ProducaoDefinirVolume() {
 
       {aba === 'preparacao' && (
         <Preparacao semanaId={semana.id} onIrParaVolume={() => setAba('volume')} />
+      )}
+
+      {aba === 'acompanhamento' && (
+        <Acompanhamento semanaId={semana.id} onIrParaVolume={() => setAba('volume')} />
       )}
     </Shell>
   );

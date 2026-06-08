@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { calcLevainBuild, farinhaPorPaoG, previewLinha, slugify } from './producao';
+import {
+  calcLevainBuild,
+  derivaEtapaAgora,
+  farinhaPorPaoG,
+  previewLinha,
+  progressoEtapas,
+  slugify,
+} from './producao';
+import type { EtapaAcomp, EtapaStatus } from '../pages/Producao/types';
+
+function etapa(id: string, ordem: number, status: EtapaStatus): EtapaAcomp {
+  return {
+    id,
+    ordem,
+    tipo: 'dobra',
+    status,
+    iniciadaAt: null,
+    concluidaAt: null,
+    dobraNumero: null,
+    tempC: null,
+    detalhes: {},
+    notas: null,
+  };
+}
 
 describe('farinhaPorPaoG (formula da ficha = peso_farinha_por_pao do banco)', () => {
   it('peso_massa / soma_baker', () => {
@@ -51,6 +74,48 @@ describe('previewLinha (espelho do trigger)', () => {
     const { massaKg, levainKg } = previewLinha(10, null, 1.9, 0.2);
     expect(massaKg).toBeNull();
     expect(levainKg).toBeNull();
+  });
+});
+
+describe('derivaEtapaAgora', () => {
+  it('em_curso de menor ordem ganha quando ha mais de uma', () => {
+    const etapas = [
+      etapa('a', 1, 'concluida'),
+      etapa('c', 3, 'em_curso'),
+      etapa('b', 2, 'em_curso'),
+    ];
+    expect(derivaEtapaAgora(etapas)).toBe('b');
+  });
+
+  it('sem em_curso, pega a primeira aguardando (menor ordem)', () => {
+    const etapas = [
+      etapa('a', 1, 'concluida'),
+      etapa('b', 2, 'pulada'),
+      etapa('d', 4, 'aguardando'),
+      etapa('c', 3, 'aguardando'),
+    ];
+    expect(derivaEtapaAgora(etapas)).toBe('c');
+  });
+
+  it('null quando todas resolvidas', () => {
+    const etapas = [etapa('a', 1, 'concluida'), etapa('b', 2, 'pulada')];
+    expect(derivaEtapaAgora(etapas)).toBeNull();
+  });
+});
+
+describe('progressoEtapas (N/M, pulada conta como resolvida)', () => {
+  it('conta concluida e pulada como feitas', () => {
+    const etapas = [
+      etapa('a', 1, 'concluida'),
+      etapa('b', 2, 'pulada'),
+      etapa('c', 3, 'em_curso'),
+      etapa('d', 4, 'aguardando'),
+    ];
+    expect(progressoEtapas(etapas)).toEqual({ feitas: 2, total: 4 });
+  });
+
+  it('lista vazia = 0/0', () => {
+    expect(progressoEtapas([])).toEqual({ feitas: 0, total: 0 });
   });
 });
 

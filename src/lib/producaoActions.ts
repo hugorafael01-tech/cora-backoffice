@@ -1,6 +1,9 @@
 import { supabase } from './supabase';
 import { slugify } from './producao';
+import type { Database, Json } from './database.types';
 import type { LinhaVolume, ProdutoFormato } from '../pages/Producao/types';
+
+type EtapaProducaoUpdate = Database['public']['Tables']['etapas_producao']['Update'];
 
 async function getLevainId(): Promise<string | null> {
   const { data } = await supabase
@@ -68,6 +71,7 @@ export async function carregarLinhaVolume(
     levainPct,
     qty: 0,
     temProducao: false,
+    producaoStatus: null,
   };
 }
 
@@ -79,6 +83,13 @@ export interface CriarProducoesResult {
  * "Criar producoes da semana": para cada linha com qty>0, upsert em producoes
  * (ON CONFLICT semana_id+versao_receita_id DO UPDATE) e gera as etapas.
  * massa/levain previstos sao preenchidos pelo trigger no banco (fonte da verdade).
+ *
+ * IMPORTANTE (fix Estado B): NAO mandamos origem/status no payload. No INSERT os
+ * defaults da coluna preenchem ('teste'/'planejada'); no UPDATE de conflito ficam
+ * PRESERVADOS (antes o upsert resetava esses campos, jogando uma producao
+ * em_curso/concluida de volta pra planejada). Alem disso, producoes ja
+ * em_curso/concluida sao EXCLUIDAS do upsert: a tela de volume nunca reescreve a
+ * qty de uma producao que ja saiu da prancheta.
  */
 export async function criarProducoesSemana(
   semanaId: string,
@@ -87,12 +98,26 @@ export async function criarProducoesSemana(
   const comQty = linhas.filter((l) => l.qty > 0);
   if (comQty.length === 0) return { criadas: 0 };
 
-  const rows = comQty.map((l) => ({
+  // Guard: producoes ja iniciadas/concluidas nao sao tocadas por esta tela.
+  const { data: existentes, error: errExist } = await supabase
+    .from('producoes')
+    .select('versao_receita_id, status')
+    .eq('semana_id', semanaId);
+  if (errExist) throw errExist;
+
+  const congeladas = new Set(
+    (existentes ?? [])
+      .filter((p) => p.status === 'em_curso' || p.status === 'concluida')
+      .map((p) => p.versao_receita_id as string)
+  );
+
+  const aGravar = comQty.filter((l) => !congeladas.has(l.versaoReceitaId));
+  if (aGravar.length === 0) return { criadas: 0 };
+
+  const rows = aGravar.map((l) => ({
     semana_id: semanaId,
     versao_receita_id: l.versaoReceitaId,
     qty_paes_prevista: l.qty,
-    origem: 'teste' as const,
-    status: 'planejada' as const,
   }));
 
   const { data, error } = await supabase
@@ -113,9 +138,11 @@ export async function criarProducoesSemana(
 }
 
 /**
- * Remove a producao de uma versao na semana. GUARD origem='teste': esta acao
- * NUNCA consegue apagar uma producao de pedido/manual real (futuro). Retorna
- * quantas linhas foram apagadas (0 = nada a apagar / nao era teste).
+ * Remove a producao de uma versao na semana. Dois guards:
+ *  - origem='teste': nunca apaga uma producao de pedido/manual real (futuro).
+ *  - status in (planejada, cancelada): nunca apaga uma producao ja em_curso ou
+ *    concluida (a FK e ON DELETE CASCADE — apagaria etapas, carimbos e capturas).
+ * Retorna quantas linhas foram apagadas (0 = nada a apagar / congelada / nao teste).
  */
 export async function removerProducao(
   semanaId: string,
@@ -127,6 +154,7 @@ export async function removerProducao(
     .eq('semana_id', semanaId)
     .eq('versao_receita_id', versaoReceitaId)
     .eq('origem', 'teste')
+    .in('status', ['planejada', 'cancelada'])
     .select('id');
   if (error) throw error;
   return (data ?? []).length;
@@ -255,4 +283,88 @@ export async function criarPaoNovo(input: PaoNovoInput): Promise<LinhaVolume> {
   if (errVer) throw errVer;
 
   return carregarLinhaVolume(versao.id as string, 'teste');
+}
+
+// ============ Acompanhamento (Estado B / fatia B1) — escrita ============
+//
+// Escrita direta do client como admin (RLS admin_all em producoes/etapas_producao,
+// igual fatia 1). Toda funcao faz throw no erro do supabase pra UI surfacear via
+// erroAcao (nada de falha calada); a tela faz refetch apos sucesso.
+
+export type AcaoEtapa = 'iniciar' | 'concluir' | 'pular';
+
+/**
+ * Avanca o status de uma etapa_producao:
+ *  - iniciar  -> em_curso  + iniciada_at
+ *  - concluir -> concluida + concluida_at (carimba iniciada_at se ainda nula)
+ *  - pular    -> pulada
+ * O `now` e gerado no client (sem RPC de relogio); aceitavel pro periodo de teste.
+ */
+export async function avancarEtapa(etapaId: string, acao: AcaoEtapa): Promise<void> {
+  const now = new Date().toISOString();
+
+  let patch: EtapaProducaoUpdate;
+  if (acao === 'iniciar') {
+    patch = { status: 'em_curso', iniciada_at: now };
+  } else if (acao === 'concluir') {
+    // Le iniciada_at pra carimbar se a etapa foi concluida sem ter sido iniciada.
+    const { data: atual, error: errLer } = await supabase
+      .from('etapas_producao')
+      .select('iniciada_at')
+      .eq('id', etapaId)
+      .single();
+    if (errLer) throw errLer;
+    patch = {
+      status: 'concluida',
+      concluida_at: now,
+      iniciada_at: atual?.iniciada_at ?? now,
+    };
+  } else {
+    patch = { status: 'pulada' };
+  }
+
+  const { error } = await supabase.from('etapas_producao').update(patch).eq('id', etapaId);
+  if (error) throw error;
+}
+
+/** Captura opcional gravada na propria etapa (por tipo). Campos undefined nao mexem. */
+export interface CapturaEtapa {
+  tempC?: number | null;
+  dobraNumero?: number | null;
+  detalhes?: Record<string, unknown> | null;
+  notas?: string | null;
+}
+
+/**
+ * Grava a captura inline de uma etapa (temp_c / dobra_numero / detalhes JSONB /
+ * notas). So as chaves presentes no objeto sao enviadas ao update.
+ */
+export async function salvarCapturaEtapa(etapaId: string, captura: CapturaEtapa): Promise<void> {
+  const patch: EtapaProducaoUpdate = {};
+  if ('tempC' in captura) patch.temp_c = captura.tempC;
+  if ('dobraNumero' in captura) patch.dobra_numero = captura.dobraNumero;
+  if ('detalhes' in captura) patch.detalhes = (captura.detalhes ?? null) as Json;
+  if ('notas' in captura) patch.notas = captura.notas;
+  if (Object.keys(patch).length === 0) return;
+
+  const { error } = await supabase.from('etapas_producao').update(patch).eq('id', etapaId);
+  if (error) throw error;
+}
+
+/** Status da producao MANUAL: iniciar -> em_curso + iniciada_at. */
+export async function iniciarProducao(producaoId: string): Promise<void> {
+  const { error } = await supabase
+    .from('producoes')
+    .update({ status: 'em_curso', iniciada_at: new Date().toISOString() })
+    .eq('id', producaoId);
+  if (error) throw error;
+}
+
+/** Status da producao MANUAL: concluir -> concluida + concluida_at. */
+export async function concluirProducao(producaoId: string): Promise<void> {
+  const { error } = await supabase
+    .from('producoes')
+    .update({ status: 'concluida', concluida_at: new Date().toISOString() })
+    .eq('id', producaoId);
+  if (error) throw error;
 }

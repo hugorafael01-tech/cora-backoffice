@@ -1,4 +1,5 @@
 import { formataDiaMes } from './date';
+import type { EtapaAcomp, EtapaStatus, EtapaTipo, ProducaoStatus } from '../pages/Producao/types';
 
 /**
  * Helpers puros da fatia 1 de Producao ("Definir volume").
@@ -136,6 +137,63 @@ export function fmtKg(kg: number | null): string {
 /** "1.250 g" arredondado a partir de gramas. */
 export function fmtG(g: number): string {
   return `${Math.round(g).toLocaleString('pt-BR')} g`;
+}
+
+// ---- Acompanhamento (Estado B / fatia B1) — helpers puros ----
+
+const ETAPA_TIPO_LABEL: Record<EtapaTipo, string> = {
+  autolise_mistura: 'Autolise + mistura',
+  batimento: 'Batimento',
+  falsa_dobra: 'Falsa dobra',
+  dobra: 'Dobras',
+  pre_shape: 'Pre-shape',
+  shape: 'Shape',
+  descanso: 'Descanso',
+  fermentacao_final: 'Fermentacao final',
+  coccao: 'Coccao',
+};
+
+/** Rotulo legivel do tipo de etapa (etapa_tipo_enum). */
+export function etapaTipoLabel(tipo: EtapaTipo): string {
+  return ETAPA_TIPO_LABEL[tipo] ?? tipo;
+}
+
+const PRODUCAO_STATUS_LABEL: Record<ProducaoStatus, string> = {
+  planejada: 'Planejada',
+  em_curso: 'Em curso',
+  concluida: 'Concluida',
+  cancelada: 'Cancelada',
+};
+
+/** Rotulo legivel do status da producao (producao_status_enum). */
+export function producaoStatusLabel(status: ProducaoStatus): string {
+  return PRODUCAO_STATUS_LABEL[status] ?? status;
+}
+
+const RESOLVIDA: ReadonlySet<EtapaStatus> = new Set<EtapaStatus>(['concluida', 'pulada']);
+
+/**
+ * Etapa "agora": a em_curso de MENOR ordem; se nenhuma estiver em curso, a
+ * primeira aguardando (menor ordem). Null se todas resolvidas (concluida/pulada).
+ * Nao assume etapas ja ordenadas.
+ */
+export function derivaEtapaAgora(etapas: EtapaAcomp[]): string | null {
+  const emCurso = etapas
+    .filter((e) => e.status === 'em_curso')
+    .sort((a, b) => a.ordem - b.ordem);
+  if (emCurso.length > 0) return emCurso[0].id;
+
+  const aguardando = etapas
+    .filter((e) => e.status === 'aguardando')
+    .sort((a, b) => a.ordem - b.ordem);
+  return aguardando.length > 0 ? aguardando[0].id : null;
+}
+
+/** Progresso "N/M etapas": feitas = resolvidas (concluida + pulada). */
+export function progressoEtapas(etapas: EtapaAcomp[]): { feitas: number; total: number } {
+  let feitas = 0;
+  for (const e of etapas) if (RESOLVIDA.has(e.status)) feitas++;
+  return { feitas, total: etapas.length };
 }
 
 /** Slugifica nome de pao novo: sem acento, sem espaco, kebab. */

@@ -24,6 +24,7 @@ export interface LinhaVolume {
   levainPct: number | null; // baker% da linha de levain (null = sem levain)
   qty: number;
   temProducao: boolean; // ja existe producao desta versao na semana
+  producaoStatus: ProducaoStatus | null; // status da producao existente (null se temProducao=false)
 }
 
 export interface DadosProducao {
@@ -86,4 +87,45 @@ export interface DadosPreparacao {
   miseEnPlace: MiseIngrediente[];
   fichas: Ficha[];
   totalPaes: number;
+}
+
+// ---- Acompanhamento (Estado B / fatia B1: percorrer as etapas) ----
+
+export type EtapaStatus = Database['public']['Enums']['etapa_status_enum'];
+export type EtapaTipo = Database['public']['Enums']['etapa_tipo_enum'];
+export type ProducaoStatus = Database['public']['Enums']['producao_status_enum'];
+
+/** Uma etapa de producao com seu estado + captura ja gravada. */
+export interface EtapaAcomp {
+  id: string;
+  ordem: number;
+  tipo: EtapaTipo;
+  status: EtapaStatus;
+  iniciadaAt: string | null;
+  concluidaAt: string | null;
+  dobraNumero: number | null;
+  tempC: number | null;
+  detalhes: Record<string, unknown>;
+  notas: string | null;
+}
+
+/** Uma producao da semana com suas etapas ordenadas + progresso derivado. */
+export interface ProducaoAcomp {
+  id: string;
+  versaoReceitaId: string;
+  nome: string;
+  grupo: number | null;
+  rascunho: boolean;
+  status: ProducaoStatus;
+  iniciadaAt: string | null;
+  concluidaAt: string | null;
+  qtyPrevista: number | null;
+  etapas: EtapaAcomp[];
+  etapaAgoraId: string | null; // etapa em destaque (em_curso de menor ordem; senao 1a aguardando)
+  feitas: number; // etapas resolvidas (concluida + pulada)
+  total: number;
+}
+
+export interface DadosAcompanhamento {
+  producoes: ProducaoAcomp[];
 }
