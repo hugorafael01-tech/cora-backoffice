@@ -1,4 +1,4 @@
-import { fmtG } from '../../../lib/producao';
+import { ehEtapaDivisao, fmtG, fmtPecaDivisao } from '../../../lib/producao';
 import { grupoLabel } from '../../../lib/semana';
 import type { Ficha } from '../types';
 
@@ -73,20 +73,24 @@ export function FichaReceita({ ficha, aberta, onToggle }: Props) {
             </p>
           ) : (
             <div className="overflow-hidden rounded border border-warm-200">
-              <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 bg-warm-50 px-3 py-1.5 text-[10.5px] uppercase tracking-[0.04em] text-warm-500">
+              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 bg-warm-50 px-3 py-1.5 text-[10.5px] uppercase tracking-[0.04em] text-warm-500">
                 <span>ingrediente</span>
                 <span className="text-right">baker%</span>
                 <span className="text-right">g / pao</span>
+                <span className="text-right">g x{ficha.qty}</span>
               </div>
               {ficha.ingredientes.map((ing) => (
                 <div
                   key={ing.slug || ing.nome}
-                  className="grid grid-cols-[1fr_auto_auto] gap-x-4 border-t border-warm-200 px-3 py-1.5 text-[13px] tabular-nums text-warm-700"
+                  className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-t border-warm-200 px-3 py-1.5 text-[13px] tabular-nums text-warm-700"
                 >
                   <span className="truncate">{ing.nome}</span>
                   <span className="text-right text-warm-600">{fmtBaker(ing.baker)}</span>
-                  <span className="text-right font-medium text-warm-800">
+                  <span className="text-right text-warm-700">
                     {ing.gramasPorPao != null ? fmtG(ing.gramasPorPao) : '—'}
+                  </span>
+                  <span className="text-right font-medium text-warm-800">
+                    {ing.gramasPorPao != null ? fmtG(ing.gramasPorPao * ficha.qty) : '—'}
                   </span>
                 </div>
               ))}
@@ -105,6 +109,9 @@ export function FichaReceita({ ficha, aberta, onToggle }: Props) {
             <ol className="space-y-1.5">
               {ficha.etapas.map((e) => {
                 const dur = fmtDuracao(e.duracaoMin);
+                const peca = ehEtapaDivisao(e.tipo, e.nome)
+                  ? fmtPecaDivisao(ficha.pesoMassaG)
+                  : null;
                 return (
                   <li key={e.ordem} className="flex gap-3 text-[13px] text-warm-700">
                     <span className="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded bg-warm-100 text-[11px] tabular-nums text-warm-500">
@@ -113,6 +120,7 @@ export function FichaReceita({ ficha, aberta, onToggle }: Props) {
                     <span className="flex-1">
                       <span className="font-medium text-warm-800">{e.nome}</span>
                       {dur && <span className="ml-2 text-warm-500">{dur}</span>}
+                      {peca && <span className="ml-2 font-medium text-brand-500">{peca}</span>}
                       {e.notas && (
                         <span className="block text-[12px] leading-snug text-warm-500">{e.notas}</span>
                       )}

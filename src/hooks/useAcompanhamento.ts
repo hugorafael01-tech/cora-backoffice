@@ -91,7 +91,7 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
   // Nome/grupo/rascunho via versoes_receita -> receitas -> produtos
   const { data: versoes } = await supabase
     .from('versoes_receita')
-    .select('id, receita_id, status')
+    .select('id, receita_id, status, peso_massa_g')
     .in('id', versaoIds);
 
   const receitaIds = [...new Set((versoes ?? []).map((v) => v.receita_id as string))];
@@ -147,6 +147,7 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
       iniciadaAt: p.iniciada_at ?? null,
       concluidaAt: p.concluida_at ?? null,
       qtyPrevista: p.qty_paes_prevista ?? null,
+      pesoMassaG: versao?.peso_massa_g ?? null,
       etapas: etapasP,
       etapaAgoraId: derivaEtapaAgora(etapasP),
       feitas,

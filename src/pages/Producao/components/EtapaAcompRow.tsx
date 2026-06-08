@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { etapaTipoLabel } from '../../../lib/producao';
+import { ehEtapaDivisao, etapaTipoLabel, fmtPecaDivisao } from '../../../lib/producao';
 import type { AcaoEtapa, CapturaEtapa as CapturaEtapaInput } from '../../../lib/producaoActions';
 import type { EtapaAcomp, EtapaStatus } from '../types';
 import { CapturaEtapa } from './CapturaEtapa';
 
 interface Props {
   etapa: EtapaAcomp;
+  pesoMassaG: number | null; // peso da peca, p/ a etapa de divisao
   destaque: boolean; // "etapa agora"
   salvando: boolean;
   onAvancar: (acao: AcaoEtapa) => void;
@@ -29,11 +30,26 @@ function statusLabel(status: EtapaStatus): string {
 const BTN =
   'min-h-[32px] rounded-md px-2.5 font-display text-[11px] uppercase tracking-[0.04em] disabled:cursor-not-allowed disabled:opacity-50';
 
-export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura }: Props) {
+export function EtapaAcompRow({
+  etapa,
+  pesoMassaG,
+  destaque,
+  salvando,
+  onAvancar,
+  onCaptura,
+}: Props) {
   const [capturaAberta, setCapturaAberta] = useState(false);
+  const toggle = () => setCapturaAberta((v) => !v);
 
   const iniciada = hora(etapa.iniciadaAt);
   const concluida = hora(etapa.concluidaAt);
+  const peca = ehEtapaDivisao(etapa.tipo) ? fmtPecaDivisao(pesoMassaG) : null;
+
+  // Acao de botao que nao deve disparar o toggle da linha
+  const acao = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
 
   return (
     <li
@@ -41,7 +57,19 @@ export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura 
         destaque ? 'border-brand-200 bg-brand-50' : 'border-warm-200 bg-white'
       }`}
     >
-      <div className="flex flex-wrap items-start gap-3 px-3 py-2.5">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={capturaAberta}
+        onClick={toggle}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            toggle();
+          }
+        }}
+        className="flex cursor-pointer flex-wrap items-start gap-3 px-3 py-2.5"
+      >
         <span className="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded bg-warm-100 text-[11px] tabular-nums text-warm-500">
           {etapa.ordem}
         </span>
@@ -58,6 +86,7 @@ export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura 
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap gap-x-3 text-[12px] text-warm-500">
+            {peca && <span className="font-medium text-brand-500">{peca}</span>}
             {iniciada && <span>iniciada {iniciada}</span>}
             {concluida && <span>concluida {concluida}</span>}
             {etapa.tempC != null && <span>{etapa.tempC}C</span>}
@@ -69,7 +98,7 @@ export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura 
         <div className="flex flex-wrap items-center gap-1.5">
           {etapa.status === 'aguardando' && (
             <button
-              onClick={() => onAvancar('iniciar')}
+              onClick={acao(() => onAvancar('iniciar'))}
               disabled={salvando}
               className={`${BTN} bg-brand-500 text-white hover:bg-brand-600`}
             >
@@ -78,7 +107,7 @@ export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura 
           )}
           {etapa.status === 'em_curso' && (
             <button
-              onClick={() => onAvancar('concluir')}
+              onClick={acao(() => onAvancar('concluir'))}
               disabled={salvando}
               className={`${BTN} border border-success-border bg-success-bg text-success-text hover:opacity-80`}
             >
@@ -87,7 +116,7 @@ export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura 
           )}
           {(etapa.status === 'aguardando' || etapa.status === 'em_curso') && (
             <button
-              onClick={() => onAvancar('pular')}
+              onClick={acao(() => onAvancar('pular'))}
               disabled={salvando}
               className={`${BTN} border border-warm-300 bg-white text-warm-500 hover:bg-warm-50`}
             >
@@ -95,21 +124,25 @@ export function EtapaAcompRow({ etapa, destaque, salvando, onAvancar, onCaptura 
             </button>
           )}
           <button
-            onClick={() => setCapturaAberta((v) => !v)}
+            onClick={acao(toggle)}
             aria-expanded={capturaAberta}
             className={`${BTN} border border-warm-300 bg-white text-warm-600 hover:bg-warm-50`}
           >
-            {capturaAberta ? 'fechar' : 'captura'}
+            {capturaAberta ? 'fechar' : 'expandir'}
           </button>
+          <span
+            aria-hidden
+            className={`text-[14px] text-warm-300 transition-transform ${
+              capturaAberta ? 'rotate-90' : ''
+            }`}
+          >
+            ›
+          </span>
         </div>
       </div>
 
       {capturaAberta && (
-        <CapturaEtapa
-          etapa={etapa}
-          salvando={salvando}
-          onSalvar={(captura) => onCaptura(captura)}
-        />
+        <CapturaEtapa etapa={etapa} salvando={salvando} onSalvar={(captura) => onCaptura(captura)} />
       )}
     </li>
   );

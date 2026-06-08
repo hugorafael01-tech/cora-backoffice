@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   calcLevainBuild,
   derivaEtapaAgora,
+  ehEtapaDivisao,
   farinhaPorPaoG,
+  fmtPecaDivisao,
   previewLinha,
   progressoEtapas,
   slugify,
@@ -116,6 +118,31 @@ describe('progressoEtapas (N/M, pulada conta como resolvida)', () => {
 
   it('lista vazia = 0/0', () => {
     expect(progressoEtapas([])).toEqual({ feitas: 0, total: 0 });
+  });
+});
+
+describe('ehEtapaDivisao (Pao Original: pre_shape e a divisao, nao shape)', () => {
+  it('pre_shape e divisao (por tipo)', () => {
+    expect(ehEtapaDivisao('pre_shape')).toBe(true);
+  });
+  it('shape NAO e divisao', () => {
+    expect(ehEtapaDivisao('shape')).toBe(false);
+  });
+  it('casa por nome com "divisao" (ficha tem nome)', () => {
+    expect(ehEtapaDivisao('descanso', 'Descanso e divisao')).toBe(true);
+  });
+  it('outros tipos sem nome de divisao = false', () => {
+    expect(ehEtapaDivisao('batimento')).toBe(false);
+    expect(ehEtapaDivisao('coccao', 'Coccao')).toBe(false);
+  });
+});
+
+describe('fmtPecaDivisao', () => {
+  it('formata o peso da peca', () => {
+    expect(fmtPecaDivisao(283)).toBe('pecas de ~283 g');
+  });
+  it('null quando peso nulo', () => {
+    expect(fmtPecaDivisao(null)).toBeNull();
   });
 });
 

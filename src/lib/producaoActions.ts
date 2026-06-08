@@ -360,11 +360,25 @@ export async function iniciarProducao(producaoId: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Status da producao MANUAL: concluir -> concluida + concluida_at. */
+/**
+ * Status da producao MANUAL: concluir -> concluida + concluida_at, cascateando
+ * as etapas ainda abertas (aguardando/em_curso) -> concluida. As etapas vao
+ * PRIMEIRO: se falhar, a producao continua em_curso e o erro sobe pro banner.
+ * Nao toca iniciada_at nem nas etapas 'pulada' (o skip explicito fica intacto).
+ */
 export async function concluirProducao(producaoId: string): Promise<void> {
+  const now = new Date().toISOString();
+
+  const { error: errEtapas } = await supabase
+    .from('etapas_producao')
+    .update({ status: 'concluida', concluida_at: now })
+    .eq('producao_id', producaoId)
+    .in('status', ['aguardando', 'em_curso']);
+  if (errEtapas) throw errEtapas;
+
   const { error } = await supabase
     .from('producoes')
-    .update({ status: 'concluida', concluida_at: new Date().toISOString() })
+    .update({ status: 'concluida', concluida_at: now })
     .eq('id', producaoId);
   if (error) throw error;
 }

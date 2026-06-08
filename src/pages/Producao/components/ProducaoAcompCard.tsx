@@ -107,6 +107,7 @@ export function ProducaoAcompCard({
                 <EtapaAcompRow
                   key={e.id}
                   etapa={e}
+                  pesoMassaG={producao.pesoMassaG}
                   destaque={e.id === producao.etapaAgoraId}
                   salvando={salvando === e.id}
                   onAvancar={(acao) => onAvancar(e.id, acao)}

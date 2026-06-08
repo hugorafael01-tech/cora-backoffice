@@ -120,6 +120,7 @@ export interface ProducaoAcomp {
   iniciadaAt: string | null;
   concluidaAt: string | null;
   qtyPrevista: number | null;
+  pesoMassaG: number | null; // peso da peca (massa crua) p/ a etapa de divisao
   etapas: EtapaAcomp[];
   etapaAgoraId: string | null; // etapa em destaque (em_curso de menor ordem; senao 1a aguardando)
   feitas: number; // etapas resolvidas (concluida + pulada)
