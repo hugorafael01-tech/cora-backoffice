@@ -2,14 +2,14 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 7 de junho de 2026.
+**Última atualização:** 8 de junho de 2026.
 
 ---
 
 ## Estado do repositório
 
 - **Repositório:** `github.com/hugorafael01-tech/cora-backoffice`
-- **Branch principal:** `main` (commit `b478509`, pós PR #20)
+- **Branch principal:** `main` (commit `1cb0339`, pós PR #22)
 - **Subdomain:** `admin.acora.com.br`
 - **Stack:** Vite + React + TypeScript + Tailwind + Supabase Auth (magic link) + Vercel Functions
 - **Banco:** Supabase Postgres — **mesmo projeto** compartilhado com Portal (sem staging isolado)
@@ -53,7 +53,7 @@
 
 ## Branches em voo
 
-Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessões de 03/06/2026: módulo Financeiro Peça C mergeado (PR #16 read-only, PR #17 ação de vincular) + atualizações de documentação deste STATUS — sem mudança de schema. **Sessão de 07/06/2026 (módulo Produção fatia 1):** migrations 0021-0023 + frontend mergeados via **PR #20** (squash) — `main` em `b478509`. **PR #19** (só as migrations 0021-0023) é subconjunto do #20 → **fechar sem mergear**. Em voo agora: fatia **Preparação** (mise en place + ficha, read-only) sendo planejada/implementada via CC.
+Nenhum branch em voo no momento. Sessão de 29/05/2026 (PRs #7 migration 0018, #8 briefing Frente D, #9 prompt template) consolidada em main. Sessão de 30/05/2026 (PR #11 migration 0019 segurança) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessão de 01/06/2026 (PR #13 migration 0020 Asaas webhooks Perna 1/SCHEMA) mergeada e **aplicada no banco** (via SQL Editor; verificada por probe em 03/jun). Sessões de 03/06/2026: módulo Financeiro Peça C mergeado (PR #16 read-only, PR #17 ação de vincular) + atualizações de documentação deste STATUS — sem mudança de schema. **Sessão de 07/06/2026 (módulo Produção fatia 1):** migrations 0021-0023 + frontend mergeados via **PR #20** (squash) — `main` em `b478509`. **PR #19** (só as migrations 0021-0023) é subconjunto do #20 → **fechar sem mergear**. Sessão de 07-08/06: fatia **Preparação** (mise en place + ficha, read-only) mergeada via **PR #22** — `main` em `1cb0339`. **Sessão de 08/06/2026 (Estado B, fatia B1 "Acompanhamento"):** primeira fatia que ESCREVE — em voo agora via CC na branch `feat/producao-b1-acompanhamento` (PR draft). Sem schema (a migration `contextos_dia → D2/D1/D0` é a B2).
 
 ---
 
@@ -120,9 +120,11 @@ Fora do circuito de assinatura/Asaas. Schema de produção existe desde a **0012
 
 - **Fatia 1 — Definir Volume (Estado A, entrada): concluída.** Migrations 0021-0023 + frontend via **PR #20**. Tela `/producao/:id` pra autorar `producoes` da semana (qty por receita, `origem='teste'`, massa/levain previstos via trigger), calculadora de build do levain (líquido 1:2:2), e criação de **variação** (via `fork_versao_receita`) / **pão novo de teste** (slug único, sem ingredientes → levain nulo).
   - **Smoke PENDENTE:** os fluxos de escrita (upsert de `producoes` + `popular_etapas_producao`, fork, pão novo, remover) **não foram exercitados em runtime** — só tsc/lint/13 testes de função pura + build. Validar clicando na tela antes de confiar; limpar producoes de teste depois (`origem='teste'`). É o que a fatia Preparação e o Estado B leem.
-  - **Caveat conhecido:** o "Criar produções" usa `upsert ON CONFLICT DO UPDATE` e **reseta `origem`/`status` no conflito**. Inofensivo na fatia 1 (tudo `teste`/`planejada`); morde quando o Estado B trouxer `em_curso`/`concluida` ou a ponte trouxer `origem` `manual`/`pedido`. Tratar antes dessas fatias.
-- **Fatia Preparação (completa o Estado A): em andamento.** View **read-only** no módulo Produção: mise en place da semana (`mise_en_place_semana`) + ficha de cada receita produzida (formulação baker%/gramas via `peso_farinha_por_pao` + processo via `etapas_receita`). Sem schema. Lê os `producoes` da fatia 1. Constrói sobre o wireframe v5+3 (Estado A) — sem novo passe no Claude Design.
-- **Próximas:** Acompanhamento (Estado B: percorrer `etapas_producao` + registrar `contextos_dia`/`contextos_producao`) → Registro/retrospectiva (Estado C: realizado, previsto×realizado pra refinar receita).
+  - **Caveat conhecido — RESOLVIDO na B1 (08/jun):** o "Criar produções" usava `upsert ON CONFLICT DO UPDATE` que **resetava `origem`/`status` no conflito**. Fix em `criarProducoesSemana`: `origem`/`status` saíram do payload (defaults preenchem no INSERT, preservam no UPDATE) + guard que **exclui do upsert as produções já `em_curso`/`concluida`** (a tela de volume nunca reescreve a qty de uma produção que saiu da prancheta).
+- **Fatia Preparação (completa o Estado A): concluída.** View **read-only** no módulo Produção: mise en place da semana (`mise_en_place_semana`) + ficha de cada receita produzida (formulação baker%/gramas via `peso_farinha_por_pao` + processo via `etapas_receita`). Sem schema. Mergeada via **PR #22** (`main` em `1cb0339`).
+- **Fatia Acompanhamento (Estado B, B1): em andamento (08/jun) — PRIMEIRA fatia que ESCREVE.** 3a aba `/producao/:id`. `useAcompanhamento` lê `producoes` da semana + `etapas_producao` (ordenadas) + nome/grupo. Walkthrough por produção (status, progresso `N/M etapas`, etapas expansíveis, destaque da "etapa agora" = `em_curso` de menor ordem, senão 1a `aguardando`). Escreve em `etapas_producao`: avançar etapa (iniciar→`em_curso`, concluir→`concluida`, pular→`pulada`) + captura opcional inline por tipo gravada na **própria etapa** (`temp_c` p/ autolise/batimento, `dobra_numero` p/ dobra, `detalhes` JSONB p/ coccao/shape, `notas` em qualquer). Status da produção manual: iniciar/concluir (`producoes.status` + timestamps). Decisão: **temperatura vive em `etapa.temp_c`**, não em `contextos_producao` (isso é B2, seria entrada dupla). Escrita direta do client (RLS admin_all); refetch após cada sucesso; erros surfaceiam no banner (padrão `erroAcao`). Sem schema. **Smoke PENDENTE:** os fluxos de escrita só passaram por tsc/lint/23 testes puros + build — exercitar clicando antes de confiar.
+  - **B2 (próxima fatia do Estado B):** migration `contextos_dia.dia` CHECK dia-da-semana → índice relativo `D2`/`D1`/`D0` + UI de contextos (`contextos_dia`/`contextos_producao`). É a fatia que mexe em schema.
+- **Próximas:** B2 (contextos + migration D2/D1/D0) → Registro/retrospectiva (Estado C: realizado, previsto×realizado pra refinar receita).
 
 **Decisões de modelo do ciclo de produção — 07/jun:**
 - **Manter a tabela/módulo `semanas`** (sem renomear pra `ciclo`/`batch`). Mecanicamente ela já é um contêiner de ciclo com **datas livres**: começar em qualquer dia, deslocar por feriado, encurtar/alongar = só setar as datas. `numero` é INT livre — pode ser usado como **batch sequencial** sem mudança de schema. Renomear seria churn no módulo vivo (rota/componentes/types/Semana) sem ganho funcional, e não consertaria o lock real (abaixo).
