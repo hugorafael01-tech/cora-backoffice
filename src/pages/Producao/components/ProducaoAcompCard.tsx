@@ -9,7 +9,7 @@ interface Props {
   aberta: boolean;
   onToggle: () => void;
   salvando: string | null; // id (etapa ou producao) em escrita; desabilita os botoes
-  onAvancar: (etapaId: string, acao: AcaoEtapa) => void;
+  onAvancar: (etapaId: string, acao: AcaoEtapa, producaoId: string) => void;
   onCaptura: (etapaId: string, captura: CapturaEtapa) => void;
   onIniciarProd: (producaoId: string) => void;
   onConcluirProd: (producaoId: string) => void;
@@ -110,7 +110,7 @@ export function ProducaoAcompCard({
                   pesoMassaG={producao.pesoMassaG}
                   destaque={e.id === producao.etapaAgoraId}
                   salvando={salvando === e.id}
-                  onAvancar={(acao) => onAvancar(e.id, acao)}
+                  onAvancar={(acao) => onAvancar(e.id, acao, producao.id)}
                   onCaptura={(captura) => onCaptura(e.id, captura)}
                 />
               ))}

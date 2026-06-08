@@ -299,8 +299,18 @@ export type AcaoEtapa = 'iniciar' | 'concluir' | 'pular';
  *  - concluir -> concluida + concluida_at (carimba iniciada_at se ainda nula)
  *  - pular    -> pulada
  * O `now` e gerado no client (sem RPC de relogio); aceitavel pro periodo de teste.
+ *
+ * Auto-inicio da producao: ao iniciar OU pular uma etapa, a producao e promovida
+ * de 'planejada' -> 'em_curso' (idempotente via .eq('status','planejada'): nunca
+ * re-carimba uma producao ja em_curso/concluida). 'concluir' nao promove (etapa
+ * em_curso ja implica producao iniciada). Etapa primeiro, promote depois: se o
+ * promote falhar, o erro sobe pro banner e um retry recupera.
  */
-export async function avancarEtapa(etapaId: string, acao: AcaoEtapa): Promise<void> {
+export async function avancarEtapa(
+  etapaId: string,
+  acao: AcaoEtapa,
+  producaoId: string
+): Promise<void> {
   const now = new Date().toISOString();
 
   let patch: EtapaProducaoUpdate;
@@ -325,6 +335,16 @@ export async function avancarEtapa(etapaId: string, acao: AcaoEtapa): Promise<vo
 
   const { error } = await supabase.from('etapas_producao').update(patch).eq('id', etapaId);
   if (error) throw error;
+
+  // Promove a producao ao mover a 1a etapa (idempotente). 'concluir' nao promove.
+  if (acao === 'iniciar' || acao === 'pular') {
+    const { error: errProm } = await supabase
+      .from('producoes')
+      .update({ status: 'em_curso', iniciada_at: now })
+      .eq('id', producaoId)
+      .eq('status', 'planejada');
+    if (errProm) throw errProm;
+  }
 }
 
 /** Captura opcional gravada na propria etapa (por tipo). Campos undefined nao mexem. */

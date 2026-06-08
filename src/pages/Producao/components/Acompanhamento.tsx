@@ -39,8 +39,8 @@ export function Acompanhamento({ semanaId, onIrParaVolume }: Props) {
     }
   }
 
-  function onAvancar(etapaId: string, acao: AcaoEtapa) {
-    return rodar(etapaId, () => avancarEtapa(etapaId, acao));
+  function onAvancar(etapaId: string, acao: AcaoEtapa, producaoId: string) {
+    return rodar(etapaId, () => avancarEtapa(etapaId, acao, producaoId));
   }
   function onCaptura(etapaId: string, captura: CapturaEtapaInput) {
     return rodar(etapaId, () => salvarCapturaEtapa(etapaId, captura));
