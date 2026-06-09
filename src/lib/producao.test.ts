@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   calcLevainBuild,
   derivaEtapaAgora,
+  diasContexto,
   ehEtapaDivisao,
   farinhaPorPaoG,
   fmtPecaDivisao,
@@ -143,6 +144,18 @@ describe('fmtPecaDivisao', () => {
   });
   it('null quando peso nulo', () => {
     expect(fmtPecaDivisao(null)).toBeNull();
+  });
+});
+
+describe('diasContexto (D2/D1/D0 a partir da entrega)', () => {
+  it('3 dias em ordem cronologica, dia = D-index, data = entrega - dia', () => {
+    const dias = diasContexto('2026-06-11'); // entrega qui 11 jun
+    expect(dias.map((d) => d.dia)).toEqual([2, 1, 0]);
+    expect(dias.map((d) => d.data)).toEqual(['2026-06-09', '2026-06-10', '2026-06-11']);
+  });
+  it('label no formato "D{dia} . {dia-semana dia mes}"', () => {
+    const [d2] = diasContexto('2026-06-11');
+    expect(d2.label).toBe('D2 . ter 9 jun');
   });
 });
 

@@ -130,3 +130,14 @@ export interface ProducaoAcomp {
 export interface DadosAcompanhamento {
   producoes: ProducaoAcomp[];
 }
+
+// ---- Contexto (B2b-1: contextos_dia, por dia) ----
+
+/** Contexto de um dia do ciclo (linha de contextos_dia). dia = D-index INT (0024). */
+export interface ContextoDia {
+  id: string;
+  dia: number;
+  ultimoRefreshLevainAt: string | null;
+  tempAmbienteMaxC: number | null;
+  notas: string | null;
+}
