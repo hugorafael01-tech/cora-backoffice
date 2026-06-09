@@ -1,4 +1,3 @@
-import { formataDiaMes } from './date';
 import type { EtapaAcomp, EtapaStatus, EtapaTipo, ProducaoStatus } from '../pages/Producao/types';
 
 /**
@@ -81,51 +80,6 @@ export function farinhaPorPaoG(pesoMassaG: number | null, somaBaker: number): nu
 
 function round3(n: number): number {
   return Math.round(n * 1000) / 1000;
-}
-
-export interface DiaSemana {
-  sigla: string; // TER / QUA / QUI
-  data: string; // "1 abr"
-  descricao: string;
-  futuro: boolean; // dia ainda nao chegou (cosmetico)
-}
-
-const SIGLAS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
-
-/** Soma `delta` dias a uma date string YYYY-MM-DD sem shift de timezone. */
-function addDiasYmd(ymd: string, delta: number): string {
-  const [y, m, d] = ymd.split('-').map(Number);
-  const dt = new Date(y, m - 1, d + delta);
-  const mm = String(dt.getMonth() + 1).padStart(2, '0');
-  const dd = String(dt.getDate()).padStart(2, '0');
-  return `${dt.getFullYear()}-${mm}-${dd}`;
-}
-
-function siglaDe(ymd: string): string {
-  const [y, m, d] = ymd.split('-').map(Number);
-  return SIGLAS[new Date(y, m - 1, d).getDay()];
-}
-
-/**
- * Os 3 dias do ciclo de producao a partir da entrega (quinta tipica):
- * entrega-2 (levain/prep), entrega-1 (autolise -> shape), entrega (coccao).
- * Apenas informativo no cabecalho da tela.
- */
-export function diasDaSemana(dataEntrega: string, hoje: string): DiaSemana[] {
-  const defs = [
-    { delta: -2, descricao: 'Levain · prep · mise en place' },
-    { delta: -1, descricao: 'Autolise -> dobras -> shape' },
-    { delta: 0, descricao: 'Coccao · expedicao · entregas' },
-  ];
-  return defs.map(({ delta, descricao }) => {
-    const ymd = addDiasYmd(dataEntrega, delta);
-    return {
-      sigla: siglaDe(ymd),
-      data: formataDiaMes(ymd),
-      descricao,
-      futuro: ymd > hoje,
-    };
-  });
 }
 
 /** "12,3 kg" a partir de kg; null/0-guard exibe travessao. */
