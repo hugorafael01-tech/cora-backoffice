@@ -9,9 +9,11 @@ import {
   type CapturaEtapa as CapturaEtapaInput,
 } from '../../../lib/producaoActions';
 import { ProducaoAcompCard } from './ProducaoAcompCard';
+import { TempAmbienteCiclo } from './TempAmbienteCiclo';
 
 interface Props {
   semanaId: string;
+  dataEntrega: string;
   onIrParaVolume: () => void;
 }
 
@@ -20,7 +22,7 @@ interface Props {
  * da semana. Le via useAcompanhamento; escreve via producaoActions e da refetch
  * apos cada sucesso. Erros surfacearem no banner (padrao erroAcao da fatia 1).
  */
-export function Acompanhamento({ semanaId, onIrParaVolume }: Props) {
+export function Acompanhamento({ semanaId, dataEntrega, onIrParaVolume }: Props) {
   const { dados, loading, error, refetch } = useAcompanhamento(semanaId);
   const [aberta, setAberta] = useState<string | null>(null);
   const [salvando, setSalvando] = useState<string | null>(null);
@@ -81,6 +83,8 @@ export function Acompanhamento({ semanaId, onIrParaVolume }: Props) {
 
   return (
     <section className="px-5 pb-10 pt-6 md:px-8">
+      <TempAmbienteCiclo semanaId={semanaId} dataEntrega={dataEntrega} />
+
       <div className="mb-2.5 flex flex-wrap items-center gap-3">
         <h2 className="font-display text-[13px] uppercase tracking-[0.06em] text-warm-600">
           Acompanhamento

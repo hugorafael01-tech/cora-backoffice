@@ -1,4 +1,4 @@
-export type AbaProducao = 'volume' | 'preparacao' | 'acompanhamento' | 'contexto';
+export type AbaProducao = 'volume' | 'preparacao' | 'acompanhamento';
 
 interface Props {
   ativa: AbaProducao;
@@ -9,7 +9,6 @@ const ABAS: { id: AbaProducao; label: string }[] = [
   { id: 'volume', label: 'Definir volume' },
   { id: 'preparacao', label: 'Preparacao' },
   { id: 'acompanhamento', label: 'Acompanhamento' },
-  { id: 'contexto', label: 'Contexto' },
 ];
 
 /** Segmented control entre as views do modulo Producao (Estado A + B). */
