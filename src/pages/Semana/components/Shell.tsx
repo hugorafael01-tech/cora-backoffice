@@ -25,9 +25,14 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-warm-50 text-warm-700">
+      {/* Top bar mobile (logo no cabecalho) */}
+      <header className="md:hidden sticky top-0 z-20 flex items-center border-b border-warm-200 bg-warm-100 px-4 py-3">
+        <img src="/cora_logo.svg" alt="Cora" className="h-6 w-auto" />
+      </header>
+
       {/* Sidebar desktop */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-[220px] flex-col border-r border-warm-200 bg-warm-100 px-4 py-6">
-        <img src="/cora_logo.svg" alt="Cora" className="mb-8 ml-2 h-7 w-auto" />
+        <img src="/cora_logo.svg" alt="Cora" className="mb-8 h-7 w-auto self-start" />
         <nav className="flex-1 space-y-1">
           {SIDEBAR_ITENS.map((item) =>
             item.emBreve ? (
