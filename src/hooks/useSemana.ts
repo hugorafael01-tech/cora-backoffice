@@ -125,7 +125,8 @@ async function carregarPlanejamento(semanaId: string): Promise<LinhaProducao[]> 
     .select(
       'id, versao_receita_id, qty_paes_prevista, massa_prevista_kg, levain_previsto_kg, status, origem'
     )
-    .eq('semana_id', semanaId);
+    .eq('semana_id', semanaId)
+    .neq('status', 'cancelada'); // cancelada nao entra no volume nem na tabela
 
   if (!producoes || producoes.length === 0) return [];
 

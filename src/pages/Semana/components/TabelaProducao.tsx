@@ -38,11 +38,12 @@ export function TabelaProducao({ estado, planejamento, etapasAgora }: Props) {
   const totalPaes = planejamento.reduce((s, l) => s + l.qty, 0);
   const totalMassaG = planejamento.reduce((s, l) => s + l.massaTotalG, 0);
   const totalLevainG = planejamento.reduce((s, l) => s + l.levainG, 0);
-  // Mostra a etapa em Estado B OU quando ha producao em andamento fora do retro
-  // (ex.: Estado A com producao ja iniciada via auto-inicio no Acompanhamento).
-  const algumaEtapaEmAndamento = [...etapasAgora.values()].some((e) => e.label !== 'aguardando');
+  // Mostra a etapa em Estado B OU quando ha producao com progresso (em_curso ou
+  // concluida) fora do retro — ex.: Estado A com producao ja iniciada/concluida
+  // via auto-inicio no Acompanhamento. 'aguardando' = planejada (sem progresso).
+  const algumaProducaoComProgresso = [...etapasAgora.values()].some((e) => e.label !== 'aguardando');
   const retro = estado === 'C';
-  const mostrarEtapa = estado === 'B' || (!retro && algumaEtapaEmAndamento);
+  const mostrarEtapa = estado === 'B' || (!retro && algumaProducaoComProgresso);
 
   return (
     <div className="px-5 py-4 md:px-8">

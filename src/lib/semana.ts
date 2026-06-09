@@ -58,7 +58,8 @@ const DUAS_HORAS_MS = 2 * 60 * 60 * 1000;
  * - etapa com iniciada_at, sem concluida_at, iniciada_at > now - 2h -> mostra
  *   o nome (de etapas_receita), com "ha X min".
  * - producao 'em_curso' sem etapa recente -> 'em producao' (generico).
- * - sem producao ou nao em_curso -> 'aguardando'.
+ * - producao 'concluida' -> 'concluida'.
+ * - sem producao ou demais status (planejada etc.) -> 'aguardando'.
  *
  * Ate a Etapa 2 popular etapas_producao, sempre retorna 'aguardando'.
  */
@@ -67,6 +68,7 @@ export function etapaAgora(
   agora: Date = new Date()
 ): EtapaAgora {
   if (!producao) return { label: 'aguardando', ha: null, tom: 'mute' };
+  if (producao.status === 'concluida') return { label: 'concluida', ha: null, tom: 'mute' };
   if (producao.status !== 'em_curso') return { label: 'aguardando', ha: null, tom: 'mute' };
 
   const recente = producao.etapas_producao
