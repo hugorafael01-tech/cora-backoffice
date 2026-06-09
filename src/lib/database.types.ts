@@ -234,7 +234,7 @@ export type Database = {
       contextos_dia: {
         Row: {
           created_at: string
-          dia: string
+          dia: number
           id: string
           lote_farinha_principal_id: string | null
           notas: string | null
@@ -245,7 +245,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          dia: string
+          dia: number
           id?: string
           lote_farinha_principal_id?: string | null
           notas?: string | null
@@ -256,7 +256,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          dia?: string
+          dia?: number
           id?: string
           lote_farinha_principal_id?: string | null
           notas?: string | null
@@ -289,8 +289,6 @@ export type Database = {
           id: string
           notas: string | null
           producao_id: string
-          temp_agua_autolise_c: number | null
-          temp_massa_pos_batimento_c: number | null
           updated_at: string
         }
         Insert: {
@@ -299,8 +297,6 @@ export type Database = {
           id?: string
           notas?: string | null
           producao_id: string
-          temp_agua_autolise_c?: number | null
-          temp_massa_pos_batimento_c?: number | null
           updated_at?: string
         }
         Update: {
@@ -309,8 +305,6 @@ export type Database = {
           id?: string
           notas?: string | null
           producao_id?: string
-          temp_agua_autolise_c?: number | null
-          temp_massa_pos_batimento_c?: number | null
           updated_at?: string
         }
         Relationships: [
