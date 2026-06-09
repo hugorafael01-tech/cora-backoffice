@@ -12,8 +12,6 @@ import type {
   Semana,
 } from '../pages/Semana/types';
 
-const LEVAIN_PCT = 0.1; // heuristica MVP — refinar em jun/2026 (briefing v3 §17 #10)
-
 export interface UseSemanaResult {
   dados: DadosSemana | null;
   loading: boolean;
@@ -113,65 +111,101 @@ export function useSemana(id: string | undefined): UseSemanaResult {
   return { dados, loading, error, naoEncontrada, refetch };
 }
 
-// ---- Q3: planejamento + enriquecimento (queries separadas, join no client) ----
+// ---- Q3: producoes reais da semana (volume + tabela) ----
+// Fonte = `producoes` (nao a view de demanda `planejamento_semana`, que fica
+// vazia sem assinante). Inclui origem='teste': Hugo quer ver paes de teste no
+// volume da Semana. Massa/levain vem do previsto gravado pelo trigger (0021),
+// nao mais da heuristica LEVAIN_PCT. Join versao->receita->produto em queries
+// separadas (mesmo padrao de carregarEtapasAgora; evita ambiguidade das 2 FKs
+// receitas<->versoes_receita). Agrega por slug (variacao = nova versao do mesmo
+// produto -> mesmo slug) pra casar com o overlay etapasAgora.
 async function carregarPlanejamento(semanaId: string): Promise<LinhaProducao[]> {
-  const { data: view } = await supabase
-    .from('planejamento_semana')
-    .select('slug, qty_total, qty_recorrente_base, qty_recorrente_extra, qty_pontual')
-    .eq('semana_id', semanaId);
+  const { data: producoes } = await supabase
+    .from('producoes')
+    .select(
+      'id, versao_receita_id, qty_paes_prevista, massa_prevista_kg, levain_previsto_kg, status, origem'
+    )
+    .eq('semana_id', semanaId)
+    .neq('status', 'cancelada'); // cancelada nao entra no volume nem na tabela
 
-  if (!view || view.length === 0) return [];
+  if (!producoes || producoes.length === 0) return [];
 
-  const slugs = view.map((v) => v.slug as string);
-
-  const { data: produtos } = await supabase
-    .from('produtos')
-    .select('id, slug, nome, formato')
-    .in('slug', slugs);
-
-  const produtoIds = (produtos ?? []).map((p) => p.id);
-
-  const { data: receitas } = await supabase
-    .from('receitas')
-    .select('produto_id, grupo_sugerido, versao_ativa_id')
-    .in('produto_id', produtoIds.length ? produtoIds : ['00000000-0000-0000-0000-000000000000']);
-
-  const versaoIds = (receitas ?? [])
-    .map((r) => r.versao_ativa_id)
+  const versaoIds = producoes
+    .map((p) => p.versao_receita_id as string)
     .filter((v): v is string => v != null);
 
   const { data: versoes } = await supabase
     .from('versoes_receita')
-    .select('id, peso_massa_g')
+    .select('id, receita_id')
     .in('id', versaoIds.length ? versaoIds : ['00000000-0000-0000-0000-000000000000']);
 
-  const produtoBySlug = new Map((produtos ?? []).map((p) => [p.slug as string, p]));
-  const receitaByProduto = new Map((receitas ?? []).map((r) => [r.produto_id as string, r]));
-  const versaoById = new Map((versoes ?? []).map((v) => [v.id as string, v]));
+  const receitaIds = (versoes ?? []).map((v) => v.receita_id as string);
+  const { data: receitas } = await supabase
+    .from('receitas')
+    .select('id, produto_id, grupo_sugerido')
+    .in('id', receitaIds.length ? receitaIds : ['00000000-0000-0000-0000-000000000000']);
 
-  return view
-    .map((v): LinhaProducao | null => {
-      const prod = produtoBySlug.get(v.slug as string);
-      if (!prod) return null;
-      const receita = receitaByProduto.get(prod.id);
-      const versao = receita?.versao_ativa_id ? versaoById.get(receita.versao_ativa_id) : null;
-      const pesoMassaG = versao?.peso_massa_g ?? 0;
-      const qty = v.qty_total ?? 0;
-      const massaTotalG = pesoMassaG * qty;
+  const produtoIds = (receitas ?? []).map((r) => r.produto_id as string);
+  const { data: produtos } = await supabase
+    .from('produtos')
+    .select('id, slug, nome, formato')
+    .in('id', produtoIds.length ? produtoIds : ['00000000-0000-0000-0000-000000000000']);
 
-      return {
-        slug: v.slug as string,
-        nome: prod.nome as string,
-        formato: (prod.formato as string | null) ?? null,
+  const receitaById = new Map((receitas ?? []).map((r) => [r.id as string, r]));
+  const produtoById = new Map((produtos ?? []).map((p) => [p.id as string, p]));
+
+  interface MetaProduto {
+    slug: string;
+    nome: string;
+    formato: string | null;
+    grupo: number | null;
+  }
+  const versaoToProduto = new Map<string, MetaProduto>();
+  for (const v of versoes ?? []) {
+    const receita = receitaById.get(v.receita_id as string);
+    const produto = receita ? produtoById.get(receita.produto_id as string) : null;
+    if (produto?.slug) {
+      versaoToProduto.set(v.id as string, {
+        slug: produto.slug as string,
+        nome: produto.nome as string,
+        formato: (produto.formato as string | null) ?? null,
         grupo: receita?.grupo_sugerido ?? null,
+      });
+    }
+  }
+
+  const porSlug = new Map<string, LinhaProducao>();
+  for (const p of producoes) {
+    const meta = p.versao_receita_id ? versaoToProduto.get(p.versao_receita_id as string) : null;
+    if (!meta) continue;
+    const qty = p.qty_paes_prevista ?? 0;
+    const massaG = (Number(p.massa_prevista_kg) || 0) * 1000;
+    const levainG = (Number(p.levain_previsto_kg) || 0) * 1000;
+
+    const ja = porSlug.get(meta.slug);
+    if (ja) {
+      ja.qty += qty;
+      ja.qtyBase += qty;
+      ja.massaTotalG += massaG;
+      ja.levainG += levainG;
+    } else {
+      porSlug.set(meta.slug, {
+        slug: meta.slug,
+        nome: meta.nome,
+        formato: meta.formato,
+        grupo: meta.grupo,
         qty,
-        qtyBase: (v.qty_recorrente_base ?? 0) + (v.qty_recorrente_extra ?? 0),
-        qtyPontual: v.qty_pontual ?? 0,
-        massaTotalG,
-        levainG: Math.round(massaTotalG * LEVAIN_PCT),
-      };
-    })
-    .filter((l): l is LinhaProducao => l !== null)
+        qtyBase: qty, // producoes nao tem decomposicao de demanda (base/pontual)
+        qtyPontual: 0,
+        massaTotalG: massaG,
+        levainG,
+      });
+    }
+  }
+
+  // Arredonda o levain so no fim (evita acumular erro de arredondamento na soma).
+  return [...porSlug.values()]
+    .map((l) => ({ ...l, levainG: Math.round(l.levainG) }))
     .sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
