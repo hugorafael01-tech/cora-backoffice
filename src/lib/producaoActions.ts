@@ -403,33 +403,21 @@ export async function concluirProducao(producaoId: string): Promise<void> {
   if (error) throw error;
 }
 
-// ============ Contexto do dia (B2b-1 / contextos_dia) — escrita ============
-
-export interface ContextoDiaInput {
-  ultimoRefreshLevainAt: string | null; // timestamptz ISO
-  tempAmbienteMaxC: number | null;
-  notas: string | null;
-}
+// ============ Temp ambiente do ciclo (contextos_dia, dia=1) — escrita ============
 
 /**
- * Upsert do contexto de um dia do ciclo. onConflict (semana_id, dia): salvar o
- * mesmo dia 2x atualiza a row em vez de duplicar. `dia` e o D-index INT (0024).
- * Escrita direta do client (RLS admin_all); throw pra UI tratar. Colunas nao
- * enviadas (ex.: lote_farinha_principal_id, deferido) sao preservadas no UPDATE.
+ * Salva a temp ambiente max da fermentacao no contexto do dia D1 (vespera da
+ * entrega), em contextos_dia.temp_ambiente_max_c. Upsert enviando SO
+ * { semana_id, dia: 1, temp_ambiente_max_c }: no conflito (semana_id, dia) o
+ * UPDATE toca apenas a coluna de temp, sem clobberar outras colunas da row
+ * (ultimo_refresh_levain_at, notas, lote). Escrita admin direta; throw pra UI.
  */
-export async function salvarContextoDia(
+export async function salvarTempAmbiente(
   semanaId: string,
-  dia: number,
-  campos: ContextoDiaInput
+  tempC: number | null
 ): Promise<void> {
   const { error } = await supabase.from('contextos_dia').upsert(
-    {
-      semana_id: semanaId,
-      dia,
-      ultimo_refresh_levain_at: campos.ultimoRefreshLevainAt,
-      temp_ambiente_max_c: campos.tempAmbienteMaxC,
-      notas: campos.notas,
-    },
+    { semana_id: semanaId, dia: 1, temp_ambiente_max_c: tempC },
     { onConflict: 'semana_id,dia' }
   );
   if (error) throw error;

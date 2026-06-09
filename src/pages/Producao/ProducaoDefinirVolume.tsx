@@ -15,7 +15,6 @@ import { NovaReceitaTesteModal } from './components/NovaReceitaTesteModal';
 import { ProducaoTabs, type AbaProducao } from './components/ProducaoTabs';
 import { Preparacao } from './components/Preparacao';
 import { Acompanhamento } from './components/Acompanhamento';
-import { Contexto } from './components/Contexto';
 import type { LinhaVolume } from './types';
 
 type ModalAberto = 'adicionar' | 'novaTeste' | null;
@@ -170,11 +169,11 @@ export function ProducaoDefinirVolume() {
       )}
 
       {aba === 'acompanhamento' && (
-        <Acompanhamento semanaId={semana.id} onIrParaVolume={() => setAba('volume')} />
-      )}
-
-      {aba === 'contexto' && (
-        <Contexto semanaId={semana.id} dataEntrega={semana.data_entrega} />
+        <Acompanhamento
+          semanaId={semana.id}
+          dataEntrega={semana.data_entrega}
+          onIrParaVolume={() => setAba('volume')}
+        />
       )}
     </Shell>
   );
