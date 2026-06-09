@@ -1,3 +1,4 @@
+import { formataDiaSemanaDiaMes, ymdMenosDias } from './date';
 import type { EtapaAcomp, EtapaStatus, EtapaTipo, ProducaoStatus } from '../pages/Producao/types';
 
 /**
@@ -164,6 +165,26 @@ export function ehEtapaDivisao(tipo: EtapaTipo | string | null, nome?: string | 
 export function fmtPecaDivisao(pesoMassaG: number | null): string | null {
   if (pesoMassaG == null) return null;
   return `pecas de ~${fmtG(pesoMassaG)}`;
+}
+
+// ---- Contexto (B2b-1) ----
+
+export interface DiaContexto {
+  dia: number; // D-index: 0=entrega, 1=vespera, 2=2 dias antes
+  data: string; // YYYY-MM-DD
+  label: string; // "D2 . ter 9 jun"
+}
+
+/**
+ * Os 3 dias do ciclo em ordem cronologica (D2, D1, D0). `dia` e o D-index
+ * (0 = entrega), batendo com a coluna INT de contextos_dia (0024). `data` =
+ * entrega - dia dias; `label` = "D{dia} . {dia-semana dia mes}".
+ */
+export function diasContexto(dataEntrega: string): DiaContexto[] {
+  return [2, 1, 0].map((dia) => {
+    const data = ymdMenosDias(dataEntrega, dia);
+    return { dia, data, label: `D${dia} . ${formataDiaSemanaDiaMes(data)}` };
+  });
 }
 
 /** Slugifica nome de pao novo: sem acento, sem espaco, kebab. */

@@ -402,3 +402,35 @@ export async function concluirProducao(producaoId: string): Promise<void> {
     .eq('id', producaoId);
   if (error) throw error;
 }
+
+// ============ Contexto do dia (B2b-1 / contextos_dia) — escrita ============
+
+export interface ContextoDiaInput {
+  ultimoRefreshLevainAt: string | null; // timestamptz ISO
+  tempAmbienteMaxC: number | null;
+  notas: string | null;
+}
+
+/**
+ * Upsert do contexto de um dia do ciclo. onConflict (semana_id, dia): salvar o
+ * mesmo dia 2x atualiza a row em vez de duplicar. `dia` e o D-index INT (0024).
+ * Escrita direta do client (RLS admin_all); throw pra UI tratar. Colunas nao
+ * enviadas (ex.: lote_farinha_principal_id, deferido) sao preservadas no UPDATE.
+ */
+export async function salvarContextoDia(
+  semanaId: string,
+  dia: number,
+  campos: ContextoDiaInput
+): Promise<void> {
+  const { error } = await supabase.from('contextos_dia').upsert(
+    {
+      semana_id: semanaId,
+      dia,
+      ultimo_refresh_levain_at: campos.ultimoRefreshLevainAt,
+      temp_ambiente_max_c: campos.tempAmbienteMaxC,
+      notas: campos.notas,
+    },
+    { onConflict: 'semana_id,dia' }
+  );
+  if (error) throw error;
+}

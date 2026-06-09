@@ -87,6 +87,29 @@ export function formataDiaSemanaDiaMes(ymd: string): string {
   return `${dias[dt.getDay()]} ${d} ${MESES[m - 1]}`;
 }
 
+/** Recua `dias` dias de uma date string YYYY-MM-DD (sem shift de timezone). */
+export function ymdMenosDias(ymd: string, dias: number): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return format(addDays(new Date(y, m - 1, d), -dias), 'yyyy-MM-dd');
+}
+
+/** Agora no fuso SP como valor de <input type="datetime-local"> ('YYYY-MM-DDTHH:mm'). */
+export function agoraSpInput(): string {
+  return format(toZonedTime(new Date(), TZ), "yyyy-MM-dd'T'HH:mm");
+}
+
+/** timestamptz (ISO) -> valor de datetime-local no fuso SP. '' se nulo. */
+export function isoParaSpInput(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return format(toZonedTime(new Date(iso), TZ), "yyyy-MM-dd'T'HH:mm");
+}
+
+/** valor de datetime-local (parede SP) -> timestamptz ISO (UTC). null se vazio. */
+export function spInputParaIso(input: string): string | null {
+  if (!input) return null;
+  return fromZonedTime(input, TZ).toISOString();
+}
+
 /** "ha 12 min" / "ha 1h20" a partir de minutos decorridos. */
 export function formataHa(minutos: number): string {
   if (minutos < 1) return 'agora';
