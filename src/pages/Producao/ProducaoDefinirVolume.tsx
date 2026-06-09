@@ -2,12 +2,10 @@ import { useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useProducaoVolume } from '../../hooks/useProducaoVolume';
 import { criarProducoesSemana, removerProducao } from '../../lib/producaoActions';
-import { diasDaSemana, previewLinha } from '../../lib/producao';
-import { dataSpStr } from '../../lib/date';
+import { previewLinha } from '../../lib/producao';
 import { Shell } from '../Semana/components/Shell';
 import { PrHeader } from './components/PrHeader';
 import { BannerProducao } from './components/BannerProducao';
-import { DayTabs } from './components/DayTabs';
 import { VolumeList } from './components/VolumeList';
 import { LevainCard } from './components/LevainCard';
 import { ResumoCards } from './components/ResumoCards';
@@ -126,8 +124,6 @@ export function ProducaoDefinirVolume() {
     }
   }
 
-  const dias = diasDaSemana(semana.data_entrega, dataSpStr(new Date()));
-
   return (
     <Shell>
       <PrHeader semana={semana} anterior={semanaAnterior} proxima={semanaProxima} />
@@ -136,7 +132,6 @@ export function ProducaoDefinirVolume() {
       {aba === 'volume' && (
         <>
           <BannerProducao sucesso={sucesso} />
-          <DayTabs dias={dias} />
 
           <VolumeList
             linhas={linhas}
