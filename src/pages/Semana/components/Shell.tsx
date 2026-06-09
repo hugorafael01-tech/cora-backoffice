@@ -27,7 +27,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-warm-50 text-warm-700">
       {/* Sidebar desktop */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-[220px] flex-col border-r border-warm-200 bg-warm-100 px-4 py-6">
-        <div className="font-display text-2xl tracking-wide text-brand-500 mb-8 px-2">CORA</div>
+        <img src="/cora_logo.svg" alt="Cora" className="mb-8 ml-2 h-7 w-auto" />
         <nav className="flex-1 space-y-1">
           {SIDEBAR_ITENS.map((item) =>
             item.emBreve ? (
