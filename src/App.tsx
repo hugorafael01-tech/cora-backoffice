@@ -7,6 +7,8 @@ import { SemanaDetalhe } from './pages/Semana/SemanaDetalhe';
 import { SemanaCardapio } from './pages/Semana/SemanaCardapio';
 import { ProducaoAtualRedirect } from './pages/Producao/ProducaoAtualRedirect';
 import { ProducaoDefinirVolume } from './pages/Producao/ProducaoDefinirVolume';
+import { ExpedicaoAtualRedirect } from './pages/Expedicao/ExpedicaoAtualRedirect';
+import { ExpedicaoDetalhe } from './pages/Expedicao/ExpedicaoDetalhe';
 import { Financeiro } from './pages/Financeiro/Financeiro';
 
 export default function App() {
@@ -55,6 +57,23 @@ export default function App() {
           element={
             <RequireAuth>
               <ProducaoDefinirVolume />
+            </RequireAuth>
+          }
+        />
+        <Route path="/expedicao" element={<Navigate to="/expedicao/atual" replace />} />
+        <Route
+          path="/expedicao/atual"
+          element={
+            <RequireAuth>
+              <ExpedicaoAtualRedirect />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/expedicao/:id"
+          element={
+            <RequireAuth>
+              <ExpedicaoDetalhe />
             </RequireAuth>
           }
         />

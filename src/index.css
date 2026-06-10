@@ -74,3 +74,21 @@
 body {
   @apply bg-warm-50 text-warm-700 font-body;
 }
+
+/* Expedicao: ao imprimir etiquetas, esconde todo o resto da pagina e deixa so
+   o bloco .etiquetas-print (que e `hidden print:block`). Isola sem mexer no Shell. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .etiquetas-print,
+  .etiquetas-print * {
+    visibility: visible;
+  }
+  .etiquetas-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
