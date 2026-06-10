@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   appendDobra,
   ehEtapaDivisao,
   etapaTipoLabel,
   fmtPecaDivisao,
+  fmtTempC,
   lerDobras,
   resumoDobras,
 } from '../../../lib/producao';
@@ -35,8 +36,10 @@ function statusLabel(status: EtapaStatus): string {
   return 'aguardando';
 }
 
+// Botao de acao: alvo de toque >= 40px e largura distribuida no mobile; volta ao
+// compacto lado a lado no md+.
 const BTN =
-  'min-h-[32px] rounded-md px-2.5 font-display text-[11px] uppercase tracking-[0.04em] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex-1 md:flex-none min-h-[40px] md:min-h-[32px] rounded-md px-3 md:px-2.5 font-display text-[12px] md:text-[11px] uppercase tracking-[0.04em] disabled:cursor-not-allowed disabled:opacity-50';
 
 export function EtapaAcompRow({
   etapa,
@@ -56,6 +59,18 @@ export function EtapaAcompRow({
   const ehDobra = etapa.tipo === 'dobra';
   const dobras = ehDobra ? lerDobras(etapa.detalhes) : [];
   const resumo = ehDobra ? resumoDobras(dobras) : null;
+
+  // Subtexto fluido: cada item inteiro (nowrap), separados por " · " com espaco
+  // real (cria ponto de quebra entre itens, nunca no meio de um). Notas pode quebrar.
+  const meta: { node: React.ReactNode; nowrap: boolean }[] = [];
+  if (peca) meta.push({ node: <span className="font-medium text-brand-500">{peca}</span>, nowrap: true });
+  if (iniciada) meta.push({ node: <>iniciada {iniciada}</>, nowrap: true });
+  if (concluida) meta.push({ node: <>concluída {concluida}</>, nowrap: true });
+  if (etapa.tempC != null) meta.push({ node: <>{fmtTempC(etapa.tempC)}</>, nowrap: true });
+  if (resumo) meta.push({ node: <span className="font-medium text-brand-500">{resumo}</span>, nowrap: true });
+  if (etapa.notas) meta.push({ node: <span className="text-warm-600">{etapa.notas}</span>, nowrap: false });
+
+  const temAcoes = etapa.status === 'aguardando' || etapa.status === 'em_curso';
 
   // Acao de botao que nao deve disparar o toggle da linha
   const acao = (fn: () => void) => (e: React.MouseEvent) => {
@@ -86,62 +101,77 @@ export function EtapaAcompRow({
             toggle();
           }
         }}
-        className="flex cursor-pointer flex-wrap items-start gap-3 px-3 py-2.5"
+        className="flex cursor-pointer flex-col gap-2.5 px-3 py-2.5 md:flex-row md:items-start md:gap-3"
       >
-        <span className="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded bg-warm-100 text-[11px] tabular-nums text-warm-500">
-          {etapa.ordem}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-warm-800">{etapaTipoLabel(etapa.tipo)}</span>
-            <span className="text-[11px] uppercase tracking-[0.04em] text-warm-500">
-              {statusLabel(etapa.status)}
-            </span>
-            {destaque && (
-              <span className="rounded bg-brand-500 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.04em] text-white">
-                agora
+        {/* Bloco 1 + 2: numero, titulo/status e subtexto */}
+        <div className="flex min-w-0 items-start gap-3 md:flex-1">
+          <span className="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded bg-warm-100 text-[11px] tabular-nums text-warm-500">
+            {etapa.ordem}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium text-warm-800">{etapaTipoLabel(etapa.tipo)}</span>
+              <span className="text-[11px] uppercase tracking-[0.04em] text-warm-500">
+                {statusLabel(etapa.status)}
               </span>
+              {destaque && (
+                <span className="rounded bg-brand-500 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.04em] text-white">
+                  agora
+                </span>
+              )}
+            </div>
+            {meta.length > 0 && (
+              <div className="mt-0.5 text-[12px] leading-snug text-warm-500">
+                {meta.map((m, i) => (
+                  <Fragment key={i}>
+                    {i > 0 && <span className="text-warm-300"> · </span>}
+                    <span className={m.nowrap ? 'whitespace-nowrap' : undefined}>{m.node}</span>
+                  </Fragment>
+                ))}
+              </div>
             )}
           </div>
-          <div className="mt-0.5 flex flex-wrap gap-x-3 text-[12px] text-warm-500">
-            {peca && <span className="font-medium text-brand-500">{peca}</span>}
-            {iniciada && <span>iniciada {iniciada}</span>}
-            {concluida && <span>concluída {concluida}</span>}
-            {etapa.tempC != null && <span>{etapa.tempC}C</span>}
-            {resumo && <span className="font-medium text-brand-500">{resumo}</span>}
-            {etapa.notas && <span className="text-warm-600">{etapa.notas}</span>}
-          </div>
+          {/* Chevron sempre visivel (a linha inteira ja e clicavel) */}
+          <span
+            aria-hidden
+            className={`mt-0.5 flex-shrink-0 text-[18px] leading-none text-warm-300 transition-transform ${
+              capturaAberta ? 'rotate-90' : ''
+            }`}
+          >
+            ›
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {ehDobra && etapa.status === 'em_curso' && (
-            <button
-              onClick={acao(registrarDobra)}
-              disabled={salvando}
-              className={`${BTN} bg-brand-500 text-white hover:bg-brand-600`}
-            >
-              registrar dobra
-            </button>
-          )}
-          {etapa.status === 'aguardando' && (
-            <button
-              onClick={acao(() => onAvancar('iniciar'))}
-              disabled={salvando}
-              className={`${BTN} bg-brand-500 text-white hover:bg-brand-600`}
-            >
-              iniciar
-            </button>
-          )}
-          {etapa.status === 'em_curso' && (
-            <button
-              onClick={acao(() => onAvancar('concluir'))}
-              disabled={salvando}
-              className={`${BTN} border border-success-border bg-success-bg text-success-text hover:opacity-80`}
-            >
-              concluir
-            </button>
-          )}
-          {(etapa.status === 'aguardando' || etapa.status === 'em_curso') && (
+        {/* Bloco 3: acoes — linha cheia no mobile, lado a lado no md+ */}
+        {temAcoes && (
+          <div className="flex items-stretch gap-2 md:items-center md:gap-1.5 md:flex-shrink-0">
+            {ehDobra && etapa.status === 'em_curso' && (
+              <button
+                onClick={acao(registrarDobra)}
+                disabled={salvando}
+                className={`${BTN} bg-brand-500 text-white hover:bg-brand-600`}
+              >
+                registrar dobra
+              </button>
+            )}
+            {etapa.status === 'aguardando' && (
+              <button
+                onClick={acao(() => onAvancar('iniciar'))}
+                disabled={salvando}
+                className={`${BTN} bg-brand-500 text-white hover:bg-brand-600`}
+              >
+                iniciar
+              </button>
+            )}
+            {etapa.status === 'em_curso' && (
+              <button
+                onClick={acao(() => onAvancar('concluir'))}
+                disabled={salvando}
+                className={`${BTN} border border-success-border bg-success-bg text-success-text hover:opacity-80`}
+              >
+                concluir
+              </button>
+            )}
             <button
               onClick={acao(() => onAvancar('pular'))}
               disabled={salvando}
@@ -149,23 +179,8 @@ export function EtapaAcompRow({
             >
               pular
             </button>
-          )}
-          <button
-            onClick={acao(toggle)}
-            aria-expanded={capturaAberta}
-            className={`${BTN} border border-warm-300 bg-white text-warm-600 hover:bg-warm-50`}
-          >
-            {capturaAberta ? 'fechar' : 'expandir'}
-          </button>
-          <span
-            aria-hidden
-            className={`text-[14px] text-warm-300 transition-transform ${
-              capturaAberta ? 'rotate-90' : ''
-            }`}
-          >
-            ›
-          </span>
-        </div>
+          </div>
+        )}
       </div>
 
       {capturaAberta &&

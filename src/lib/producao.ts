@@ -94,6 +94,11 @@ export function fmtG(g: number): string {
   return `${Math.round(g).toLocaleString('pt-BR')} g`;
 }
 
+/** Temp legivel pt-BR: "25,5 °C" (virgula decimal, ate 1 casa). */
+export function fmtTempC(c: number): string {
+  return `${c.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} °C`;
+}
+
 // ---- Acompanhamento (Estado B / fatia B1) — helpers puros ----
 
 const ETAPA_TIPO_LABEL: Record<EtapaTipo, string> = {
