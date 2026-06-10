@@ -24,11 +24,17 @@ export function Login() {
   // Verifica o codigo de 6 digitos do email (mesmo destino do callback do link).
   async function entrarComCodigo(e: React.FormEvent) {
     e.preventDefault();
+    // Strip de tudo que nao for digito (colar com espacos do email funciona).
+    const token = codigo.replace(/\D/g, '');
+    if (!/^\d{6,10}$/.test(token)) {
+      setError('Digite o código do email (6 a 10 dígitos).');
+      return;
+    }
     setError(null);
     setVerificando(true);
     const { error } = await supabase.auth.verifyOtp({
       email,
-      token: codigo.trim(),
+      token,
       type: 'email',
     });
     if (error) {
@@ -54,8 +60,7 @@ export function Login() {
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                pattern="[0-9]*"
-                maxLength={6}
+                maxLength={10}
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value)}
                 placeholder="Código do email"
@@ -64,7 +69,7 @@ export function Login() {
               />
               <button
                 type="submit"
-                disabled={verificando}
+                disabled={verificando || codigo.replace(/\D/g, '').length < 6}
                 className="w-full bg-brand-500 text-white py-2 rounded hover:bg-brand-600 disabled:opacity-50"
               >
                 {verificando ? 'Entrando…' : 'Entrar com código'}
