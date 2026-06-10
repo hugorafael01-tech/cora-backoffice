@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { derivaEstado } from '../lib/semana';
 import type {
@@ -36,6 +36,10 @@ export function useProducaoVolume(id: string | undefined): UseProducaoVolumeResu
   const [naoEncontrada, setNaoEncontrada] = useState(false);
   const [tick, setTick] = useState(0);
 
+  // O spinner de pagina inteira aparece SO no primeiro load; no refetch a tela
+  // fica montada (salvar nao volta a tela pro inicio nem pisca).
+  const jaCarregouRef = useRef(false);
+
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
@@ -43,7 +47,7 @@ export function useProducaoVolume(id: string | undefined): UseProducaoVolumeResu
     if (!id) return;
 
     async function carregar(semanaId: string) {
-      setLoading(true);
+      if (!jaCarregouRef.current) setLoading(true);
       setError(null);
       setNaoEncontrada(false);
 
@@ -92,6 +96,7 @@ export function useProducaoVolume(id: string | undefined): UseProducaoVolumeResu
           semanaAnterior: anterior?.id ?? null,
           semanaProxima: proxima?.id ?? null,
         });
+        jaCarregouRef.current = true;
         setLoading(false);
       } catch (e) {
         if (!cancelado) {
