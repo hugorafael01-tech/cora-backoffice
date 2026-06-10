@@ -2,7 +2,7 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 9 de junho de 2026 (Semana lê produções + B2a 0024 + B2b-1 aba Contexto revertida → temp ambiente no Acompanhamento).
+**Última atualização:** 10 de junho de 2026 (P1a — migration 0025: drop do `UNIQUE (numero, ano)` em `semanas` (ciclos sem trava semanal) + coluna `semanas.sobra_levain_g`; **criada, aguardando aplicação no SQL Editor**. UI é a P1b).
 
 ---
 
@@ -49,6 +49,7 @@
 | 0022_produto_formato_disco_bola | **aplicada** (via SQL Editor) | `main` (PR #20, `b478509`) | `ALTER TYPE produto_formato ADD VALUE 'disco'/'bola'`. Gotcha: enum value novo não é usável na mesma transação → seed da Pizza separada na 0023. |
 | 0023_seed_pizza | **aplicada** (via SQL Editor) | `main` (PR #20, `b478509`) | Cria ingrediente `levain` no catálogo (se faltava) + **Pizza Clássica** (produto+receita+versão rascunho; formato `'disco'`; peso_massa 283g/un; perda_coccao 0.08; preço avulso NULL; ingredientes incl. levain 0.20). Verificada por probe 07/jun (farinha Original 427, Pizza 150, 7 receitas com levain). |
 | 0024_contextos_dia_indice_relativo | **aplicada** (via SQL Editor) | `main` (PR #30, `69c41c7`) | B2a. `contextos_dia.dia`: `text` dia-da-semana (`terca`/`quarta`/`quinta`) → **`INT` contagem regressiva** (`D0`=entrega, `D1`=véspera, `D2`=2 dias antes); drop do CHECK `IN(...)`, `ALTER TYPE INT USING CASE`, `ADD CHECK (dia >= 0)`; `UNIQUE (semana_id, dia)` intacto. Remove o **único lock de dia-da-semana do schema**. Também dropa as colunas mortas `temp_agua_autolise_c`/`temp_massa_pos_batimento_c` de `contextos_producao` (temp vive em `etapas_producao.temp_c` desde a B1). Verificada por probe PRE/POS 09/jun. |
+| 0025_ciclos_sobra | **criada — aguardando SQL Editor** | `feat/p1a-migration-0025` (PR #40) | P1a. `DROP CONSTRAINT semanas_numero_ano_key` — era a **última trava de schema** amarrando 1 ciclo por semana ISO; removida, vários ciclos coexistem na mesma semana ISO (sobrepostos, entrega em qualquer dia), **identidade do ciclo = `data_entrega`**, `numero`/`ano` viram informativos. Carona: `ADD COLUMN semanas.sobra_levain_g NUMERIC NOT NULL DEFAULT 400 CHECK (>= 0)` — persiste a sobra de levain por ciclo (hoje `useState(400)` local). Aplicar via SQL Editor (não db push); probes PRE/POS em `0025_ciclos_sobra.verificacao.sql` — **PRE.1 confirma o `conname` real** antes do DROP. `database.types.ts` já atualizado (aditivo). UI lê/grava na **P1b**. |
 
 ---
 
@@ -135,6 +136,7 @@ Fora do circuito de assinatura/Asaas. Schema de produção existe desde a **0012
 **Decisões de modelo do ciclo de produção — 07/jun:**
 - **Manter a tabela/módulo `semanas`** (sem renomear pra `ciclo`/`batch`). Mecanicamente ela já é um contêiner de ciclo com **datas livres**: começar em qualquer dia, deslocar por feriado, encurtar/alongar = só setar as datas. `numero` é INT livre — pode ser usado como **batch sequencial** sem mudança de schema. Renomear seria churn no módulo vivo (rota/componentes/types/Semana) sem ganho funcional, e não consertaria o lock real (abaixo).
 - **CONCLUÍDA (B2a, 09/jun) — `contextos_dia.dia` virou índice relativo:** migration 0024 (PR #30, aplicada no SQL Editor, probe PRE/POS). De `text` dia-da-semana (`'terca'/'quarta'/'quinta'`) para **`INT` contagem regressiva** (`D0`=entrega, `D1`, `D2`...), `CHECK (dia >= 0)`, `UNIQUE (semana_id, dia)` intacto. Removeu o único lock de dia-da-semana do schema → destrava ciclos começando em qualquer dia, de 2 a N dias, e feriados. O frontend deriva o rótulo das datas; como `diasDaSemana()` foi removida no #29, a **B2b** introduz um helper novo `data → rótulo D{n}` (a partir do `dia` INT).
+- **CRIADA (P1a, 10/jun) — `UNIQUE (numero, ano)` dropado:** migration 0025 (PR #40, **aguardando aplicação no SQL Editor**) remove a última trava de schema que amarrava 1 ciclo por semana ISO. Vários **ciclos** passam a coexistir na mesma semana ISO (sobrepostos, entrega em qualquer dia); a **identidade do ciclo vira `data_entrega`** e `numero`/`ano` viram **informativos** (não mais identidade). Carona: `semanas.sobra_levain_g` (`NUMERIC NOT NULL DEFAULT 400`) persiste a sobra de levain por ciclo, hoje `useState(400)` local na tela de volume. A UI (ler/gravar `sobra_levain_g` + tratar semanas como ciclos) é a **P1b**.
 - **Multi-entrega por ciclo: ADIADO.** Modelar N entregas como rows é o que adiciona complexidade de verdade (e `derivaEstado` assume uma entrega só). 1 entrega/ciclo com datas livres cobre teste e lançamento. **Fio amarrado:** a `janelas_entrega` (0016) já desacopla entrega/cutoff de `semanas`, e `semanas.data_entrega`/`data_corte` estão **deprecated** (ver Tech debt). Quando o módulo migrar pra `janelas_entrega`, o `D2/D1/D0` deve ancorar na data de entrega canônica de lá.
 
 ### Tech debt registrada
