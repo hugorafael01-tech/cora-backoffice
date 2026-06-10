@@ -10,12 +10,13 @@ interface CicloOption {
 }
 
 /**
- * Switcher de ciclos do modulo Producao: lista os ciclos ABERTOS (nao
- * cancelado/encerrado) por data de entrega; trocar navega pro mesmo path
- * preservando a aba (?aba=). O ciclo atual entra na lista mesmo se ja encerrado
- * (voce esta nele). Substitui a navegacao linear prev/next (ciclos sobrepoem).
+ * Switcher de ciclos: lista os ciclos ABERTOS (nao cancelado/encerrado) por data
+ * de entrega; trocar navega pro mesmo path preservando a aba (?aba=). O ciclo
+ * atual entra na lista mesmo se ja encerrado (voce esta nele). Substitui a
+ * navegacao linear prev/next (ciclos sobrepoem). `basePath` reusa o switcher
+ * fora da Producao (ex.: '/expedicao').
  */
-export function CicloSwitcher() {
+export function CicloSwitcher({ basePath = '/producao' }: { basePath?: string }) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -44,7 +45,7 @@ export function CicloSwitcher() {
   function trocar(novoId: string) {
     if (novoId === id) return;
     const qs = searchParams.toString();
-    navigate(`/producao/${novoId}${qs ? `?${qs}` : ''}`);
+    navigate(`${basePath}/${novoId}${qs ? `?${qs}` : ''}`);
   }
 
   return (
