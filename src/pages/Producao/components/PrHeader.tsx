@@ -1,5 +1,8 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formataDiaMes } from '../../../lib/date';
 import { cicloLabel } from '../../../lib/semana';
+import { ModalCriarSemana } from '../../Semana/components/ModalCriarSemana';
 import { CicloSwitcher } from './CicloSwitcher';
 import type { Semana } from '../types';
 
@@ -8,8 +11,11 @@ interface Props {
 }
 
 /** Cabecalho da tela de Producao. Identidade = ciclo (data de entrega); a semana
- *  ISO vira detalhe secundario. Switcher de ciclos abertos no lugar das setas. */
+ *  ISO vira detalhe secundario. Switcher de ciclos abertos + criar ciclo (que
+ *  cai de volta na Producao) no lugar das setas. */
 export function PrHeader({ semana }: Props) {
+  const navigate = useNavigate();
+  const [criando, setCriando] = useState(false);
   const titulo = cicloLabel(semana.data_entrega); // "Ciclo · entrega qua 10 jun"
   const subtitulo = `Semana ISO ${semana.numero} · ${formataDiaMes(semana.data_inicio)} — ${formataDiaMes(
     semana.data_entrega
@@ -29,7 +35,20 @@ export function PrHeader({ semana }: Props) {
           período de testes
         </span>
         <CicloSwitcher />
+        <button
+          onClick={() => setCriando(true)}
+          className="h-11 rounded-md border border-warm-300 bg-white px-3 text-[13px] text-warm-700 hover:bg-warm-100"
+        >
+          + Novo ciclo
+        </button>
       </div>
+
+      {criando && (
+        <ModalCriarSemana
+          onClose={() => setCriando(false)}
+          onCriada={(id) => navigate(`/producao/${id}?aba=volume`)}
+        />
+      )}
     </header>
   );
 }
