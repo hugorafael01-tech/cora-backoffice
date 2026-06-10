@@ -1,8 +1,16 @@
 import { useState } from 'react';
-import { ehEtapaDivisao, etapaTipoLabel, fmtPecaDivisao } from '../../../lib/producao';
+import {
+  appendDobra,
+  ehEtapaDivisao,
+  etapaTipoLabel,
+  fmtPecaDivisao,
+  lerDobras,
+  resumoDobras,
+} from '../../../lib/producao';
 import type { AcaoEtapa, CapturaEtapa as CapturaEtapaInput } from '../../../lib/producaoActions';
 import type { EtapaAcomp, EtapaStatus } from '../types';
 import { CapturaEtapa } from './CapturaEtapa';
+import { RegistroDobras } from './RegistroDobras';
 
 interface Props {
   etapa: EtapaAcomp;
@@ -45,11 +53,21 @@ export function EtapaAcompRow({
   const concluida = hora(etapa.concluidaAt);
   const peca = ehEtapaDivisao(etapa.tipo) ? fmtPecaDivisao(pesoMassaG) : null;
 
+  const ehDobra = etapa.tipo === 'dobra';
+  const dobras = ehDobra ? lerDobras(etapa.detalhes) : [];
+  const resumo = ehDobra ? resumoDobras(dobras) : null;
+
   // Acao de botao que nao deve disparar o toggle da linha
   const acao = (fn: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation();
     fn();
   };
+
+  // UM TOQUE: append { n, at:now, temp_c:null } e persiste (detalhes + dobra_numero).
+  function registrarDobra() {
+    const novo = appendDobra(dobras, new Date().toISOString());
+    onCaptura({ detalhes: { ...etapa.detalhes, dobras: novo }, dobraNumero: novo.length });
+  }
 
   return (
     <li
@@ -90,12 +108,21 @@ export function EtapaAcompRow({
             {iniciada && <span>iniciada {iniciada}</span>}
             {concluida && <span>concluída {concluida}</span>}
             {etapa.tempC != null && <span>{etapa.tempC}C</span>}
-            {etapa.dobraNumero != null && <span>dobra {etapa.dobraNumero}</span>}
+            {resumo && <span className="font-medium text-brand-500">{resumo}</span>}
             {etapa.notas && <span className="text-warm-600">{etapa.notas}</span>}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
+          {ehDobra && etapa.status === 'em_curso' && (
+            <button
+              onClick={acao(registrarDobra)}
+              disabled={salvando}
+              className={`${BTN} bg-brand-500 text-white hover:bg-brand-600`}
+            >
+              registrar dobra
+            </button>
+          )}
           {etapa.status === 'aguardando' && (
             <button
               onClick={acao(() => onAvancar('iniciar'))}
@@ -141,9 +168,16 @@ export function EtapaAcompRow({
         </div>
       </div>
 
-      {capturaAberta && (
-        <CapturaEtapa etapa={etapa} salvando={salvando} onSalvar={(captura) => onCaptura(captura)} />
-      )}
+      {capturaAberta &&
+        (ehDobra ? (
+          <RegistroDobras etapa={etapa} salvando={salvando} onCaptura={onCaptura} />
+        ) : (
+          <CapturaEtapa
+            etapa={etapa}
+            salvando={salvando}
+            onSalvar={(captura) => onCaptura(captura)}
+          />
+        ))}
     </li>
   );
 }

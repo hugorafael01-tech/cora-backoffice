@@ -44,7 +44,6 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
   const det = etapa.detalhes ?? {};
 
   const [tempC, setTempC] = useState(asStr(etapa.tempC));
-  const [dobraNumero, setDobraNumero] = useState(asStr(etapa.dobraNumero));
   const [notas, setNotas] = useState(etapa.notas ?? '');
   // detalhes editaveis como strings (coccao/shape)
   const [detVals, setDetVals] = useState<Record<string, string>>(() => {
@@ -68,7 +67,6 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
     const captura: CapturaEtapaInput = { notas: notas.trim() === '' ? null : notas.trim() };
 
     if (usaTemp) captura.tempC = parseNum(tempC);
-    if (tipo === 'dobra') captura.dobraNumero = parseNum(dobraNumero);
 
     if (tipo === 'coccao') {
       const detalhes: Record<string, unknown> = { ...det };
@@ -97,19 +95,6 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
               value={tempC}
               onChange={(e) => setTempC(e.target.value)}
               placeholder="ex: 14,5"
-            />
-          </div>
-        )}
-
-        {tipo === 'dobra' && (
-          <div>
-            <label className={LABEL}>Número da dobra</label>
-            <input
-              className={INPUT}
-              inputMode="numeric"
-              value={dobraNumero}
-              onChange={(e) => setDobraNumero(e.target.value)}
-              placeholder="ex: 2"
             />
           </div>
         )}

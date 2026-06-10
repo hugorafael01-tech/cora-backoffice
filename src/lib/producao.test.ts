@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  appendDobra,
   calcLevainBuild,
   derivaEtapaAgora,
   diasContexto,
   ehEtapaDivisao,
   farinhaPorPaoG,
   fmtPecaDivisao,
+  lerDobras,
   previewLinha,
   progressoEtapas,
+  removerUltimaDobra,
+  resumoDobras,
+  setTempDobra,
   slugify,
 } from './producao';
 import type { EtapaAcomp, EtapaStatus } from '../pages/Producao/types';
@@ -144,6 +149,76 @@ describe('fmtPecaDivisao', () => {
   });
   it('null quando peso nulo', () => {
     expect(fmtPecaDivisao(null)).toBeNull();
+  });
+});
+
+describe('registro de dobras', () => {
+  // 17:32Z = 14:32 em America/Sao_Paulo (UTC-3); 18:01Z = 15:01.
+  const at1 = '2026-06-10T17:32:00.000Z';
+  const at2 = '2026-06-10T18:01:00.000Z';
+
+  it('lerDobras: vazio quando ausente ou nao-array', () => {
+    expect(lerDobras(null)).toEqual([]);
+    expect(lerDobras({})).toEqual([]);
+    expect(lerDobras({ dobras: 'x' })).toEqual([]);
+  });
+
+  it('lerDobras: ignora entradas malformadas e ordena por n', () => {
+    const det = {
+      dobras: [
+        { n: 2, at: at2, temp_c: 25 },
+        { n: 1, at: at1, temp_c: null },
+        { n: 3 }, // malformada (sem at) -> ignorada
+        null, // ignorada
+        { at: at1 }, // sem n -> ignorada
+      ],
+    };
+    expect(lerDobras(det)).toEqual([
+      { n: 1, at: at1, temp_c: null },
+      { n: 2, at: at2, temp_c: 25 },
+    ]);
+  });
+
+  it('lerDobras: temp_c nao-numerica vira null', () => {
+    expect(lerDobras({ dobras: [{ n: 1, at: at1, temp_c: 'quente' }] })).toEqual([
+      { n: 1, at: at1, temp_c: null },
+    ]);
+  });
+
+  it('appendDobra: n sequencial, temp_c null, imutavel', () => {
+    const d0: ReturnType<typeof lerDobras> = [];
+    const d1 = appendDobra(d0, at1);
+    expect(d1).toEqual([{ n: 1, at: at1, temp_c: null }]);
+    const d2 = appendDobra(d1, at2);
+    expect(d2.map((d) => d.n)).toEqual([1, 2]);
+    expect(d0).toEqual([]); // nao mutou o original
+  });
+
+  it('setTempDobra: aceita numero e null, so toca o n alvo', () => {
+    const d = appendDobra(appendDobra([], at1), at2);
+    expect(setTempDobra(d, 1, 26.5)).toEqual([
+      { n: 1, at: at1, temp_c: 26.5 },
+      { n: 2, at: at2, temp_c: null },
+    ]);
+    const com = setTempDobra(d, 2, 27);
+    expect(setTempDobra(com, 2, null)[1].temp_c).toBeNull();
+  });
+
+  it('removerUltimaDobra: tira so a ultima', () => {
+    const d = appendDobra(appendDobra([], at1), at2);
+    expect(removerUltimaDobra(d).map((x) => x.n)).toEqual([1]);
+    expect(removerUltimaDobra([])).toEqual([]);
+  });
+
+  it('resumoDobras: contagem + hora SP da ultima', () => {
+    expect(resumoDobras([])).toBeNull();
+    expect(resumoDobras([{ n: 1, at: at1, temp_c: null }])).toBe('1 dobra · última 14:32');
+    expect(
+      resumoDobras([
+        { n: 1, at: at1, temp_c: null },
+        { n: 2, at: at2, temp_c: 25 },
+      ])
+    ).toBe('2 dobras · última 15:01');
   });
 });
 
