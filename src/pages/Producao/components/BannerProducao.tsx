@@ -10,7 +10,7 @@ export function BannerProducao({ sucesso }: Props) {
   if (sucesso) {
     return (
       <div className="mx-5 mt-4 rounded-md border border-success-border bg-success-bg px-4 py-3 text-[13px] text-success-text md:mx-8">
-        <strong className="font-semibold">{sucesso}</strong> Etapas geradas (autolise ate coccao).
+        <strong className="font-semibold">{sucesso}</strong> Etapas geradas (autólise até cocção).
       </div>
     );
   }
@@ -20,8 +20,8 @@ export function BannerProducao({ sucesso }: Props) {
       <span className="mr-2 text-[11px] uppercase tracking-[0.06em] text-brand-500">
         sem assinante
       </span>
-      Voce define o volume da semana na mao. Quando entrar cliente, os{' '}
-      <strong className="font-semibold text-brand-800">pedidos</strong> populam aqui e a forma nao muda.
+      Você define o volume da semana na mão. Quando entrar cliente, os{' '}
+      <strong className="font-semibold text-brand-800">pedidos</strong> populam aqui e a forma não muda.
     </div>
   );
 }

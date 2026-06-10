@@ -46,7 +46,7 @@ export function ProducaoAtualRedirect() {
       <Shell>
         <div className="grid min-h-[60vh] place-items-center p-8 text-center">
           <p className="font-display text-2xl text-ink-700">
-            Crie uma semana primeiro (no modulo Semana) pra definir o volume de producao.
+            Crie uma semana primeiro (no módulo Semana) pra definir o volume de produção.
           </p>
         </div>
       </Shell>

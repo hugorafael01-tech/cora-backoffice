@@ -140,7 +140,7 @@ describe('ehEtapaDivisao (Pao Original: pre_shape e a divisao, nao shape)', () =
 
 describe('fmtPecaDivisao', () => {
   it('formata o peso da peca', () => {
-    expect(fmtPecaDivisao(283)).toBe('pecas de ~283 g');
+    expect(fmtPecaDivisao(283)).toBe('peças de ~283 g');
   });
   it('null quando peso nulo', () => {
     expect(fmtPecaDivisao(null)).toBeNull();

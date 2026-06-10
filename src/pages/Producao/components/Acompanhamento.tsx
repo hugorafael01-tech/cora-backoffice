@@ -64,10 +64,10 @@ export function Acompanhamento({ semanaId, dataEntrega, onIrParaVolume }: Props)
     return (
       <div className="px-5 py-12 text-center md:px-8">
         <p className="font-display text-[18px] uppercase tracking-[0.04em] text-warm-500">
-          Nenhuma producao na semana
+          Nenhuma produção na semana
         </p>
         <p className="mx-auto mt-1.5 max-w-md text-[14px] leading-relaxed text-warm-500">
-          Defina o volume e crie as producoes pra acompanhar as etapas.
+          Defina o volume e crie as produções pra acompanhar as etapas.
         </p>
         <button
           onClick={onIrParaVolume}
@@ -90,8 +90,8 @@ export function Acompanhamento({ semanaId, dataEntrega, onIrParaVolume }: Props)
           Acompanhamento
         </h2>
         <span className="text-[12px] text-warm-500">
-          {dados.producoes.length} {dados.producoes.length === 1 ? 'producao' : 'producoes'} ·{' '}
-          {totalPaes} paes
+          {dados.producoes.length} {dados.producoes.length === 1 ? 'produção' : 'produções'} ·{' '}
+          {totalPaes} pães
         </span>
       </div>
 

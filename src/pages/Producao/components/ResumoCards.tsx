@@ -11,10 +11,10 @@ export function ResumoCards({ paes, massaKg, levainKg }: Props) {
         <h2 className="font-display text-[13px] uppercase tracking-[0.06em] text-warm-600">
           Resumo da semana
         </h2>
-        <span className="text-[12px] text-warm-500">pre-producao · planejada</span>
+        <span className="text-[12px] text-warm-500">pré-produção · planejada</span>
       </div>
       <div className="grid grid-cols-3 gap-2.5">
-        <Card k="Paes" v={paes.toLocaleString('pt-BR')} u="un" d="defina o volume" />
+        <Card k="Pães" v={paes.toLocaleString('pt-BR')} u="un" d="defina o volume" />
         <Card
           k="Massa total"
           v={massaKg.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
