@@ -52,6 +52,30 @@ export function derivaSemana(dataEntrega: Date): SemanaDerivada {
 }
 
 /**
+ * Deriva os campos de um CICLO a partir da data de entrega (qualquer dia da
+ * semana). Sem a trava semanal da 0025: o ciclo sao 3 dias terminando na entrega.
+ *
+ * - data_inicio = entrega - 2 dias (D2)
+ * - data_fim    = entrega (D0)
+ * - data_corte  = entrega - 2 dias as 12h SP (informativo no periodo de teste)
+ * - numero/ano  = semana ISO da entrega (informativos; nao sao mais identidade)
+ */
+export function derivaCiclo(dataEntrega: Date): SemanaDerivada {
+  const inicio = addDays(dataEntrega, -2);
+  const inicioYmd = format(inicio, 'yyyy-MM-dd');
+  const dataCorte = fromZonedTime(`${inicioYmd}T12:00:00`, TZ);
+
+  return {
+    numero: getISOWeek(dataEntrega),
+    ano: getISOWeekYear(dataEntrega),
+    data_inicio: inicioYmd,
+    data_fim: format(dataEntrega, 'yyyy-MM-dd'),
+    data_entrega: format(dataEntrega, 'yyyy-MM-dd'),
+    data_corte: dataCorte.toISOString(),
+  };
+}
+
+/**
  * Proxima quinta a partir de hoje. Se hoje for quinta, retorna a proxima
  * quinta (nao hoje). Usado como default no date picker do modal de criacao.
  */

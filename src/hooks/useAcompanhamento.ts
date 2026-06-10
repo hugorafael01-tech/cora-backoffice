@@ -32,14 +32,20 @@ export function useAcompanhamento(semanaId: string | undefined): UseAcompanhamen
 
   // Loading nao gateia no refetch: a lista NAO desmonta ao salvar captura/dobra
   // (sem flash de "Carregando", sem perder o estado de UI das linhas). Spinner so
-  // no primeiro load.
+  // no primeiro load. Trocar de ciclo (semanaId muda) reseta a flag.
   const jaCarregouRef = useRef(false);
+  const idRef = useRef<string | undefined>(undefined);
 
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     if (!semanaId) return;
     let cancelado = false;
+
+    if (idRef.current !== semanaId) {
+      idRef.current = semanaId;
+      jaCarregouRef.current = false;
+    }
 
     async function carregar(id: string) {
       if (!jaCarregouRef.current) setLoading(true);

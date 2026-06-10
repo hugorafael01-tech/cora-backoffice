@@ -1,9 +1,17 @@
+import { useState } from 'react';
 import { calcLevainBuild, fmtG } from '../../../lib/producao';
 
 interface Props {
   metaG: number; // meta autolise = levain total previsto da semana, em gramas
   sobraG: number;
-  onSobra: (g: number) => void;
+  onSobra: (g: number) => void; // ao vivo (recalcula o build)
+  onSobraCommit?: (g: number) => void; // no blur (persiste sobra_levain_g do ciclo)
+}
+
+/** "" -> 0; aceita virgula; clamp em 0. */
+function parseSobra(s: string): number {
+  const n = Number(s.trim().replace(',', '.'));
+  return Number.isNaN(n) ? 0 : Math.max(0, n);
 }
 
 /**
@@ -11,8 +19,18 @@ interface Props {
  * Meta autolise = demanda total de levain da semana (vem do preview, espelho do trigger).
  * Build: total = meta + sobra; isca:agua:farinha = 1:2:2.
  */
-export function LevainCard({ metaG, sobraG, onSobra }: Props) {
+export function LevainCard({ metaG, sobraG, onSobra, onSobraCommit }: Props) {
   const build = calcLevainBuild(metaG, sobraG);
+
+  // String local pro input (permite virgula/trailing). Reseed so quando o sobraG
+  // muda POR FORA (load/troca de ciclo), nao quando a mudanca veio da propria
+  // digitacao (parse local ja bate com o sobraG).
+  const [sobraStr, setSobraStr] = useState(String(sobraG));
+  const [prevSobra, setPrevSobra] = useState(sobraG);
+  if (sobraG !== prevSobra) {
+    setPrevSobra(sobraG);
+    if (parseSobra(sobraStr) !== sobraG) setSobraStr(String(sobraG));
+  }
 
   return (
     <section className="px-5 pt-7 md:px-8">
@@ -81,11 +99,18 @@ export function LevainCard({ metaG, sobraG, onSobra }: Props) {
               <span className="text-warm-600">Sobra desejada (mãe)</span>
               <span className="inline-flex items-baseline gap-1 rounded border border-warm-300 bg-white px-2 py-1 font-semibold tabular-nums text-warm-800">
                 <input
-                  type="number"
-                  min={0}
-                  step={50}
-                  value={sobraG}
-                  onChange={(e) => onSobra(Math.max(0, Number(e.target.value) || 0))}
+                  type="text"
+                  inputMode="decimal"
+                  value={sobraStr}
+                  onChange={(e) => {
+                    setSobraStr(e.target.value);
+                    onSobra(parseSobra(e.target.value));
+                  }}
+                  onBlur={() => {
+                    const n = parseSobra(sobraStr);
+                    setSobraStr(String(n));
+                    onSobraCommit?.(n);
+                  }}
                   className="w-16 border-0 bg-transparent text-right outline-none"
                 />
                 <span className="text-[11px] font-normal text-warm-500">g</span>

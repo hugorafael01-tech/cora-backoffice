@@ -1,5 +1,5 @@
 import type { Database } from './database.types';
-import { dataSpStr, formataHa } from './date';
+import { dataSpStr, formataDiaSemanaDiaMes, formataHa } from './date';
 
 type Semana = Database['public']['Tables']['semanas']['Row'];
 
@@ -106,6 +106,37 @@ const DIA_MS = 86_400_000;
 function ymdLocal(ymd: string): number {
   const [y, m, d] = ymd.split('-').map(Number);
   return new Date(y, m - 1, d).getTime();
+}
+
+/** Identidade exibida do ciclo: "Ciclo · entrega qua 10 jun". */
+export function cicloLabel(dataEntrega: string): string {
+  return `Ciclo · entrega ${formataDiaSemanaDiaMes(dataEntrega)}`;
+}
+
+export interface CicloLite {
+  id: string;
+  data_entrega: string;
+  status: string;
+}
+
+/**
+ * Ciclo "atual" do modulo Producao: entre os ABERTOS (nao cancelado/encerrado),
+ * o de entrega mais proxima a partir de hoje (>= hoje); se nenhum no futuro, o de
+ * entrega mais recente. Sem ciclos abertos, cai no conjunto inteiro. Compara
+ * datas YYYY-MM-DD lexicograficamente (hoje = data SP).
+ */
+export function escolherCicloAtual(ciclos: CicloLite[], hojeYmd: string): string | null {
+  const abertos = ciclos.filter((c) => c.status !== 'cancelada' && c.status !== 'concluida');
+  const fonte = abertos.length > 0 ? abertos : ciclos;
+  if (fonte.length === 0) return null;
+
+  const proximos = fonte
+    .filter((c) => c.data_entrega >= hojeYmd)
+    .sort((a, b) => a.data_entrega.localeCompare(b.data_entrega));
+  if (proximos[0]) return proximos[0].id;
+
+  const recentes = [...fonte].sort((a, b) => b.data_entrega.localeCompare(a.data_entrega));
+  return recentes[0].id;
 }
 
 /** Escolhe a semana "atual" por prioridade (briefing v3 §10). */

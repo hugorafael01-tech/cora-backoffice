@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { escolherAtual, type SemanaLite } from '../../lib/semana';
+import { escolherCicloAtual, type CicloLite } from '../../lib/semana';
+import { dataSpStr } from '../../lib/date';
 import { Shell } from '../Semana/components/Shell';
 
 /** Resolve a semana "atual" e redireciona pra /producao/:id. Espelha SemanaAtualRedirect. */
@@ -16,7 +17,7 @@ export function ProducaoAtualRedirect() {
     async function resolver() {
       const { data, error } = await supabase
         .from('semanas')
-        .select('id, data_entrega, data_corte')
+        .select('id, data_entrega, status')
         .order('data_entrega', { ascending: true });
 
       if (cancelado) return;
@@ -24,8 +25,8 @@ export function ProducaoAtualRedirect() {
         setErro(error.message);
         return;
       }
-      const id = escolherAtual((data ?? []) as SemanaLite[], Date.now());
-      // Preserva o query param (ex.: ?aba=acompanhamento) ao resolver a semana.
+      const id = escolherCicloAtual((data ?? []) as CicloLite[], dataSpStr(new Date()));
+      // Preserva o query param (ex.: ?aba=acompanhamento) ao resolver o ciclo.
       if (id) navigate(`/producao/${id}${search}`, { replace: true });
       else setVazio(true);
     }

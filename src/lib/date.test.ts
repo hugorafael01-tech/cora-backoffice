@@ -1,8 +1,28 @@
 import { describe, it, expect } from 'vitest';
-import { derivaSemana, proximaQuinta } from './date';
+import { derivaCiclo, derivaSemana, proximaQuinta } from './date';
 
 // Helper: date local (meia-noite) sem timezone shift.
 const local = (y: number, m: number, d: number) => new Date(y, m - 1, d);
+
+describe('derivaCiclo', () => {
+  it('entrega numa quarta (10/jun/2026): D2=seg 8, fim=entrega, corte D2 12h', () => {
+    const r = derivaCiclo(local(2026, 6, 10));
+    expect(r.data_inicio).toBe('2026-06-08'); // entrega - 2 (D2)
+    expect(r.data_fim).toBe('2026-06-10'); // = entrega
+    expect(r.data_entrega).toBe('2026-06-10');
+    // 08/jun 12h BRT (UTC-3) = 15h UTC
+    expect(r.data_corte).toBe('2026-06-08T15:00:00.000Z');
+    expect(r.numero).toBe(24); // semana ISO da entrega (informativo)
+    expect(r.ano).toBe(2026);
+  });
+
+  it('entrega num domingo: ciclo de 3 dias termina no domingo', () => {
+    const r = derivaCiclo(local(2026, 6, 14)); // domingo
+    expect(r.data_inicio).toBe('2026-06-12'); // sexta
+    expect(r.data_fim).toBe('2026-06-14');
+    expect(r.data_entrega).toBe('2026-06-14');
+  });
+});
 
 describe('derivaSemana', () => {
   it('semana 22/2026 a partir de quinta 28/mai/2026', () => {
