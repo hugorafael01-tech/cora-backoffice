@@ -7,6 +7,7 @@ import {
   ehEtapaDivisao,
   farinhaPorPaoG,
   fmtPecaDivisao,
+  fmtTempC,
   lerDobras,
   previewLinha,
   progressoEtapas,
@@ -149,6 +150,15 @@ describe('fmtPecaDivisao', () => {
   });
   it('null quando peso nulo', () => {
     expect(fmtPecaDivisao(null)).toBeNull();
+  });
+});
+
+describe('fmtTempC', () => {
+  it('usa virgula decimal e sufixo °C', () => {
+    expect(fmtTempC(25.5)).toBe('25,5 °C');
+  });
+  it('inteiro sem casa decimal', () => {
+    expect(fmtTempC(25)).toBe('25 °C');
   });
 });
 

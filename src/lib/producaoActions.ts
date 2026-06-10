@@ -305,6 +305,12 @@ export type AcaoEtapa = 'iniciar' | 'concluir' | 'pular';
  * re-carimba uma producao ja em_curso/concluida). 'concluir' nao promove (etapa
  * em_curso ja implica producao iniciada). Etapa primeiro, promote depois: se o
  * promote falhar, o erro sobe pro banner e um retry recupera.
+ *
+ * Auto-conclusao sequencial: ao INICIAR a etapa N, as anteriores (ordem < N) ainda
+ * abertas (aguardando/em_curso) viram 'concluida' + concluida_at (padeiro pulou
+ * direto pra etapa atual). NAO toca iniciada_at: fica null se a etapa nunca foi
+ * iniciada, preserva o carimbo se ja estava em_curso. As 'pulada' ficam intactas.
+ * 'pular' NAO dispara isso (skip explicito nao carimba as anteriores).
  */
 export async function avancarEtapa(
   etapaId: string,
@@ -315,6 +321,22 @@ export async function avancarEtapa(
 
   let patch: EtapaProducaoUpdate;
   if (acao === 'iniciar') {
+    // Le a ordem da etapa alvo pra fechar as anteriores ainda abertas.
+    const { data: alvo, error: errOrdem } = await supabase
+      .from('etapas_producao')
+      .select('ordem')
+      .eq('id', etapaId)
+      .single();
+    if (errOrdem) throw errOrdem;
+
+    const { error: errAuto } = await supabase
+      .from('etapas_producao')
+      .update({ status: 'concluida', concluida_at: now })
+      .eq('producao_id', producaoId)
+      .lt('ordem', alvo.ordem as number)
+      .in('status', ['aguardando', 'em_curso']);
+    if (errAuto) throw errAuto;
+
     patch = { status: 'em_curso', iniciada_at: now };
   } else if (acao === 'concluir') {
     // Le iniciada_at pra carimbar se a etapa foi concluida sem ter sido iniciada.
