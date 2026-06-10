@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useProducaoVolume } from '../../hooks/useProducaoVolume';
 import { criarProducoesSemana, removerProducao } from '../../lib/producaoActions';
 import { previewLinha } from '../../lib/producao';
@@ -24,12 +24,28 @@ export function ProducaoDefinirVolume() {
   const { dados, loading, naoEncontrada, error, refetch } = useProducaoVolume(id);
 
   const [linhas, setLinhas] = useState<LinhaVolume[]>([]);
-  const [aba, setAba] = useState<AbaProducao>('volume');
   const [sobra, setSobra] = useState(400);
   const [modal, setModal] = useState<ModalAberto>(null);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+
+  // Aba na URL (?aba=...): deep-link + sobrevive a reload e a remount. Default
+  // 'volume'. Trocar de aba usa replace (nao polui o historico de navegacao).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const abaParam = searchParams.get('aba');
+  const aba: AbaProducao =
+    abaParam === 'preparacao' || abaParam === 'acompanhamento' ? abaParam : 'volume';
+  function setAba(nova: AbaProducao) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('aba', nova);
+        return next;
+      },
+      { replace: true }
+    );
+  }
 
   // Sincroniza a lista local com o carregamento/refetch do banco no render
   // (padrao "ajustar estado durante render"; evita setState em effect).

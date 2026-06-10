@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { derivaEtapaAgora, progressoEtapas } from '../lib/producao';
 import type {
@@ -30,6 +30,11 @@ export function useAcompanhamento(semanaId: string | undefined): UseAcompanhamen
   const [error, setError] = useState<Error | null>(null);
   const [tick, setTick] = useState(0);
 
+  // Loading nao gateia no refetch: a lista NAO desmonta ao salvar captura/dobra
+  // (sem flash de "Carregando", sem perder o estado de UI das linhas). Spinner so
+  // no primeiro load.
+  const jaCarregouRef = useRef(false);
+
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
@@ -37,12 +42,13 @@ export function useAcompanhamento(semanaId: string | undefined): UseAcompanhamen
     let cancelado = false;
 
     async function carregar(id: string) {
-      setLoading(true);
+      if (!jaCarregouRef.current) setLoading(true);
       setError(null);
       try {
         const d = await montarAcompanhamento(id);
         if (!cancelado) {
           setDados(d);
+          jaCarregouRef.current = true;
           setLoading(false);
         }
       } catch (e) {

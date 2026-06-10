@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { escolherAtual, type SemanaLite } from '../../lib/semana';
 import { Shell } from '../Semana/components/Shell';
@@ -7,6 +7,7 @@ import { Shell } from '../Semana/components/Shell';
 /** Resolve a semana "atual" e redireciona pra /producao/:id. Espelha SemanaAtualRedirect. */
 export function ProducaoAtualRedirect() {
   const navigate = useNavigate();
+  const { search } = useLocation();
   const [vazio, setVazio] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -24,14 +25,15 @@ export function ProducaoAtualRedirect() {
         return;
       }
       const id = escolherAtual((data ?? []) as SemanaLite[], Date.now());
-      if (id) navigate(`/producao/${id}`, { replace: true });
+      // Preserva o query param (ex.: ?aba=acompanhamento) ao resolver a semana.
+      if (id) navigate(`/producao/${id}${search}`, { replace: true });
       else setVazio(true);
     }
     resolver();
     return () => {
       cancelado = true;
     };
-  }, [navigate]);
+  }, [navigate, search]);
 
   if (erro) {
     return (
