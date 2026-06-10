@@ -7,6 +7,8 @@ import { diasContexto } from '../../../lib/producao';
 
 interface Props {
   onClose: () => void;
+  /** Destino pos-criacao. Default: navega pra /semanas/:id (modulo Semana nao muda). */
+  onCriada?: (id: string) => void;
 }
 
 function ymdToLocalDate(ymd: string): Date {
@@ -14,7 +16,7 @@ function ymdToLocalDate(ymd: string): Date {
   return new Date(y, m - 1, d);
 }
 
-export function ModalCriarSemana({ onClose }: Props) {
+export function ModalCriarSemana({ onClose, onCriada }: Props) {
   const navigate = useNavigate();
   const [ymd, setYmd] = useState(() => format(proximaQuinta(), 'yyyy-MM-dd'));
   const [salvando, setSalvando] = useState(false);
@@ -46,7 +48,8 @@ export function ModalCriarSemana({ onClose }: Props) {
       return;
     }
     onClose();
-    navigate(`/semanas/${data!.id}`);
+    if (onCriada) onCriada(data!.id);
+    else navigate(`/semanas/${data!.id}`);
   }
 
   return (
