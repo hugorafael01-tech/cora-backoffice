@@ -2,12 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { supabase } from '../../../lib/supabase';
-import {
-  derivaSemana,
-  proximaQuinta,
-  formataDiaMes,
-  formataDiaSemanaDiaMes,
-} from '../../../lib/date';
+import { derivaCiclo, proximaQuinta, formataDiaSemanaDiaMes } from '../../../lib/date';
+import { diasContexto } from '../../../lib/producao';
 
 interface Props {
   onClose: () => void;
@@ -24,7 +20,8 @@ export function ModalCriarSemana({ onClose }: Props) {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const derivada = derivaSemana(ymdToLocalDate(ymd));
+  const derivada = derivaCiclo(ymdToLocalDate(ymd));
+  const dias = diasContexto(ymd); // [D2, D1, D0]
 
   async function submit() {
     setSalvando(true);
@@ -45,11 +42,7 @@ export function ModalCriarSemana({ onClose }: Props) {
 
     if (error) {
       setSalvando(false);
-      if (error.code === '23505') {
-        setErro(`Semana ${derivada.numero} de ${derivada.ano} já existe.`);
-      } else {
-        setErro(error.message);
-      }
+      setErro(error.message);
       return;
     }
     onClose();
@@ -60,9 +53,9 @@ export function ModalCriarSemana({ onClose }: Props) {
     <div className="fixed inset-0 z-40 grid place-items-center p-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-lg border border-warm-200 bg-warm-50 p-6 shadow-xl">
-        <h2 className="font-display text-2xl text-ink-700">Nova semana</h2>
+        <h2 className="font-display text-2xl text-ink-700">Novo ciclo</h2>
         <p className="mt-1 text-[14px] text-warm-500">
-          Informe a data de entrega (quinta). O resto é derivado.
+          Informe a data de entrega — qualquer dia. O ciclo (3 dias) é derivado dela.
         </p>
 
         <label className="mt-5 block text-[12px] uppercase tracking-wide text-warm-500">
@@ -76,10 +69,16 @@ export function ModalCriarSemana({ onClose }: Props) {
         />
 
         <div className="mt-4 rounded-md bg-warm-100 px-4 py-3 text-[13px] text-warm-600">
-          Semana {derivada.numero} · {formataDiaMes(derivada.data_inicio)} a{' '}
-          {formataDiaMes(derivada.data_fim)} · corte{' '}
-          {formataDiaSemanaDiaMes(derivada.data_corte.slice(0, 10))} 12h · entrega{' '}
-          {formataDiaSemanaDiaMes(derivada.data_entrega)}
+          {dias
+            .map((d) =>
+              d.dia === 0
+                ? `D0/entrega ${formataDiaSemanaDiaMes(d.data)}`
+                : `D${d.dia} ${formataDiaSemanaDiaMes(d.data)}`
+            )
+            .join(' · ')}
+          <span className="mt-1 block text-[12px] text-warm-400">
+            Semana ISO {derivada.numero} (informativo)
+          </span>
         </div>
 
         {erro && <p className="mt-3 text-[13px] text-danger-text">{erro}</p>}
@@ -96,7 +95,7 @@ export function ModalCriarSemana({ onClose }: Props) {
             disabled={salvando}
             className="h-11 rounded-md bg-brand-500 px-4 text-white hover:bg-brand-600 disabled:opacity-50"
           >
-            {salvando ? 'Criando…' : 'Criar semana'}
+            {salvando ? 'Criando…' : 'Criar ciclo'}
           </button>
         </div>
       </div>

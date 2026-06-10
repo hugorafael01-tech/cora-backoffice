@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useProducaoVolume } from '../../hooks/useProducaoVolume';
-import { criarProducoesSemana, removerProducao } from '../../lib/producaoActions';
+import { criarProducoesSemana, removerProducao, salvarSobraLevain } from '../../lib/producaoActions';
 import { previewLinha } from '../../lib/producao';
 import { Shell } from '../Semana/components/Shell';
 import { PrHeader } from './components/PrHeader';
@@ -47,12 +47,14 @@ export function ProducaoDefinirVolume() {
     );
   }
 
-  // Sincroniza a lista local com o carregamento/refetch do banco no render
-  // (padrao "ajustar estado durante render"; evita setState em effect).
+  // Sincroniza a lista local + sobra de levain do ciclo com o load/refetch do
+  // banco no render (padrao "ajustar estado durante render"; evita setState em
+  // effect). sobra vem de semanas.sobra_levain_g (0025), default 400.
   const [origem, setOrigem] = useState(dados);
   if (dados !== origem) {
     setOrigem(dados);
     setLinhas(dados?.linhas ?? []);
+    setSobra(dados?.semana.sobra_levain_g ?? 400);
   }
 
   const totais = useMemo(() => {
@@ -90,7 +92,19 @@ export function ProducaoDefinirVolume() {
     );
   }
 
-  const { semana, semanaAnterior, semanaProxima } = dados;
+  const { semana } = dados;
+
+  // Persiste a sobra de levain do ciclo (no blur do input). Erro vai pro banner;
+  // sem refetch (o estado local ja reflete a edicao ao vivo).
+  async function salvarSobra(g: number) {
+    if (!id) return;
+    setErroAcao(null);
+    try {
+      await salvarSobraLevain(id, g);
+    } catch (e) {
+      setErroAcao(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   function setQty(versaoReceitaId: string, qty: number) {
     setSucesso(null);
@@ -142,7 +156,7 @@ export function ProducaoDefinirVolume() {
 
   return (
     <Shell>
-      <PrHeader semana={semana} anterior={semanaAnterior} proxima={semanaProxima} />
+      <PrHeader semana={semana} />
       <ProducaoTabs ativa={aba} onChange={setAba} />
 
       {aba === 'volume' && (
@@ -157,7 +171,12 @@ export function ProducaoDefinirVolume() {
             onNovaTeste={() => setModal('novaTeste')}
           />
 
-          <LevainCard metaG={totais.levainKg * 1000} sobraG={sobra} onSobra={setSobra} />
+          <LevainCard
+            metaG={totais.levainKg * 1000}
+            sobraG={sobra}
+            onSobra={setSobra}
+            onSobraCommit={salvarSobra}
+          />
 
           <ResumoCards paes={totais.paes} massaKg={totais.massaKg} levainKg={totais.levainKg} />
 

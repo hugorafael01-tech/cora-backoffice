@@ -444,3 +444,15 @@ export async function salvarTempAmbiente(
   );
   if (error) throw error;
 }
+
+/**
+ * Sobra desejada de levain do ciclo (g), em semanas.sobra_levain_g (0025).
+ * Update focado da propria row do ciclo; throw pra UI. Minimo 0 (clamp no caller).
+ */
+export async function salvarSobraLevain(semanaId: string, sobraG: number): Promise<void> {
+  const { error } = await supabase
+    .from('semanas')
+    .update({ sobra_levain_g: Math.max(0, sobraG) })
+    .eq('id', semanaId);
+  if (error) throw error;
+}

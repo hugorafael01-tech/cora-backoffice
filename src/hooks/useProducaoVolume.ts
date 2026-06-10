@@ -37,14 +37,21 @@ export function useProducaoVolume(id: string | undefined): UseProducaoVolumeResu
   const [tick, setTick] = useState(0);
 
   // O spinner de pagina inteira aparece SO no primeiro load; no refetch a tela
-  // fica montada (salvar nao volta a tela pro inicio nem pisca).
+  // fica montada (salvar nao volta a tela pro inicio nem pisca). Trocar de ciclo
+  // (id muda) reseta a flag: mostra loading e nao reusa dados do ciclo anterior.
   const jaCarregouRef = useRef(false);
+  const idRef = useRef<string | undefined>(undefined);
 
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     let cancelado = false;
     if (!id) return;
+
+    if (idRef.current !== id) {
+      idRef.current = id;
+      jaCarregouRef.current = false;
+    }
 
     async function carregar(semanaId: string) {
       if (!jaCarregouRef.current) setLoading(true);
