@@ -30,7 +30,7 @@ export function WkHeader({ semana, estado, anterior, proxima, onNova }: Props) {
         <div className="text-[11px] uppercase tracking-[0.04em] text-warm-500">{EYEBROW[estado]}</div>
         <h1 className="font-display text-[26px] md:text-[30px] leading-tight text-ink-700">{titulo}</h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <button
           aria-label="Semana anterior"
           disabled={!anterior}
