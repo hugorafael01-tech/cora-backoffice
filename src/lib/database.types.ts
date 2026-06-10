@@ -1092,6 +1092,7 @@ export type Database = {
           data_inicio: string
           id: string
           numero: number
+          sobra_levain_g: number
           status: string
           updated_at: string
         }
@@ -1104,6 +1105,7 @@ export type Database = {
           data_inicio: string
           id?: string
           numero: number
+          sobra_levain_g?: number
           status?: string
           updated_at?: string
         }
@@ -1116,6 +1118,7 @@ export type Database = {
           data_inicio?: string
           id?: string
           numero?: number
+          sobra_levain_g?: number
           status?: string
           updated_at?: string
         }
