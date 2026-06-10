@@ -22,7 +22,7 @@ function hora(iso: string | null): string | null {
 
 function statusLabel(status: EtapaStatus): string {
   if (status === 'em_curso') return 'em curso';
-  if (status === 'concluida') return 'concluida';
+  if (status === 'concluida') return 'concluída';
   if (status === 'pulada') return 'pulada';
   return 'aguardando';
 }
@@ -88,7 +88,7 @@ export function EtapaAcompRow({
           <div className="mt-0.5 flex flex-wrap gap-x-3 text-[12px] text-warm-500">
             {peca && <span className="font-medium text-brand-500">{peca}</span>}
             {iniciada && <span>iniciada {iniciada}</span>}
-            {concluida && <span>concluida {concluida}</span>}
+            {concluida && <span>concluída {concluida}</span>}
             {etapa.tempC != null && <span>{etapa.tempC}C</span>}
             {etapa.dobraNumero != null && <span>dobra {etapa.dobraNumero}</span>}
             {etapa.notas && <span className="text-warm-600">{etapa.notas}</span>}

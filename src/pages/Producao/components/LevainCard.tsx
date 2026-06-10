@@ -19,7 +19,7 @@ export function LevainCard({ metaG, sobraG, onSobra }: Props) {
       <div className="mb-2.5 flex flex-wrap items-center gap-3">
         <h2 className="font-display text-[13px] uppercase tracking-[0.06em] text-warm-600">Levain</h2>
         <span className="text-[12px] text-warm-500">
-          calculado a partir do volume · autolise na quarta
+          calculado a partir do volume · autólise na quarta
         </span>
       </div>
 
@@ -38,22 +38,22 @@ export function LevainCard({ metaG, sobraG, onSobra }: Props) {
                   className="rounded bg-white px-1.5 py-0.5 text-[12.5px] font-semibold text-brand-700"
                   defaultValue="liquido"
                 >
-                  <option value="liquido">levain liquido 1:2:2</option>
+                  <option value="liquido">levain líquido 1:2:2</option>
                   <option value="solido" disabled>
-                    levain solido — em breve
+                    levain sólido — em breve
                   </option>
                 </select>
               </span>
             </div>
             <div className="mt-1.5 text-[13px] text-warm-600">
-              isca + agua 18C + farinha
+              isca + água 18C + farinha
               <span className="mx-1.5 text-warm-300">·</span>
-              1 isca · 2 agua · 2 farinha
+              1 isca · 2 água · 2 farinha
             </div>
           </div>
           <div className="text-right">
             <div className="font-display text-[10px] uppercase tracking-[0.06em] text-warm-500">
-              meta autolise
+              meta autólise
             </div>
             <div className="font-display text-[22px] tabular-nums text-brand-500">
               {fmtG(metaG)}
@@ -68,17 +68,17 @@ export function LevainCard({ metaG, sobraG, onSobra }: Props) {
               Calculadora · build
             </span>
             <span className="text-[10.5px] tracking-[0.04em] text-warm-500">
-              1 isca · 2 agua · 2 farinha
+              1 isca · 2 água · 2 farinha
             </span>
           </div>
 
           <div className="mb-3 grid grid-cols-1 gap-2.5 border-b border-dashed border-warm-300 pb-3 md:grid-cols-2">
             <div className="flex items-baseline justify-between gap-2 text-[13px] text-warm-700">
-              <span className="text-warm-600">Meta autolise</span>
+              <span className="text-warm-600">Meta autólise</span>
               <span className="font-bold tabular-nums text-warm-800">{fmtG(metaG)}</span>
             </div>
             <div className="flex items-baseline justify-between gap-2 text-[13px] text-warm-700">
-              <span className="text-warm-600">Sobra desejada (mae)</span>
+              <span className="text-warm-600">Sobra desejada (mãe)</span>
               <span className="inline-flex items-baseline gap-1 rounded border border-warm-300 bg-white px-2 py-1 font-semibold tabular-nums text-warm-800">
                 <input
                   type="number"
@@ -94,8 +94,8 @@ export function LevainCard({ metaG, sobraG, onSobra }: Props) {
           </div>
 
           <div className="grid grid-cols-1 gap-x-5 gap-y-1.5 text-[13px] tabular-nums text-warm-700 md:grid-cols-2">
-            <Out label="Isca (levain mae)" valor={fmtG(build.isca)} />
-            <Out label="Agua mineral 18C" valor={fmtG(build.agua)} />
+            <Out label="Isca (levain mãe)" valor={fmtG(build.isca)} />
+            <Out label="Água mineral 18C" valor={fmtG(build.agua)} />
             <Out label="Farinha" valor={fmtG(build.farinha)} />
             <div className="col-span-full mt-1 flex items-baseline justify-between border-t border-dashed border-warm-300 pt-2">
               <span className="font-display text-[10.5px] font-semibold uppercase tracking-[0.06em] text-warm-700">
@@ -108,7 +108,7 @@ export function LevainCard({ metaG, sobraG, onSobra }: Props) {
 
         <div className="mt-3 flex items-start gap-2 rounded border border-dashed border-warning-border bg-warning-bg px-3 py-2 text-[12px] leading-snug text-warning-text">
           <span>⚠</span>
-          <span>Levain parado ha mais de 3 dias? Faca 1 refresco a mais antes de usar.</span>
+          <span>Levain parado há mais de 3 dias? Faça 1 refresco a mais antes de usar.</span>
         </div>
       </div>
     </section>

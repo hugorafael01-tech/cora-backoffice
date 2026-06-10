@@ -79,7 +79,7 @@ export function ProducaoAcompCard({
                 disabled={prodBusy}
                 className="min-h-[36px] rounded-md bg-brand-500 px-3.5 font-display text-[12px] uppercase tracking-[0.04em] text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-warm-200 disabled:text-warm-400"
               >
-                {prodBusy ? 'Salvando…' : 'Iniciar producao'}
+                {prodBusy ? 'Salvando…' : 'Iniciar produção'}
               </button>
             )}
             {producao.status === 'em_curso' && (
@@ -88,18 +88,18 @@ export function ProducaoAcompCard({
                 disabled={prodBusy}
                 className="min-h-[36px] rounded-md border border-success-border bg-success-bg px-3.5 font-display text-[12px] uppercase tracking-[0.04em] text-success-text hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {prodBusy ? 'Salvando…' : 'Concluir producao'}
+                {prodBusy ? 'Salvando…' : 'Concluir produção'}
               </button>
             )}
             {producao.status === 'concluida' && (
-              <span className="text-[12.5px] text-success-text">Producao concluida.</span>
+              <span className="text-[12.5px] text-success-text">Produção concluída.</span>
             )}
           </div>
 
           {/* Etapas */}
           {producao.etapas.length === 0 ? (
             <p className="text-[13px] text-warm-500">
-              Sem etapas geradas (a producao nasce com as etapas da receita + coccao).
+              Sem etapas geradas (a produção nasce com as etapas da receita + cocção).
             </p>
           ) : (
             <ol className="space-y-1.5">

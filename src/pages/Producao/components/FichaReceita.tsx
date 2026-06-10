@@ -50,13 +50,13 @@ export function FichaReceita({ ficha, aberta, onToggle }: Props) {
         <div className="border-t border-warm-200 px-4 pb-4 pt-3 md:px-5">
           <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-warm-600">
             <span>
-              hidratacao{' '}
+              hidratação{' '}
               <strong className="font-semibold text-warm-800">
                 {ficha.hidratacaoAlvo != null ? `${ficha.hidratacaoAlvo}%` : '—'}
               </strong>
             </span>
             <span>
-              massa / pao{' '}
+              massa / pão{' '}
               <strong className="font-semibold text-warm-800">
                 {ficha.pesoMassaG != null ? fmtG(ficha.pesoMassaG) : '—'}
               </strong>
@@ -65,18 +65,18 @@ export function FichaReceita({ ficha, aberta, onToggle }: Props) {
 
           {/* Formulacao */}
           <div className="mb-1.5 font-display text-[11px] uppercase tracking-[0.06em] text-warm-500">
-            Formulacao
+            Formulação
           </div>
           {ficha.ingredientes.length === 0 ? (
             <p className="text-[13px] text-warm-500">
-              Sem ingredientes cadastrados (definir no modulo Receitas).
+              Sem ingredientes cadastrados (definir no módulo Receitas).
             </p>
           ) : (
             <div className="overflow-hidden rounded border border-warm-200">
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 bg-warm-50 px-3 py-1.5 text-[10.5px] uppercase tracking-[0.04em] text-warm-500">
                 <span>ingrediente</span>
                 <span className="text-right">baker%</span>
-                <span className="text-right">g / pao</span>
+                <span className="text-right">g / pão</span>
                 <span className="text-right">g x{ficha.qty}</span>
               </div>
               {ficha.ingredientes.map((ing) => (
@@ -103,7 +103,7 @@ export function FichaReceita({ ficha, aberta, onToggle }: Props) {
           </div>
           {ficha.etapas.length === 0 ? (
             <p className="text-[13px] text-warm-500">
-              Etapas ainda nao autoradas (geradas no modulo Receitas; so a cocção e criada na produção).
+              Etapas ainda não autoradas (geradas no módulo Receitas; só a cocção é criada na produção).
             </p>
           ) : (
             <ol className="space-y-1.5">

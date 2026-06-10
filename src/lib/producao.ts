@@ -97,15 +97,15 @@ export function fmtG(g: number): string {
 // ---- Acompanhamento (Estado B / fatia B1) — helpers puros ----
 
 const ETAPA_TIPO_LABEL: Record<EtapaTipo, string> = {
-  autolise_mistura: 'Autolise + mistura',
+  autolise_mistura: 'Autólise + mistura',
   batimento: 'Batimento',
   falsa_dobra: 'Falsa dobra',
   dobra: 'Dobras',
-  pre_shape: 'Pre-shape',
+  pre_shape: 'Pré-shape',
   shape: 'Shape',
   descanso: 'Descanso',
-  fermentacao_final: 'Fermentacao final',
-  coccao: 'Coccao',
+  fermentacao_final: 'Fermentação final',
+  coccao: 'Cocção',
 };
 
 /** Rotulo legivel do tipo de etapa (etapa_tipo_enum). */
@@ -116,7 +116,7 @@ export function etapaTipoLabel(tipo: EtapaTipo): string {
 const PRODUCAO_STATUS_LABEL: Record<ProducaoStatus, string> = {
   planejada: 'Planejada',
   em_curso: 'Em curso',
-  concluida: 'Concluida',
+  concluida: 'Concluída',
   cancelada: 'Cancelada',
 };
 
@@ -161,10 +161,10 @@ export function ehEtapaDivisao(tipo: EtapaTipo | string | null, nome?: string | 
   return tipo === 'pre_shape' || (nome != null && /divis/i.test(nome));
 }
 
-/** Subtexto do tamanho da peca na etapa de divisao: "pecas de ~283 g". */
+/** Subtexto do tamanho da peca na etapa de divisao: "peças de ~283 g". */
 export function fmtPecaDivisao(pesoMassaG: number | null): string | null {
   if (pesoMassaG == null) return null;
-  return `pecas de ~${fmtG(pesoMassaG)}`;
+  return `peças de ~${fmtG(pesoMassaG)}`;
 }
 
 // ---- Contexto (B2b-1) ----

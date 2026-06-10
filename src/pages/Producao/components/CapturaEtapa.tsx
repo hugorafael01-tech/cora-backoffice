@@ -26,10 +26,10 @@ const LABEL = 'mb-1 block text-[11px] uppercase tracking-[0.04em] text-warm-500'
 
 /** Campos numericos do detalhes JSONB de coccao. */
 const COCCAO_FIELDS: { key: string; label: string }[] = [
-  { key: 'qty_paes', label: 'Qty paes' },
-  { key: 'base_c', label: 'Base (C)' },
-  { key: 'teto_c', label: 'Teto (C)' },
-  { key: 'duracao_min', label: 'Duracao (min)' },
+  { key: 'qty_paes', label: 'Qty pães' },
+  { key: 'base_c', label: 'Base (°C)' },
+  { key: 'teto_c', label: 'Teto (°C)' },
+  { key: 'duracao_min', label: 'Duração (min)' },
   { key: 'fornada_num', label: 'Fornada num' },
   { key: 'fornada_total', label: 'Fornada total' },
 ];
@@ -56,8 +56,9 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
   });
 
   const tipo = etapa.tipo;
-  const usaTemp = tipo === 'autolise_mistura' || tipo === 'batimento';
-  const tempLabel = tipo === 'autolise_mistura' ? 'Temp da agua (C)' : 'Temp da massa (C)';
+  const usaTemp =
+    tipo === 'autolise_mistura' || tipo === 'batimento' || tipo === 'pre_shape';
+  const tempLabel = 'Temp da massa (°C)';
 
   function setDet(key: string, value: string) {
     setDetVals((prev) => ({ ...prev, [key]: value }));
@@ -102,7 +103,7 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
 
         {tipo === 'dobra' && (
           <div>
-            <label className={LABEL}>Numero da dobra</label>
+            <label className={LABEL}>Número da dobra</label>
             <input
               className={INPUT}
               inputMode="numeric"
@@ -129,7 +130,7 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
         {tipo === 'shape' && (
           <>
             <div>
-              <label className={LABEL}>Peso medio (g)</label>
+              <label className={LABEL}>Peso médio (g)</label>
               <input
                 className={INPUT}
                 inputMode="decimal"
@@ -162,7 +163,7 @@ export function CapturaEtapa({ etapa, salvando, onSalvar }: Props) {
           className={`${INPUT} min-h-[44px] py-1.5`}
           value={notas}
           onChange={(e) => setNotas(e.target.value)}
-          placeholder="observacoes da etapa"
+          placeholder="observações da etapa"
         />
       </div>
 

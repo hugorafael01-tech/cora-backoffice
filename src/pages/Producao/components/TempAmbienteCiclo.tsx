@@ -27,6 +27,8 @@ export function TempAmbienteCiclo({ semanaId, dataEntrega }: Props) {
   const [valor, setValor] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Cue discreto de sucesso: "salvo HH:mm" ate a proxima edicao do input.
+  const [salvoEm, setSalvoEm] = useState<string | null>(null);
 
   // Seed do input quando a fonte carrega/muda (padrao "ajustar estado no render").
   const atual = porDia ? (porDia.get(1)?.tempAmbienteMaxC ?? null) : undefined;
@@ -43,6 +45,9 @@ export function TempAmbienteCiclo({ semanaId, dataEntrega }: Props) {
     setSalvando(true);
     try {
       await salvarTempAmbiente(semanaId, parseNum(valor));
+      setSalvoEm(
+        new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      );
       refetch();
     } catch (e) {
       setErro(e instanceof Error ? e.message : String(e));
@@ -56,9 +61,9 @@ export function TempAmbienteCiclo({ semanaId, dataEntrega }: Props) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="font-display text-[12px] uppercase tracking-[0.06em] text-warm-600">
-            Temp ambiente (fermentacao)
+            Temp ambiente (fermentação)
           </div>
-          <div className="mt-0.5 text-[12px] text-warm-500">referencia {rotuloDia}</div>
+          <div className="mt-0.5 text-[12px] text-warm-500">referência {rotuloDia}</div>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
@@ -66,7 +71,10 @@ export function TempAmbienteCiclo({ semanaId, dataEntrega }: Props) {
               className="min-h-[36px] w-24 rounded border border-warm-300 bg-white px-2.5 text-[14px] tabular-nums text-warm-800 placeholder:text-warm-400 focus:border-brand-300 focus:outline-none"
               inputMode="decimal"
               value={valor}
-              onChange={(e) => setValor(e.target.value)}
+              onChange={(e) => {
+                setValor(e.target.value);
+                setSalvoEm(null);
+              }}
               placeholder="ex: 27,5"
             />
             <span className="text-[13px] text-warm-500">C</span>
@@ -78,6 +86,9 @@ export function TempAmbienteCiclo({ semanaId, dataEntrega }: Props) {
           >
             {salvando ? 'Salvando…' : 'Salvar'}
           </button>
+          {salvoEm && !salvando && (
+            <span className="text-[12px] text-success-text">salvo {salvoEm}</span>
+          )}
         </div>
       </div>
       {erro && <p className="mt-2 text-[13px] text-danger-text">Erro: {erro}</p>}

@@ -77,7 +77,7 @@ export function VolumeRow({ linha, onQty, onRemover }: Props) {
         <button
           aria-label="Remover receita"
           disabled={congelada}
-          title={congelada ? 'Producao ja iniciada' : undefined}
+          title={congelada ? 'Produção já iniciada' : undefined}
           onClick={() => onRemover(linha)}
           className="ml-3 grid h-9 w-9 place-items-center rounded-md border border-warm-300 bg-white text-[13px] text-warm-400 enabled:hover:border-danger-border enabled:hover:text-danger-text disabled:cursor-not-allowed disabled:text-warm-300"
         >

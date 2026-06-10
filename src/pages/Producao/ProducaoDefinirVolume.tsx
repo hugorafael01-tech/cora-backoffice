@@ -98,7 +98,7 @@ export function ProducaoDefinirVolume() {
         if (apagadas === 0) {
           // Backstop: producao ja congelada no banco (em_curso/concluida) — mantem
           // a linha na UI pra nao desincronizar com o banco.
-          setErroAcao('Producao ja iniciada. Nao da pra remover por aqui.');
+          setErroAcao('Produção já iniciada. Não dá pra remover por aqui.');
           return;
         }
       }
@@ -115,7 +115,7 @@ export function ProducaoDefinirVolume() {
     setSucesso(null);
     try {
       const { criadas } = await criarProducoesSemana(id, linhas);
-      setSucesso(`${criadas} ${criadas === 1 ? 'producao criada.' : 'producoes criadas.'}`);
+      setSucesso(`${criadas} ${criadas === 1 ? 'produção criada.' : 'produções criadas.'}`);
       refetch();
     } catch (e) {
       setErroAcao(e instanceof Error ? e.message : String(e));

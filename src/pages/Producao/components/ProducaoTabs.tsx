@@ -7,7 +7,7 @@ interface Props {
 
 const ABAS: { id: AbaProducao; label: string }[] = [
   { id: 'volume', label: 'Definir volume' },
-  { id: 'preparacao', label: 'Preparacao' },
+  { id: 'preparacao', label: 'Preparação' },
   { id: 'acompanhamento', label: 'Acompanhamento' },
 ];
 

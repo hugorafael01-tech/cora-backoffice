@@ -19,7 +19,7 @@ export function VolumeList({ linhas, onQty, onRemover, onAdicionar, onNovaTeste 
           Definir volume
         </h2>
         <span className="text-[12px] text-warm-500">
-          cardapio da semana · {cardapioCount} {cardapioCount === 1 ? 'receita' : 'receitas'}
+          cardápio da semana · {cardapioCount} {cardapioCount === 1 ? 'receita' : 'receitas'}
         </span>
         <div className="ml-auto flex gap-2">
           <button
@@ -43,7 +43,7 @@ export function VolumeList({ linhas, onQty, onRemover, onAdicionar, onNovaTeste 
             <div className="mb-1.5 font-display text-[15px] uppercase tracking-[0.04em]">
               Nenhum volume definido
             </div>
-            Adicione uma receita ao cardapio da semana ou crie uma receita de teste.
+            Adicione uma receita ao cardápio da semana ou crie uma receita de teste.
           </div>
         ) : (
           linhas.map((l) => (
