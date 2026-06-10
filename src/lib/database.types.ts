@@ -383,6 +383,86 @@ export type Database = {
         }
         Relationships: []
       }
+      entregas: {
+        Row: {
+          bairro: string
+          cep: string | null
+          cidade: string
+          complemento: string | null
+          created_at: string
+          em_rota_at: string | null
+          entregue_at: string | null
+          id: string
+          itens: Json
+          nome: string
+          numero: string | null
+          observacao: string | null
+          origem: string
+          pedido_pontual_id: string | null
+          regiao: string
+          rua: string
+          semana_id: string
+          status: string
+          updated_at: string
+          weekly_order_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          bairro: string
+          cep?: string | null
+          cidade: string
+          complemento?: string | null
+          created_at?: string
+          em_rota_at?: string | null
+          entregue_at?: string | null
+          id?: string
+          itens: Json
+          nome: string
+          numero?: string | null
+          observacao?: string | null
+          origem: string
+          pedido_pontual_id?: string | null
+          regiao: string
+          rua: string
+          semana_id: string
+          status?: string
+          updated_at?: string
+          weekly_order_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          bairro?: string
+          cep?: string | null
+          cidade?: string
+          complemento?: string | null
+          created_at?: string
+          em_rota_at?: string | null
+          entregue_at?: string | null
+          id?: string
+          itens?: Json
+          nome?: string
+          numero?: string | null
+          observacao?: string | null
+          origem?: string
+          pedido_pontual_id?: string | null
+          regiao?: string
+          rua?: string
+          semana_id?: string
+          status?: string
+          updated_at?: string
+          weekly_order_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entregas_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       etapas_producao: {
         Row: {
           concluida_at: string | null
