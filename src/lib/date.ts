@@ -110,6 +110,12 @@ export function spInputParaIso(input: string): string | null {
   return fromZonedTime(input, TZ).toISOString();
 }
 
+/** "14:32" (hora:min no fuso SP) a partir de um timestamptz ISO. '' se nulo. */
+export function formataHoraSp(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return format(toZonedTime(new Date(iso), TZ), 'HH:mm');
+}
+
 /** "ha 12 min" / "ha 1h20" a partir de minutos decorridos. */
 export function formataHa(minutos: number): string {
   if (minutos < 1) return 'agora';

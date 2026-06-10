@@ -1,4 +1,4 @@
-import { formataDiaSemanaDiaMes, ymdMenosDias } from './date';
+import { formataDiaSemanaDiaMes, formataHoraSp, ymdMenosDias } from './date';
 import type { EtapaAcomp, EtapaStatus, EtapaTipo, ProducaoStatus } from '../pages/Producao/types';
 
 /**
@@ -165,6 +165,64 @@ export function ehEtapaDivisao(tipo: EtapaTipo | string | null, nome?: string | 
 export function fmtPecaDivisao(pesoMassaG: number | null): string | null {
   if (pesoMassaG == null) return null;
   return `peças de ~${fmtG(pesoMassaG)}`;
+}
+
+// ---- Registro de dobras (etapa tipo='dobra', em detalhes.dobras) ----
+//
+// Sem schema: o array vive em etapas_producao.detalhes (JSONB) e dobra_numero
+// espelha a contagem. Registro e UM TOQUE (append { n, at, temp_c:null }); a
+// temp e opcional e preenchivel depois. Helpers puros pra UI + testes.
+
+export interface DobraRegistro {
+  n: number; // 1-based, sequencial
+  at: string; // timestamptz ISO do registro (gerado no client)
+  temp_c: number | null; // temp da massa na dobra (opcional, preenchivel depois)
+}
+
+/**
+ * Le detalhes.dobras de forma defensiva: ignora valor nao-array e entradas
+ * malformadas; ordena por n pra exibicao estavel.
+ */
+export function lerDobras(detalhes: Record<string, unknown> | null | undefined): DobraRegistro[] {
+  const raw = detalhes?.dobras;
+  if (!Array.isArray(raw)) return [];
+  const out: DobraRegistro[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    if (typeof o.n === 'number' && typeof o.at === 'string') {
+      out.push({ n: o.n, at: o.at, temp_c: typeof o.temp_c === 'number' ? o.temp_c : null });
+    }
+  }
+  return out.sort((a, b) => a.n - b.n);
+}
+
+/** Append de uma nova dobra (n sequencial a partir da ultima). */
+export function appendDobra(dobras: DobraRegistro[], at: string): DobraRegistro[] {
+  const n = (dobras[dobras.length - 1]?.n ?? 0) + 1;
+  return [...dobras, { n, at, temp_c: null }];
+}
+
+/** Define a temp (pode ser null) de uma dobra ja registrada, por n. */
+export function setTempDobra(
+  dobras: DobraRegistro[],
+  n: number,
+  tempC: number | null
+): DobraRegistro[] {
+  return dobras.map((d) => (d.n === n ? { ...d, temp_c: tempC } : d));
+}
+
+/** Remove a ultima dobra registrada (desfazer toque errado). */
+export function removerUltimaDobra(dobras: DobraRegistro[]): DobraRegistro[] {
+  return dobras.slice(0, -1);
+}
+
+/** Resumo da etapa de dobras: "3 dobras · última 15:02" (hora SP). Null se vazio. */
+export function resumoDobras(dobras: DobraRegistro[]): string | null {
+  if (dobras.length === 0) return null;
+  const ultima = dobras[dobras.length - 1];
+  const plural = dobras.length === 1 ? 'dobra' : 'dobras';
+  return `${dobras.length} ${plural} · última ${formataHoraSp(ultima.at)}`;
 }
 
 // ---- Contexto (B2b-1) ----
