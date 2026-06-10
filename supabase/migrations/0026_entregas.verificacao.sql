@@ -22,7 +22,8 @@ WHERE table_schema = 'public' AND table_name = 'entregas';
 -- POS (rodar DEPOIS de aplicar)
 -- ============================================================
 
--- POS.1 — colunas da tabela (esperado: 19 linhas; conferir tipos e NOT NULL).
+-- POS.1 — colunas da tabela (esperado: 21 linhas = 19 de negocio + created_at/updated_at;
+--   conferir tipos e NOT NULL).
 --   NOT NULL (is_nullable = NO): semana_id, origem, nome, rua, bairro, cidade,
 --   regiao, itens, status, id, created_at, updated_at.
 --   nullable: weekly_order_id, pedido_pontual_id, whatsapp, cep, numero,
