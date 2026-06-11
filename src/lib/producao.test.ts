@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   appendDobra,
+  calcDelta,
   calcLevainBuild,
   derivaEtapaAgora,
   diasContexto,
+  duracaoMin,
   ehEtapaDivisao,
   farinhaPorPaoG,
+  fmtDeltaPct,
+  fmtDeltaUn,
+  fmtDuracaoMin,
   fmtPecaDivisao,
   fmtTempC,
   lerDobras,
@@ -229,6 +234,78 @@ describe('registro de dobras', () => {
         { n: 2, at: at2, temp_c: 25 },
       ])
     ).toBe('2 dobras · última 15:01');
+  });
+});
+
+describe('calcDelta (Registro: (realizado - previsto) / previsto)', () => {
+  it('delta positivo e negativo', () => {
+    expect(calcDelta(50, 52)).toBeCloseTo(0.04, 5);
+    expect(calcDelta(10, 9)).toBeCloseTo(-0.1, 5);
+  });
+  it('zero quando bate o previsto', () => {
+    expect(calcDelta(40, 40)).toBe(0);
+  });
+  it('null quando falta um dos lados', () => {
+    expect(calcDelta(null, 10)).toBeNull();
+    expect(calcDelta(10, null)).toBeNull();
+  });
+  it('null quando previsto == 0 (sem base de comparacao)', () => {
+    expect(calcDelta(0, 5)).toBeNull();
+  });
+});
+
+describe('fmtDeltaPct (sinal explicito, virgula decimal)', () => {
+  it('positivo com "+"', () => {
+    expect(fmtDeltaPct(0.04)).toBe('+4%');
+  });
+  it('negativo com "-" e 1 casa', () => {
+    expect(fmtDeltaPct(-0.032)).toBe('-3,2%');
+  });
+  it('zero vira "+0%"', () => {
+    expect(fmtDeltaPct(0)).toBe('+0%');
+  });
+  it('negativo que arredonda pra zero nao vira "-0%"', () => {
+    expect(fmtDeltaPct(-0.0001)).toBe('-0%');
+  });
+});
+
+describe('fmtDeltaUn (delta absoluto em unidades)', () => {
+  it('positivo, negativo e zero com sinal explicito', () => {
+    expect(fmtDeltaUn(50, 52)).toBe('+2 un');
+    expect(fmtDeltaUn(50, 45)).toBe('-5 un');
+    expect(fmtDeltaUn(50, 50)).toBe('+0 un');
+  });
+});
+
+describe('duracaoMin', () => {
+  const ini = '2026-06-10T17:00:00.000Z';
+  it('minutos arredondados entre inicio e fim', () => {
+    expect(duracaoMin(ini, '2026-06-10T17:45:00.000Z')).toBe(45);
+    expect(duracaoMin(ini, '2026-06-10T18:20:30.000Z')).toBe(81); // 80,5 -> 81
+  });
+  it('null quando falta carimbo', () => {
+    expect(duracaoMin(null, ini)).toBeNull();
+    expect(duracaoMin(ini, null)).toBeNull();
+  });
+  it('null quando fim antes do inicio (carimbo inconsistente)', () => {
+    expect(duracaoMin(ini, '2026-06-10T16:00:00.000Z')).toBeNull();
+  });
+  it('null quando ISO invalido', () => {
+    expect(duracaoMin('nao-e-data', ini)).toBeNull();
+  });
+});
+
+describe('fmtDuracaoMin', () => {
+  it('abaixo de 1h em minutos', () => {
+    expect(fmtDuracaoMin(45)).toBe('45 min');
+    expect(fmtDuracaoMin(0)).toBe('0 min');
+  });
+  it('hora cheia sem minutos', () => {
+    expect(fmtDuracaoMin(120)).toBe('2h');
+  });
+  it('hora + minutos com zero a esquerda', () => {
+    expect(fmtDuracaoMin(65)).toBe('1h05');
+    expect(fmtDuracaoMin(81)).toBe('1h21');
   });
 });
 

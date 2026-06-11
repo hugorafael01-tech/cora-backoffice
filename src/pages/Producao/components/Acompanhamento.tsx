@@ -5,6 +5,7 @@ import {
   concluirProducao,
   iniciarProducao,
   salvarCapturaEtapa,
+  salvarContextoProducao,
   type AcaoEtapa,
   type CapturaEtapa as CapturaEtapaInput,
 } from '../../../lib/producaoActions';
@@ -52,6 +53,13 @@ export function Acompanhamento({ semanaId, dataEntrega, onIrParaVolume }: Props)
   }
   function onConcluirProd(producaoId: string) {
     return rodar(producaoId, () => concluirProducao(producaoId));
+  }
+  // B2b-2: hidratacao ajustada (decidida na masseira) -> contextos_producao.
+  // Upsert parcial: payload so com o campo + producao_id (nunca toca notas).
+  function onSalvarHidratacao(producaoId: string, pct: number | null) {
+    return rodar(`hidratacao:${producaoId}`, () =>
+      salvarContextoProducao(producaoId, { hidratacaoAjustadaPct: pct })
+    );
   }
 
   if (loading) {
@@ -111,6 +119,7 @@ export function Acompanhamento({ semanaId, dataEntrega, onIrParaVolume }: Props)
             onCaptura={onCaptura}
             onIniciarProd={onIniciarProd}
             onConcluirProd={onConcluirProd}
+            onSalvarHidratacao={onSalvarHidratacao}
           />
         ))}
       </div>

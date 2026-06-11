@@ -230,6 +230,57 @@ export function resumoDobras(dobras: DobraRegistro[]): string | null {
   return `${dobras.length} ${plural} · última ${formataHoraSp(ultima.at)}`;
 }
 
+// ---- Registro (Estado C / fatia 1) — previsto x realizado ----
+
+/**
+ * Delta relativo (realizado - previsto) / previsto. Null quando qualquer lado
+ * falta OU previsto == 0 (sem base de comparacao) — a UI so exibe delta com
+ * ambos preenchidos.
+ */
+export function calcDelta(previsto: number | null, realizado: number | null): number | null {
+  if (previsto == null || realizado == null || previsto === 0) return null;
+  return (realizado - previsto) / previsto;
+}
+
+/**
+ * Delta relativo legivel com sinal EXPLICITO: "+4%" / "-3,2%" / "+0%".
+ * Produzir menos nao e erro — o sinal e informacao, nao julgamento.
+ */
+export function fmtDeltaPct(delta: number): string {
+  const pct = delta * 100;
+  const s = Math.abs(pct).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  return pct < 0 ? `-${s}%` : `+${s}%`;
+}
+
+/** Delta absoluto em unidades com sinal explicito: "+2 un" / "-5 un" / "+0 un". */
+export function fmtDeltaUn(previstoUn: number, realizadoUn: number): string {
+  const d = realizadoUn - previstoUn;
+  return d < 0 ? `${d} un` : `+${d} un`;
+}
+
+/**
+ * Duracao em minutos entre dois timestamps ISO. Null se algum falta, e
+ * invalido ou o fim vem antes do inicio (carimbo inconsistente).
+ */
+export function duracaoMin(
+  iniciadaAt: string | null,
+  concluidaAt: string | null
+): number | null {
+  if (!iniciadaAt || !concluidaAt) return null;
+  const a = new Date(iniciadaAt).getTime();
+  const b = new Date(concluidaAt).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b) || b < a) return null;
+  return Math.round((b - a) / 60000);
+}
+
+/** Duracao legivel: "45 min" / "1h" / "1h05". */
+export function fmtDuracaoMin(min: number): string {
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, '0')}`;
+}
+
 // ---- Contexto (B2b-1) ----
 
 export interface DiaContexto {
