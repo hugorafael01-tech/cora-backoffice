@@ -125,6 +125,14 @@ export interface ProducaoAcomp {
   etapaAgoraId: string | null; // etapa em destaque (em_curso de menor ordem; senao 1a aguardando)
   feitas: number; // etapas resolvidas (concluida + pulada)
   total: number;
+  // Estado C (Registro): previsto x realizado + contexto da producao.
+  massaPrevistaKg: number | null;
+  levainPrevistoKg: number | null;
+  qtyRealizada: number | null;
+  massaRealizadaKg: number | null;
+  levainConsumidoKg: number | null;
+  hidratacaoAjustadaPct: number | null; // contextos_producao (B2b-2)
+  notasProducao: string | null; // contextos_producao.notas (nota pos-producao)
 }
 
 export interface DadosAcompanhamento {

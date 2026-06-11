@@ -425,6 +425,63 @@ export async function concluirProducao(producaoId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ============ Registro (Estado C / fatia 1) — escrita ============
+
+/** Campos do realizado em producoes. So as chaves presentes entram no update. */
+export interface RealizadoProducao {
+  qtyPaesRealizada?: number | null;
+  massaRealizadaKg?: number | null;
+  levainConsumidoKg?: number | null;
+}
+
+/**
+ * Grava o realizado de uma producao (UPDATE parcial em producoes). Payload SO
+ * com os campos editados — nunca reenvia status/origem (licao do upsert da
+ * fatia 1: reenviar resetava producao em_curso pra planejada).
+ */
+export async function salvarRealizado(
+  producaoId: string,
+  campos: RealizadoProducao
+): Promise<void> {
+  const patch: Database['public']['Tables']['producoes']['Update'] = {};
+  if ('qtyPaesRealizada' in campos) patch.qty_paes_realizada = campos.qtyPaesRealizada;
+  if ('massaRealizadaKg' in campos) patch.massa_realizada_kg = campos.massaRealizadaKg;
+  if ('levainConsumidoKg' in campos) patch.levain_consumido_kg = campos.levainConsumidoKg;
+  if (Object.keys(patch).length === 0) return;
+
+  const { error } = await supabase.from('producoes').update(patch).eq('id', producaoId);
+  if (error) throw error;
+}
+
+/** Campos de contextos_producao. So as chaves presentes entram no upsert. */
+export interface ContextoProducaoInput {
+  hidratacaoAjustadaPct?: number | null;
+  notas?: string | null;
+}
+
+/**
+ * Upsert parcial em contextos_producao (ON CONFLICT producao_id DO UPDATE).
+ * O payload leva SO o campo editado + producao_id: salvar a nota nunca
+ * sobrescreve hidratacao_ajustada_pct, e vice-versa.
+ */
+export async function salvarContextoProducao(
+  producaoId: string,
+  campos: ContextoProducaoInput
+): Promise<void> {
+  const row: Database['public']['Tables']['contextos_producao']['Insert'] = {
+    producao_id: producaoId,
+  };
+  if ('hidratacaoAjustadaPct' in campos)
+    row.hidratacao_ajustada_pct = campos.hidratacaoAjustadaPct;
+  if ('notas' in campos) row.notas = campos.notas;
+  if (Object.keys(row).length === 1) return;
+
+  const { error } = await supabase
+    .from('contextos_producao')
+    .upsert(row, { onConflict: 'producao_id' });
+  if (error) throw error;
+}
+
 // ============ Temp ambiente do ciclo (contextos_dia, dia=1) — escrita ============
 
 /**

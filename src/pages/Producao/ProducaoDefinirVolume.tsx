@@ -15,6 +15,7 @@ import { NovaReceitaTesteModal } from './components/NovaReceitaTesteModal';
 import { ProducaoTabs, type AbaProducao } from './components/ProducaoTabs';
 import { Preparacao } from './components/Preparacao';
 import { Acompanhamento } from './components/Acompanhamento';
+import { Registro } from './components/Registro';
 import type { LinhaVolume } from './types';
 
 type ModalAberto = 'adicionar' | 'novaTeste' | null;
@@ -35,7 +36,9 @@ export function ProducaoDefinirVolume() {
   const [searchParams, setSearchParams] = useSearchParams();
   const abaParam = searchParams.get('aba');
   const aba: AbaProducao =
-    abaParam === 'preparacao' || abaParam === 'acompanhamento' ? abaParam : 'volume';
+    abaParam === 'preparacao' || abaParam === 'acompanhamento' || abaParam === 'registro'
+      ? abaParam
+      : 'volume';
   function setAba(nova: AbaProducao) {
     setSearchParams(
       (prev) => {
@@ -209,6 +212,10 @@ export function ProducaoDefinirVolume() {
           dataEntrega={semana.data_entrega}
           onIrParaVolume={() => setAba('volume')}
         />
+      )}
+
+      {aba === 'registro' && (
+        <Registro semanaId={semana.id} onIrParaVolume={() => setAba('volume')} />
       )}
     </Shell>
   );

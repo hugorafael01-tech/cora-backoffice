@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { grupoLabel } from '../../../lib/semana';
 import { producaoStatusLabel } from '../../../lib/producao';
 import type { AcaoEtapa, CapturaEtapa } from '../../../lib/producaoActions';
@@ -13,6 +14,15 @@ interface Props {
   onCaptura: (etapaId: string, captura: CapturaEtapa) => void;
   onIniciarProd: (producaoId: string) => void;
   onConcluirProd: (producaoId: string) => void;
+  onSalvarHidratacao: (producaoId: string, pct: number | null) => void;
+}
+
+/** "" -> null; senao Number (NaN vira null). Aceita virgula. */
+function parseNum(s: string): number | null {
+  const t = s.trim();
+  if (t === '') return null;
+  const n = Number(t.replace(',', '.'));
+  return Number.isNaN(n) ? null : n;
 }
 
 function chipClasse(status: ProducaoStatus): string {
@@ -31,8 +41,30 @@ export function ProducaoAcompCard({
   onCaptura,
   onIniciarProd,
   onConcluirProd,
+  onSalvarHidratacao,
 }: Props) {
   const prodBusy = salvando === producao.id;
+  const hidraBusy = salvando === `hidratacao:${producao.id}`;
+
+  // B2b-2: hidratacao ajustada (%) — decidida na masseira, durante a producao.
+  // String local (virgula/trailing); reseed quando o valor salvo muda por fora.
+  const [hidraStr, setHidraStr] = useState(
+    producao.hidratacaoAjustadaPct != null
+      ? String(producao.hidratacaoAjustadaPct).replace('.', ',')
+      : ''
+  );
+  const [prevHidra, setPrevHidra] = useState(producao.hidratacaoAjustadaPct);
+  if (producao.hidratacaoAjustadaPct !== prevHidra) {
+    setPrevHidra(producao.hidratacaoAjustadaPct);
+    if (parseNum(hidraStr) !== producao.hidratacaoAjustadaPct) {
+      setHidraStr(
+        producao.hidratacaoAjustadaPct != null
+          ? String(producao.hidratacaoAjustadaPct).replace('.', ',')
+          : ''
+      );
+    }
+  }
+  const hidraMudou = parseNum(hidraStr) !== producao.hidratacaoAjustadaPct;
 
   return (
     <div className="overflow-hidden rounded-md border border-warm-300 bg-white">
@@ -94,6 +126,31 @@ export function ProducaoAcompCard({
             {producao.status === 'concluida' && (
               <span className="text-[12.5px] text-success-text">Produção concluída.</span>
             )}
+          </div>
+
+          {/* B2b-2: hidratacao ajustada -> contextos_producao (upsert parcial) */}
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded border border-warm-200 bg-warm-50 px-3 py-2">
+            <label
+              htmlFor={`hidra-${producao.id}`}
+              className="text-[11px] uppercase tracking-[0.04em] text-warm-500"
+            >
+              Hidratação ajustada (%)
+            </label>
+            <input
+              id={`hidra-${producao.id}`}
+              className="min-h-[36px] w-20 rounded border border-warm-300 bg-white px-2.5 text-[13px] tabular-nums text-warm-800 placeholder:text-warm-400 focus:border-brand-300 focus:outline-none"
+              inputMode="decimal"
+              value={hidraStr}
+              onChange={(e) => setHidraStr(e.target.value)}
+              placeholder="ex: 76"
+            />
+            <button
+              onClick={() => onSalvarHidratacao(producao.id, parseNum(hidraStr))}
+              disabled={hidraBusy || !hidraMudou}
+              className="min-h-[36px] rounded-md bg-brand-500 px-3.5 font-display text-[12px] uppercase tracking-[0.04em] text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:bg-warm-200 disabled:text-warm-400"
+            >
+              {hidraBusy ? 'Salvando…' : 'Salvar'}
+            </button>
           </div>
 
           {/* Etapas */}

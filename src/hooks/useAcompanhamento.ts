@@ -75,10 +75,13 @@ export function useAcompanhamento(semanaId: string | undefined): UseAcompanhamen
 }
 
 async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamento> {
-  // Producoes da semana
+  // Producoes da semana (previsto + realizado: a mesma query serve
+  // Acompanhamento e Registro)
   const { data: producoes, error: errProd } = await supabase
     .from('producoes')
-    .select('id, versao_receita_id, qty_paes_prevista, status, iniciada_at, concluida_at')
+    .select(
+      'id, versao_receita_id, qty_paes_prevista, status, iniciada_at, concluida_at, massa_prevista_kg, levain_previsto_kg, qty_paes_realizada, massa_realizada_kg, levain_consumido_kg'
+    )
     .eq('semana_id', semanaId);
   if (errProd) throw errProd;
 
@@ -99,6 +102,16 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
     .order('producao_id', { ascending: true })
     .order('ordem', { ascending: true });
   if (errEt) throw errEt;
+
+  // Contexto da producao (B2b-2: hidratacao ajustada + nota pos-producao)
+  const { data: contextos, error: errCtx } = await supabase
+    .from('contextos_producao')
+    .select('producao_id, hidratacao_ajustada_pct, notas')
+    .in('producao_id', producaoIds);
+  if (errCtx) throw errCtx;
+  const contextoPorProducao = new Map(
+    (contextos ?? []).map((c) => [c.producao_id as string, c])
+  );
 
   // Nome/grupo/rascunho via versoes_receita -> receitas -> produtos
   const { data: versoes } = await supabase
@@ -148,6 +161,7 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
     const produto = receita ? produtoById.get(receita.produto_id as string) : null;
     const etapasP = etapasPorProducao.get(p.id as string) ?? [];
     const { feitas, total } = progressoEtapas(etapasP);
+    const contexto = contextoPorProducao.get(p.id as string);
 
     return {
       id: p.id as string,
@@ -164,6 +178,13 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
       etapaAgoraId: derivaEtapaAgora(etapasP),
       feitas,
       total,
+      massaPrevistaKg: p.massa_prevista_kg ?? null,
+      levainPrevistoKg: p.levain_previsto_kg ?? null,
+      qtyRealizada: p.qty_paes_realizada ?? null,
+      massaRealizadaKg: p.massa_realizada_kg ?? null,
+      levainConsumidoKg: p.levain_consumido_kg ?? null,
+      hidratacaoAjustadaPct: contexto?.hidratacao_ajustada_pct ?? null,
+      notasProducao: contexto?.notas ?? null,
     };
   });
 
