@@ -5,14 +5,16 @@ import type { LinhaVolume, ProdutoFormato } from '../pages/Producao/types';
 
 type EtapaProducaoUpdate = Database['public']['Tables']['etapas_producao']['Update'];
 
-async function getLevainId(): Promise<string | null> {
+async function getIngredienteId(slug: string): Promise<string | null> {
   const { data } = await supabase
     .from('ingredientes')
     .select('id')
-    .eq('slug', 'levain')
+    .eq('slug', slug)
     .maybeSingle();
   return data?.id ?? null;
 }
+
+const getLevainId = () => getIngredienteId('levain');
 
 /**
  * Monta uma LinhaVolume (qty 0, sem producao) pra uma versao recem-criada.
@@ -202,6 +204,18 @@ export async function criarVariacao(input: VariacaoInput): Promise<LinhaVolume> 
       .eq('versao_receita_id', versaoId)
       .eq('ingrediente_id', levainId);
     if (errLev) throw errLev;
+  }
+
+  // Override da linha de agua com a hidratacao alvo da variacao.
+  // Se a receita nao tiver linha de agua (ex.: Brioche), o update afeta 0 linhas — ok.
+  const aguaId = await getIngredienteId('agua-mineral');
+  if (aguaId) {
+    const { error: errAgua } = await supabase
+      .from('ingredientes_receita')
+      .update({ percentual_baker: input.hidratacaoAlvo / 100 })
+      .eq('versao_receita_id', versaoId)
+      .eq('ingrediente_id', aguaId);
+    if (errAgua) throw errAgua;
   }
 
   return carregarLinhaVolume(versaoId, 'teste');
