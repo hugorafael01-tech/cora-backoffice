@@ -2,7 +2,7 @@
 
 Registro vivo de defeitos, atritos de UX e mudanças de modelo observados na operação do backoffice. Operação solo, sem ferramenta externa: editar este arquivo direto e referenciar o item no commit que corrige.
 
-Última atualização: 19/jun/2026
+Última atualização: 19/jun/2026 — item 3 corrigido (PR #54)
 
 ## Como usar
 
@@ -25,8 +25,11 @@ Priorização é etapa separada. Aqui é só captura.
 
 ## Defeitos
 
-- `[defeito · atrapalha]` **Produção (estado/landing):** ao reabrir o backoffice depois de um tempo parado, abre em "Definir Volume" em vez da fase em andamento. Esperado: retomar na fase corrente do ciclo. (item 3)
 - `[defeito · atrapalha]` **Semana/Ciclo:** ciclo concluído continua exibindo "pré-produção · planejada". Falta transição de status no encerramento (`week_status` → `concluida` refletido no resumo). (item 5)
+
+## Corrigidos
+
+- ~~`[defeito · atrapalha]` **Produção (estado/landing):** ao reabrir o backoffice depois de um tempo parado, abre em "Definir Volume" em vez da fase em andamento.~~ Corrigido em [PR #54](https://github.com/hugorafael01-tech/cora-backoffice/pull/54) (19/jun/2026): `ProducaoAtualRedirect` injeta `?aba=` derivado do estado do ciclo quando a URL não traz o param. `rascunho`/`A` → volume · `B` → acompanhamento · `C` → registro. Deep-link explícito tem prioridade. (item 3)
 
 ## UX / interface
 
