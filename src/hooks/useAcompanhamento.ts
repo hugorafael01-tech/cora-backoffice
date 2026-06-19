@@ -96,12 +96,25 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
   const { data: etapas, error: errEt } = await supabase
     .from('etapas_producao')
     .select(
-      'id, producao_id, ordem, tipo, status, iniciada_at, concluida_at, dobra_numero, temp_c, detalhes, notas'
+      'id, producao_id, etapa_receita_id, ordem, tipo, status, iniciada_at, concluida_at, dobra_numero, temp_c, detalhes, notas'
     )
     .in('producao_id', producaoIds)
     .order('producao_id', { ascending: true })
     .order('ordem', { ascending: true });
   if (errEt) throw errEt;
+
+  // Nomes das etapas da receita (para exibir no titulo em vez do rotulo do tipo)
+  const etapaReceitaIds = [
+    ...new Set(
+      (etapas ?? []).map((e) => e.etapa_receita_id as string | null).filter(Boolean) as string[]
+    ),
+  ];
+  const { data: etapasReceita } = etapaReceitaIds.length
+    ? await supabase.from('etapas_receita').select('id, nome').in('id', etapaReceitaIds)
+    : { data: [] };
+  const nomeEtapaReceita = new Map(
+    (etapasReceita ?? []).map((er) => [er.id as string, er.nome as string])
+  );
 
   // Contexto da producao (B2b-2: hidratacao ajustada + nota pos-producao)
   const { data: contextos, error: errCtx } = await supabase
@@ -144,6 +157,7 @@ async function montarAcompanhamento(semanaId: string): Promise<DadosAcompanhamen
       id: e.id as string,
       ordem: e.ordem as number,
       tipo: e.tipo,
+      nome: e.etapa_receita_id ? (nomeEtapaReceita.get(e.etapa_receita_id as string) ?? null) : null,
       status: e.status,
       iniciadaAt: e.iniciada_at ?? null,
       concluidaAt: e.concluida_at ?? null,

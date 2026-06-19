@@ -54,7 +54,7 @@ export function EtapaAcompRow({
 
   const iniciada = hora(etapa.iniciadaAt);
   const concluida = hora(etapa.concluidaAt);
-  const peca = ehEtapaDivisao(etapa.tipo) ? fmtPecaDivisao(pesoMassaG) : null;
+  const peca = ehEtapaDivisao(etapa.tipo, etapa.nome) ? fmtPecaDivisao(pesoMassaG) : null;
 
   const ehDobra = etapa.tipo === 'dobra';
   const dobras = ehDobra ? lerDobras(etapa.detalhes) : [];
@@ -110,7 +110,7 @@ export function EtapaAcompRow({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-medium text-warm-800">{etapaTipoLabel(etapa.tipo)}</span>
+              <span className="font-medium text-warm-800">{etapa.nome ?? etapaTipoLabel(etapa.tipo)}</span>
               <span className="text-[11px] uppercase tracking-[0.04em] text-warm-500">
                 {statusLabel(etapa.status)}
               </span>

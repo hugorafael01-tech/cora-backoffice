@@ -100,6 +100,7 @@ export interface EtapaAcomp {
   id: string;
   ordem: number;
   tipo: EtapaTipo;
+  nome: string | null; // etapas_receita.nome (null para a coccao, que nao tem etapa_receita)
   status: EtapaStatus;
   iniciadaAt: string | null;
   concluidaAt: string | null;

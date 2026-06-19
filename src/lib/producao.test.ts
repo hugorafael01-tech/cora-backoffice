@@ -28,6 +28,7 @@ function etapa(id: string, ordem: number, status: EtapaStatus): EtapaAcomp {
     id,
     ordem,
     tipo: 'dobra',
+    nome: null,
     status,
     iniciadaAt: null,
     concluidaAt: null,
