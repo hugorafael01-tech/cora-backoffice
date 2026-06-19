@@ -68,6 +68,7 @@ Não pule etapas. Não junte frentes.
 6. Qualquer coisa não coberta pelo briefing — não invente, pergunte
 7. Qualquer pedido de credencial além das já presentes em `.env.local.example`
 8. Bifurcar branch a partir de algo que não seja main atualizada
+9. Alterar a forma de um tipo, interface ou contrato compartilhado (usado por mais de um módulo ou arquivo). Antes de tocar, faça grep dos consumidores, liste os arquivos afetados e me mostre o alcance. Se a sua mudança quebrar um arquivo fora do escopo do briefing, NÃO "corrija a consistência de tipo" tocando esse arquivo — isso é sinal de que o escopo cresceu. Prefira um tipo local no arquivo da task e pare pra perguntar.
 
 ## Padrões de verificação obrigatórios
 
@@ -112,7 +113,7 @@ Não comece a codar nada nesta resposta.
 
 ## Pontos de parada obrigatórios — adaptar por tarefa
 
-A seção "Pare e pergunte obrigatoriamente antes de" tem itens genéricos. Em briefings específicos, costuma haver itens adicionais (ex: "Tocar em src/Onboarding.jsx"). Sempre revisar o briefing antes de mandar o prompt e adicionar os itens específicos da tarefa logo após o item 8 do template.
+A seção "Pare e pergunte obrigatoriamente antes de" tem itens genéricos. Em briefings específicos, costuma haver itens adicionais (ex: "Tocar em src/Onboarding.jsx"). Sempre revisar o briefing antes de mandar o prompt e adicionar os itens específicos da tarefa logo após o item 9 do template.
 
 ---
 
@@ -138,6 +139,9 @@ A seção "Pare e pergunte obrigatoriamente antes de" tem itens genéricos. Em b
 
 **Lição 7 (sessão Backoffice, 23/mai/2026):** Após os 3 squash merges do dia, Hugo descobriu que ainda havia 2 branches locais órfãos (`feat/schema-bairros-atendidos`, `feat/janelas-entrega`) que sobreviveram aos merges porque squash gera SHA novo em main e `git --merged` não os reconhece como mergeados (falso negativo). CC fez análise de conteúdo (diff vs main) pra confirmar que eram seguros pra deletar antes de rodar `git branch -D`. A regra "deletar branch local após merge" já estava no template original, mas dispersa entre os princípios, sem destaque. A sessão mostrou que precisa virar ritual explícito pós-merge.
 → Reforçado em "Gestão de branches (regras invioláveis)" como quarta regra, com palavra IMEDIATAMENTE em caixa alta. Também adicionado como passo 10 explícito no Workflow.
+
+**Lição 8 (sessão Backoffice, jun/2026):** Na task de aba inicial da Produção (#54), o CC tornou `data_corte` obrigatório no tipo compartilhado `CicloLite`. Isso quebrou o cast em `ExpedicaoAtualRedirect` (arquivo fora de escopo, que nem usa `data_corte`), e em vez de parar, o CC "corrigiu a consistência de tipo" mandando a Expedição buscar uma coluna morta. Ele criou o erro com a própria mudança e o resolveu fora do escopo. A forma certa, aplicada na revisão, foi um tipo local no arquivo da task (`CicloComCorte = CicloLite & { data_corte }`), sem tocar o tipo compartilhado nem a Expedição.
+→ Incorporado em "Pare e pergunte obrigatoriamente antes de" como item 9.
 
 ---
 
