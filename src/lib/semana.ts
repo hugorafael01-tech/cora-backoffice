@@ -18,7 +18,7 @@ export type EstadoSemana = 'rascunho' | 'A' | 'B' | 'C';
  * Timezone: A/B usa o instante exato de data_corte (timestamptz);
  * B/C compara a data calendario em America/Sao_Paulo contra data_entrega.
  */
-export function derivaEstado(semana: Semana, agora: Date = new Date()): EstadoSemana {
+export function derivaEstado(semana: Pick<Semana, 'status' | 'data_corte' | 'data_entrega'>, agora: Date = new Date()): EstadoSemana {
   if (semana.status === 'rascunho') return 'rascunho';
   if (semana.status === 'concluida') return 'C';
 
