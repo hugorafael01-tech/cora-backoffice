@@ -116,7 +116,6 @@ export function cicloLabel(dataEntrega: string): string {
 export interface CicloLite {
   id: string;
   data_entrega: string;
-  data_corte: string;
   status: string;
 }
 

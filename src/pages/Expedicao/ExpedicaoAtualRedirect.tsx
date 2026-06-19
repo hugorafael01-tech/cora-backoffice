@@ -17,7 +17,7 @@ export function ExpedicaoAtualRedirect() {
     async function resolver() {
       const { data, error } = await supabase
         .from('semanas')
-        .select('id, data_entrega, data_corte, status')
+        .select('id, data_entrega, status')
         .order('data_entrega', { ascending: true });
 
       if (cancelado) return;

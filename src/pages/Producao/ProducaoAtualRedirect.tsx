@@ -5,6 +5,8 @@ import { escolherCicloAtual, derivaEstado, type CicloLite } from '../../lib/sema
 import { dataSpStr } from '../../lib/date';
 import { Shell } from '../Semana/components/Shell';
 
+type CicloComCorte = CicloLite & { data_corte: string };
+
 /** Resolve a semana "atual" e redireciona pra /producao/:id. Espelha SemanaAtualRedirect. */
 export function ProducaoAtualRedirect() {
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export function ProducaoAtualRedirect() {
         setErro(error.message);
         return;
       }
-      const ciclos = (data ?? []) as CicloLite[];
+      const ciclos = (data ?? []) as CicloComCorte[];
       const id = escolherCicloAtual(ciclos, dataSpStr(new Date()));
       if (id) {
         const params = new URLSearchParams(search);

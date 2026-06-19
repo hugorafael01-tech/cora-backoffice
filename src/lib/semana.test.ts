@@ -11,7 +11,6 @@ describe('escolherCicloAtual', () => {
   const c = (id: string, data_entrega: string, status = 'rascunho'): CicloLite => ({
     id,
     data_entrega,
-    data_corte: data_entrega + 'T12:00:00Z',
     status,
   });
 
