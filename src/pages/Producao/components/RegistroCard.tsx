@@ -394,7 +394,7 @@ function EtapaRegistroRow({ etapa }: { etapa: EtapaAcomp }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`font-medium ${pulada ? 'text-warm-500' : 'text-warm-800'}`}>
-              {etapaTipoLabel(etapa.tipo)}
+              {etapa.nome ?? etapaTipoLabel(etapa.tipo)}
             </span>
             <span className="text-[11px] uppercase tracking-[0.04em] text-warm-500">
               {etapaStatusLabel(etapa.status)}
