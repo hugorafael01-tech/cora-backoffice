@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { escolherCicloAtual, type CicloLite } from '../../lib/semana';
+import { escolherCicloAtual, derivaEstado, type CicloLite } from '../../lib/semana';
 import { dataSpStr } from '../../lib/date';
 import { Shell } from '../Semana/components/Shell';
 
@@ -17,7 +17,7 @@ export function ProducaoAtualRedirect() {
     async function resolver() {
       const { data, error } = await supabase
         .from('semanas')
-        .select('id, data_entrega, status')
+        .select('id, data_entrega, data_corte, status')
         .order('data_entrega', { ascending: true });
 
       if (cancelado) return;
@@ -25,10 +25,22 @@ export function ProducaoAtualRedirect() {
         setErro(error.message);
         return;
       }
-      const id = escolherCicloAtual((data ?? []) as CicloLite[], dataSpStr(new Date()));
-      // Preserva o query param (ex.: ?aba=acompanhamento) ao resolver o ciclo.
-      if (id) navigate(`/producao/${id}${search}`, { replace: true });
-      else setVazio(true);
+      const ciclos = (data ?? []) as CicloLite[];
+      const id = escolherCicloAtual(ciclos, dataSpStr(new Date()));
+      if (id) {
+        const params = new URLSearchParams(search);
+        if (!params.has('aba')) {
+          const ciclo = ciclos.find((c) => c.id === id)!;
+          const estado = derivaEstado(ciclo);
+          const aba =
+            estado === 'B' ? 'acompanhamento' : estado === 'C' ? 'registro' : 'volume';
+          params.set('aba', aba);
+        }
+        const qs = params.toString();
+        navigate(`/producao/${id}${qs ? `?${qs}` : ''}`, { replace: true });
+      } else {
+        setVazio(true);
+      }
     }
     resolver();
     return () => {
