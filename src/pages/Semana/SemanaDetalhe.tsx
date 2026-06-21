@@ -11,11 +11,13 @@ import { TabelaProducao } from './components/TabelaProducao';
 import { CardInsumos } from './components/CardInsumos';
 import { CardEntregas } from './components/CardEntregas';
 import { ModalCriarSemana } from './components/ModalCriarSemana';
+import { ModalEditarCiclo } from './components/ModalEditarCiclo';
 
 export function SemanaDetalhe() {
   const { id } = useParams<{ id: string }>();
   const { dados, loading, naoEncontrada, error, refetch } = useSemana(id);
   const [modalAberto, setModalAberto] = useState(false);
+  const [editandoData, setEditandoData] = useState(false);
   const [abrindo, setAbrindo] = useState(false);
 
   if (naoEncontrada) return <Navigate to="/semanas/atual" replace />;
@@ -50,6 +52,7 @@ export function SemanaDetalhe() {
         anterior={semanaAnterior}
         proxima={semanaProxima}
         onNova={() => setModalAberto(true)}
+        onEditarData={() => setEditandoData(true)}
       />
 
       <EstadoBanner
@@ -80,6 +83,13 @@ export function SemanaDetalhe() {
       </div>
 
       {modalAberto && <ModalCriarSemana onClose={() => setModalAberto(false)} />}
+      {editandoData && (
+        <ModalEditarCiclo
+          semana={semana}
+          onClose={() => setEditandoData(false)}
+          onSalva={() => { setEditandoData(false); refetch(); }}
+        />
+      )}
     </Shell>
   );
 }

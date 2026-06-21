@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { EstadoSemana } from '../../../lib/semana';
+import { cicloLabel } from '../../../lib/semana';
 import { formataDiaMes } from '../../../lib/date';
 import type { Semana } from '../types';
 
@@ -16,19 +17,29 @@ interface Props {
   anterior: string | null;
   proxima: string | null;
   onNova: () => void;
+  onEditarData: () => void;
 }
 
-export function WkHeader({ semana, estado, anterior, proxima, onNova }: Props) {
+export function WkHeader({ semana, estado, anterior, proxima, onNova, onEditarData }: Props) {
   const navigate = useNavigate();
-  const titulo = `SEMANA ${semana.numero} · ${formataDiaMes(
-    semana.data_inicio
-  ).toUpperCase()} — ${formataDiaMes(semana.data_fim).toUpperCase()}`;
+  const titulo = cicloLabel(semana.data_entrega);
+  const subtitulo = `Semana ISO ${semana.numero} · ${formataDiaMes(semana.data_inicio)} — ${formataDiaMes(semana.data_fim)}`;
 
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 border-b border-warm-200 px-5 py-5 md:px-8">
       <div>
         <div className="text-[11px] uppercase tracking-[0.04em] text-warm-500">{EYEBROW[estado]}</div>
-        <h1 className="font-display text-[26px] md:text-[30px] leading-tight text-ink-700">{titulo}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-[26px] md:text-[30px] leading-tight text-ink-700">{titulo}</h1>
+          <button
+            onClick={onEditarData}
+            aria-label="Editar data de entrega"
+            className="text-warm-400 hover:text-warm-700 transition-colors pb-1"
+          >
+            ✏
+          </button>
+        </div>
+        <div className="mt-1 text-[13px] text-warm-500">{subtitulo}</div>
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2">
         <button
