@@ -2,7 +2,7 @@
 
 Registro vivo de defeitos, atritos de UX e mudanças de modelo observados na operação do backoffice. Operação solo, sem ferramenta externa: editar este arquivo direto e referenciar o item no commit que corrige.
 
-Última atualização: 19/jun/2026 — item 3 corrigido (PR #54)
+Última atualização: 20/jun/2026
 
 ## Como usar
 
@@ -26,6 +26,7 @@ Priorização é etapa separada. Aqui é só captura.
 ## Defeitos
 
 - `[defeito · atrapalha]` **Semana/Ciclo:** ciclo concluído continua exibindo "pré-produção · planejada". Falta transição de status no encerramento (`week_status` → `concluida` refletido no resumo). (item 5)
+- `[defeito · atrapalha]` **Semana/EditarCiclo:** o UPDATE da janela "Padrão" não checa zero-rows — se a janela não casar, salva calado e dessincroniza de `semanas`. Guard: `.select()` + erro visível. (follow-up da PR #56)
 
 ## Corrigidos
 
@@ -34,14 +35,6 @@ Priorização é etapa separada. Aqui é só captura.
 ## UX / interface
 
 - `[ux · atrapalha]` **Navegação global:** bottom nav com alvos de toque pequenos. Refazer mobile-first, com áreas de clique maiores. (item 7)
-
-## Ajuste: Semana / Planejamento ancorado em D-0
-
-- `[redesign pequeno · atrapalha]` **Semana/Planejamento:** as labels mostram ter/qua/qui fixos, e o ciclo aparece como "ISO 26", ilegível quando há vários ciclos em paralelo. (itens 1 + 4)
-  - Causa: a tela imprime dia da semana fixo e usa `iso_week` como nome, em vez de derivar de `delivery_date`/`cutoff_at`, que já existem como datas reais na tabela `weeks`.
-  - Esperado: contagem regressiva D-2 / D-1 / D-0 calculada a partir de `cutoff_at`/`delivery_date`; rótulo humano do ciclo a partir de `delivery_date` (ex: "Entrega qui 25/jun"). Tornar `delivery_date`/`cutoff_at` editáveis por semana (destrava antecipar fornada em feriado).
-  - Ripple a verificar no código: corte de edição (terça 12h vira D-2 12h), congelamento do cardápio, estimativa de refresco de levain (hoje calculada pra terça).
-  - Nota de confiança: schema confirmado (as datas reais existem). NÃO foi lido o código da tela Semana nem da rotina de geração de `weeks`. Confirmar antes de implementar.
 
 ## Redesign: módulo Produção / Acompanhamento (precisa mini-spec)
 
