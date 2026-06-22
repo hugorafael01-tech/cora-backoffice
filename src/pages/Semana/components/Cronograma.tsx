@@ -1,15 +1,15 @@
 import type { EstadoSemana } from '../../../lib/semana';
-import { dataSpStr, formataDiaMes } from '../../../lib/date';
+import { dataSpStr, formataDiaSemanaDiaMes } from '../../../lib/date';
 
 interface Props {
-  dataEntrega: string; // YYYY-MM-DD (quinta)
+  dataEntrega: string; // YYYY-MM-DD (D-0)
   estado: EstadoSemana;
 }
 
 const DIAS = [
-  { label: 'TER', offset: -2, sub: 'levain + prep + mise en place' },
-  { label: 'QUA', offset: -1, sub: 'autólise → shape' },
-  { label: 'QUI', offset: 0, sub: 'cocção + entrega' },
+  { label: 'D-2', offset: -2, sub: 'levain + prep + mise en place' },
+  { label: 'D-1', offset: -1, sub: 'autólise → shape' },
+  { label: 'D-0', offset: 0, sub: 'cocção + entrega' },
 ];
 
 function addDiasYmd(ymd: string, dias: number): string {
@@ -46,7 +46,7 @@ export function Cronograma({ dataEntrega, estado }: Props) {
               </span>
               <span className="text-[11px] text-warm-500">
                 {concluido && estado === 'C' ? '✓ ' : ''}
-                {formataDiaMes(data)}
+                {formataDiaSemanaDiaMes(data)}
               </span>
             </div>
             <p className="mt-1 text-[12px] leading-snug text-warm-500">{dia.sub}</p>
