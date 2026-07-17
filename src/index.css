@@ -76,8 +76,16 @@ body {
 }
 
 /* Expedicao: ao imprimir etiquetas, esconde todo o resto da pagina e deixa so
-   o bloco .etiquetas-print (que e `hidden print:block`). Isola sem mexer no Shell. */
+   o bloco .etiquetas-print (que e `hidden print:block`). Isola sem mexer no Shell.
+   Geometria calibrada para folha PIMACO 6183 / Avery 5163 (Carta, 2 col x 5 lin,
+   etiqueta 101,6 x 50,8mm) e validada em teste fisico com escala 100% — nao
+   adicionar fator de correcao por impressora, manter os valores nominais. */
 @media print {
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
   body * {
     visibility: hidden;
   }
@@ -90,5 +98,23 @@ body {
     left: 0;
     top: 0;
     width: 100%;
+    box-sizing: border-box;
+    padding: 12.7mm 3.97mm 0 3.97mm;
+  }
+  .etiquetas-print .etiquetas-grid {
+    display: grid;
+    grid-template-columns: 101.6mm 101.6mm;
+    column-gap: 4.76mm;
+    row-gap: 0;
+  }
+  .etiquetas-print .etiqueta {
+    width: 101.6mm;
+    height: 50.8mm;
+    box-sizing: border-box;
+    overflow: hidden;
+    break-inside: avoid;
+    padding: 4mm;
+    border: none;
+    border-radius: 0;
   }
 }
