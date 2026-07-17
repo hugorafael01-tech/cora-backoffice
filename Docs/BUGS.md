@@ -2,7 +2,7 @@
 
 Registro vivo de defeitos, atritos de UX e mudanças de modelo observados na operação do backoffice. Operação solo, sem ferramenta externa: editar este arquivo direto e referenciar o item no commit que corrige.
 
-Última atualização: 20/jun/2026
+Última atualização: 02/jul/2026
 
 ## Como usar
 
@@ -46,6 +46,8 @@ Cluster único, não 4 bugs soltos. Atacam a mesma tela com a mesma lógica nova
 - Acompanhamento subdividido em 5 etapas macro: 1) conferência do mise en place, 2) autólise/batimentos, 3) dobras/bulk, 4) fermentação TA > TF (overnight), 5) cocção. (item 10)
 
 ## Features (cross-system)
+
+- `[feature · atrapalha]` **Expedição / Endereços:** sem forma de reordenar os endereços da rota. Bairros próximos (ex: Botafogo e Humaitá) ficam separados enquanto Gávea entra antes, forçando o entregador a improvisar a sequência mentalmente. Esperado: arrastar-e-soltar (ou outro mecanismo) para definir a ordem de entrega manualmente antes de sair. (item 11)
 
 - `[feature]` **Pedido para não-assinante:** criar uma compra/pedido para alguém fora da assinatura (ex: brinde a um pré-cadastrado). Toca pedidos/portal/backoffice. (item 6)
   - Conexão: mesmo buraco da fornada paralela parqueada (venda fora do ritmo de assinatura). Avaliar um conceito único de "produção/venda avulsa" que cubra os dois.
