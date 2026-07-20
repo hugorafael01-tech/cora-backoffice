@@ -4,6 +4,7 @@ import {
   enderecoCurto,
   flattenComposicaoPontual,
   flattenComposition,
+  itensAssinatura,
   linhaRota,
   normalizaRegiao,
   proximoStatus,
@@ -76,6 +77,66 @@ describe('flattenComposicaoPontual', () => {
     expect(flattenComposicaoPontual({ integral: 2, original: 0 }, NOMES)).toEqual([
       { slug: 'integral', nome: 'Integral', qty: 2 },
     ]);
+  });
+});
+
+describe('itensAssinatura', () => {
+  it('sem weekly_order -> baseline puro (Original + Integral do plano)', () => {
+    const itens = itensAssinatura(null, { original: 2, integral: 1 }, NOMES);
+    expect(itens).toEqual([
+      { slug: 'original', nome: 'Original', qty: 2 },
+      { slug: 'integral', nome: 'Integral', qty: 1 },
+    ]);
+  });
+
+  it('order rascunho com composicao e extras -> ignorado, cai no baseline puro (sem extras)', () => {
+    const itens = itensAssinatura(
+      {
+        status: 'rascunho',
+        composition: { original: 5, focaccia: 2 },
+        extras: [{ id: 'focaccia', qty: 3, nome: 'Focaccia' }],
+      },
+      { original: 2, integral: 1 },
+      NOMES
+    );
+    expect(itens).toEqual([
+      { slug: 'original', nome: 'Original', qty: 2 },
+      { slug: 'integral', nome: 'Integral', qty: 1 },
+    ]);
+  });
+
+  it('order confirmado com composicao custom + extras -> usa o override', () => {
+    const itens = itensAssinatura(
+      {
+        status: 'confirmado',
+        composition: { original: 5, focaccia: 2 },
+        extras: [{ id: 'focaccia', qty: 1, nome: 'Focaccia' }],
+      },
+      { original: 2, integral: 1 },
+      NOMES
+    );
+    expect(itens).toEqual([
+      { slug: 'original', nome: 'Original', qty: 5 },
+      { slug: 'focaccia', nome: 'Focaccia', qty: 3 },
+    ]);
+  });
+
+  it('order confirmado com composicao null -> cai no baseline, mas extras ainda entram', () => {
+    const itens = itensAssinatura(
+      { status: 'confirmado', composition: null, extras: [{ id: 'focaccia', qty: 2, nome: 'Focaccia' }] },
+      { original: 2, integral: 1 },
+      NOMES
+    );
+    expect(itens).toEqual([
+      { slug: 'original', nome: 'Original', qty: 2 },
+      { slug: 'integral', nome: 'Integral', qty: 1 },
+      { slug: 'focaccia', nome: 'Focaccia', qty: 2 },
+    ]);
+  });
+
+  it('baseline com qty 0 nao entra (ex: so Original no plano)', () => {
+    const itens = itensAssinatura(null, { original: 3, integral: 0 }, NOMES);
+    expect(itens).toEqual([{ slug: 'original', nome: 'Original', qty: 3 }]);
   });
 });
 

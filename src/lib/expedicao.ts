@@ -100,6 +100,39 @@ export function flattenComposicaoPontual(
   return flattenComposition(composicao, null, nomePorSlug);
 }
 
+/** Baseline da assinatura: qty de Original/Integral cadastrada no plano. */
+export interface BaselineAssinatura {
+  original: number;
+  integral: number;
+}
+
+/** weekly_order do ciclo (se existir) considerado como possivel override. */
+export interface OrdemAssinatura {
+  status: 'rascunho' | 'confirmado';
+  composition: unknown;
+  extras: unknown;
+}
+
+/**
+ * Itens da entrega de uma assinatura (decisao de produto 20/07/2026): todo
+ * assinante recebe o baseline (Original + Integral do plano) toda semana, sem
+ * precisar de acao. O weekly_order CONFIRMADO e o UNICO override valido —
+ * composicao custom (se null, cai no baseline) E extras. Rascunho ou ausencia
+ * de order nao valem nada (nem composicao nem extras): baseline puro, sem
+ * extras.
+ */
+export function itensAssinatura(
+  ordem: OrdemAssinatura | null,
+  baseline: BaselineAssinatura,
+  nomePorSlug: Map<string, string>
+): ItemEntrega[] {
+  const composicaoBase = { original: baseline.original, integral: baseline.integral };
+  if (ordem && ordem.status === 'confirmado') {
+    return flattenComposition(ordem.composition ?? composicaoBase, ordem.extras, nomePorSlug);
+  }
+  return flattenComposition(composicaoBase, null, nomePorSlug);
+}
+
 /** "3x Original · 1x Focaccia" (ordem dos itens). '' quando vazio. */
 export function resumoItens(itens: ItemEntrega[]): string {
   return itens.map((i) => `${i.qty}x ${i.nome}`).join(' · ');
