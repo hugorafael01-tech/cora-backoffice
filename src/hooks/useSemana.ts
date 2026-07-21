@@ -76,7 +76,7 @@ export function useSemana(id: string | undefined): UseSemanaResult {
 
         const planejamento = await carregarPlanejamento(semanaId);
         const insumos = await carregarInsumos();
-        const entregas = await carregarEntregas(semana.data_entrega);
+        const entregas = await carregarEntregas();
         // Sempre carrega (sem gate de estado): a funcao e escopada por semana e
         // devolve Map vazio sem producoes, entao o estado A cai em 'aguardando'.
         // Sem o gate, a Semana reflete producao em curso fora do Estado B.
@@ -238,14 +238,19 @@ async function carregarInsumos(): Promise<{ alertas: InsumoAlerta[]; okCount: nu
 }
 
 // ---- Q5: entregas por bairro ----
-async function carregarEntregas(
-  dataEntrega: string
-): Promise<{ cidades: CidadeEntregas[]; totalGeral: number }> {
-  const { data: ordens } = await supabase
-    .from('weekly_orders')
-    .select('subscriptions!inner ( cidade, bairro )')
-    .eq('status', 'confirmado')
-    .eq('delivery_date', dataEntrega);
+// Baseline da assinatura (decisao de produto 20/07/2026): TODO assinante
+// status='active' recebe entrega no ciclo, com ou sem weekly_order — o painel
+// conta direto de `subscriptions`, sem passar por weekly_orders (endereco ja
+// vem da assinatura, nao do order; o order so afeta os ITENS, nao se a entrega
+// acontece). Mesma fonte usada pelo gerador em expedicaoActions.ts.
+async function carregarEntregas(): Promise<{
+  cidades: CidadeEntregas[];
+  totalGeral: number;
+}> {
+  const { data: assinaturas } = await supabase
+    .from('subscriptions')
+    .select('cidade, bairro')
+    .eq('status', 'active');
 
   const { data: bairrosAtendidos } = await supabase
     .from('bairros_atendidos')
@@ -264,13 +269,9 @@ async function carregarEntregas(
   const contagem = new Map<string, Acc>();
   let totalGeral = 0;
 
-  for (const o of ordens ?? []) {
-    // subscriptions embedded vem como objeto (FK !inner)
-    const sub = (o as { subscriptions: { cidade: string | null; bairro: string | null } })
-      .subscriptions;
-    if (!sub) continue;
-    const cidade = sub.cidade ?? '(sem cidade)';
-    const bairro = sub.bairro ?? '(sem bairro)';
+  for (const s of assinaturas ?? []) {
+    const cidade = s.cidade ?? '(sem cidade)';
+    const bairro = s.bairro ?? '(sem bairro)';
     const key = `${normalize(cidade)}|${normalize(bairro)}`;
     totalGeral++;
     const ja = contagem.get(key);

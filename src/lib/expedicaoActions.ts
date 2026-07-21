@@ -1,11 +1,12 @@
-// Acoes da Expedicao (E2): gerador (snapshot por ciclo) + transicoes de status +
-// observacao/remocao. Le weekly_orders/pedidos_pontuais/subscriptions/produtos
-// (so leitura) e escreve em `entregas`. Schema 0026.
+// Acoes da Expedicao (E2 + baseline 20/07/2026): gerador (snapshot por ciclo) +
+// transicoes de status + observacao/remocao. Le subscriptions/weekly_orders/
+// pedidos_pontuais/produtos (so leitura) e escreve em `entregas`. Schema 0026 +
+// 0030 (subscription_id).
 import { supabase } from './supabase';
 import type { Database, Json } from './database.types';
 import {
   flattenComposicaoPontual,
-  flattenComposition,
+  itensAssinatura,
   normalizaRegiao,
   proximoStatus,
   statusAnterior,
@@ -21,14 +22,18 @@ export interface GerarResult {
 }
 
 /**
- * (Re)gera a expedicao de um ciclo a partir da demanda confirmada:
- *   - assinaturas: weekly_orders status='confirmado' e delivery_date = data_entrega
- *     do ciclo (join subscriptions pra nome/whatsapp/endereco/itens);
+ * (Re)gera a expedicao de um ciclo a partir da demanda:
+ *   - assinaturas: TODO subscriptions.status='active' recebe o baseline
+ *     (Original + Integral do plano) toda semana, sem precisar de acao. O
+ *     weekly_order do ciclo (delivery_date = data_entrega) e o UNICO override
+ *     valido quando CONFIRMADO (composicao custom E extras) — rascunho ou
+ *     ausencia de order caem no baseline puro, sem extras. Ver itensAssinatura.
  *   - avulsos: pedidos_pontuais status='confirmado' e semana_id = ciclo.
  * Faz upsert em `entregas` SO com o snapshot (nome/endereco/regiao/itens/origem);
  * status e observacao NUNCA entram no payload — regenerar atualiza a demanda sem
  * tocar no progresso de entrega nem nas observacoes da bancada. Idempotente pelos
- * UNIQUE (semana_id, weekly_order_id) / (semana_id, pedido_pontual_id) da 0026.
+ * UNIQUE (semana_id, subscription_id) da 0030 / (semana_id, pedido_pontual_id) da
+ * 0026.
  */
 export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   // 1) ciclo
@@ -44,15 +49,27 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   const { data: produtos } = await supabase.from('produtos').select('slug, nome');
   const nomePorSlug = new Map((produtos ?? []).map((p) => [p.slug as string, p.nome as string]));
 
-  // 3) assinaturas (weekly_orders + subscriptions)
+  // 3) assinaturas ativas (fonte da demanda) + weekly_orders do ciclo (override)
+  const { data: assinaturas, error: errAssinaturas } = await supabase
+    .from('subscriptions')
+    .select(
+      'id, nome, whatsapp, cep, rua, numero, complemento, bairro, cidade, qty_original, qty_integral'
+    )
+    .eq('status', 'active');
+  if (errAssinaturas) throw errAssinaturas;
+
   const { data: ordens, error: errOrdens } = await supabase
     .from('weekly_orders')
-    .select(
-      'id, composition, extras, subscriptions!inner ( nome, whatsapp, cep, rua, numero, complemento, bairro, cidade )'
-    )
-    .eq('status', 'confirmado')
+    .select('id, subscription_id, status, composition, extras')
     .eq('delivery_date', dataEntrega);
   if (errOrdens) throw errOrdens;
+
+  const ordemPorSubscription = new Map(
+    (ordens ?? []).map((o) => [
+      o.subscription_id as string,
+      { id: o.id as string, status: o.status as 'rascunho' | 'confirmado', composition: o.composition, extras: o.extras },
+    ])
+  );
 
   // 4) avulsos (pedidos_pontuais)
   const { data: pontuais, error: errPontuais } = await supabase
@@ -64,29 +81,18 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
     .eq('semana_id', semanaId);
   if (errPontuais) throw errPontuais;
 
-  type OrdemRow = {
-    id: string;
-    composition: Json | null;
-    extras: Json | null;
-    subscriptions: {
-      nome: string;
-      whatsapp: string | null;
-      cep: string | null;
-      rua: string;
-      numero: string | null;
-      complemento: string | null;
-      bairro: string;
-      cidade: string;
-    };
-  };
-
-  const linhasAssinatura: EntregaInsert[] = ((ordens ?? []) as unknown as OrdemRow[]).map((o) => {
-    const s = o.subscriptions;
-    const itens = flattenComposition(o.composition, o.extras, nomePorSlug);
+  const linhasAssinatura: EntregaInsert[] = (assinaturas ?? []).map((s) => {
+    const ordem = ordemPorSubscription.get(s.id as string) ?? null;
+    const itens = itensAssinatura(
+      ordem,
+      { original: s.qty_original ?? 0, integral: s.qty_integral ?? 0 },
+      nomePorSlug
+    );
     return {
       semana_id: semanaId,
       origem: 'assinatura',
-      weekly_order_id: o.id,
+      subscription_id: s.id,
+      weekly_order_id: ordem && ordem.status === 'confirmado' ? ordem.id : null,
       pedido_pontual_id: null,
       nome: s.nome,
       whatsapp: s.whatsapp ?? null,
@@ -124,10 +130,10 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   // Conta criadas vs atualizadas comparando com o que ja existe (antes do upsert).
   const { data: existentes } = await supabase
     .from('entregas')
-    .select('weekly_order_id, pedido_pontual_id')
+    .select('subscription_id, pedido_pontual_id')
     .eq('semana_id', semanaId);
-  const woExist = new Set(
-    (existentes ?? []).map((e) => e.weekly_order_id).filter((v): v is string => v != null)
+  const subExist = new Set(
+    (existentes ?? []).map((e) => e.subscription_id).filter((v): v is string => v != null)
   );
   const ppExist = new Set(
     (existentes ?? []).map((e) => e.pedido_pontual_id).filter((v): v is string => v != null)
@@ -136,7 +142,7 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   let criadas = 0;
   let atualizadas = 0;
   for (const r of linhasAssinatura) {
-    if (woExist.has(r.weekly_order_id!)) atualizadas++;
+    if (subExist.has(r.subscription_id!)) atualizadas++;
     else criadas++;
   }
   for (const r of linhasAvulso) {
@@ -147,7 +153,7 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   if (linhasAssinatura.length > 0) {
     const { error } = await supabase
       .from('entregas')
-      .upsert(linhasAssinatura, { onConflict: 'semana_id,weekly_order_id' });
+      .upsert(linhasAssinatura, { onConflict: 'semana_id,subscription_id' });
     if (error) throw error;
   }
   if (linhasAvulso.length > 0) {

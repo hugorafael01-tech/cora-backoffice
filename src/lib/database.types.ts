@@ -403,6 +403,7 @@ export type Database = {
           rua: string
           semana_id: string
           status: string
+          subscription_id: string | null
           updated_at: string
           weekly_order_id: string | null
           whatsapp: string | null
@@ -426,6 +427,7 @@ export type Database = {
           rua: string
           semana_id: string
           status?: string
+          subscription_id?: string | null
           updated_at?: string
           weekly_order_id?: string | null
           whatsapp?: string | null
@@ -449,6 +451,7 @@ export type Database = {
           rua?: string
           semana_id?: string
           status?: string
+          subscription_id?: string | null
           updated_at?: string
           weekly_order_id?: string | null
           whatsapp?: string | null
@@ -459,6 +462,13 @@ export type Database = {
             columns: ["semana_id"]
             isOneToOne: false
             referencedRelation: "semanas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
