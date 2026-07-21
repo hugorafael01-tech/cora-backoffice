@@ -60,16 +60,19 @@ export type Database = {
       app_settings: {
         Row: {
           id: number
+          max_subscriptions: number
           subscriptions_open: boolean
           updated_at: string
         }
         Insert: {
           id?: number
+          max_subscriptions?: number
           subscriptions_open?: boolean
           updated_at?: string
         }
         Update: {
           id?: number
+          max_subscriptions?: number
           subscriptions_open?: boolean
           updated_at?: string
         }
