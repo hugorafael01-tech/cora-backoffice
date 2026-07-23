@@ -31,9 +31,6 @@ export function PrHeader({ semana }: Props) {
         <div className="mt-1 text-[13px] text-warm-500">{subtitulo}</div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md border border-warning-border bg-warning-bg px-2.5 py-1 text-[11px] text-warning-text">
-          período de testes
-        </span>
         <CicloSwitcher />
         <button
           onClick={() => setCriando(true)}
