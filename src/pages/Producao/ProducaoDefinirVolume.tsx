@@ -6,6 +6,7 @@ import { previewLinha } from '../../lib/producao';
 import { Shell } from '../Semana/components/Shell';
 import { PrHeader } from './components/PrHeader';
 import { BannerProducao } from './components/BannerProducao';
+import { DemandaCard } from './components/DemandaCard';
 import { VolumeList } from './components/VolumeList';
 import { LevainCard } from './components/LevainCard';
 import { ResumoCards } from './components/ResumoCards';
@@ -165,6 +166,8 @@ export function ProducaoDefinirVolume() {
       {aba === 'volume' && (
         <>
           <BannerProducao sucesso={sucesso} />
+
+          <DemandaCard semanaId={semana.id} />
 
           <VolumeList
             linhas={linhas}
