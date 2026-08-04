@@ -199,6 +199,15 @@ describe('linhaRota / textoRota', () => {
     expect(txt).toContain('1. Ana');
     expect(txt).toContain('2. Bia');
   });
+  // Contato do assinante nao circula fora da Cora (decisao do Hugo, 04/08): a
+  // rota vai pro celular do entregador, entao telefone nao entra nela. O
+  // entregador fala com o Hugo, o Hugo fala com o cliente.
+  it('nao vaza o telefone do assinante na rota', () => {
+    const fone = '(21) 98888-7777';
+    const e = entrega({ nome: 'Ana', whatsapp: fone });
+    expect(linhaRota(1, e)).not.toContain('8888');
+    expect(textoRota([e])).not.toContain('8888');
+  });
 });
 
 describe('proximoStatus / statusAnterior', () => {
