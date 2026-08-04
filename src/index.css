@@ -81,9 +81,13 @@ body {
    etiqueta 101,6 x 50,8mm) e validada em teste fisico com escala 100% — nao
    adicionar fator de correcao por impressora, manter os valores nominais. */
 @media print {
+  /* A margem da folha vive no @page, nao no padding do bloco: padding aplica uma
+     vez no bloco inteiro e as paginas 2+ nasciam em y=0, deslocadas 12,7mm pra
+     cima. Aqui a area util fica 207,96 x 254mm (2 x 101,6 + gap 4,76 por
+     5 x 50,8) e cada pagina recomeca ja dentro da margem. */
   @page {
     size: letter;
-    margin: 0;
+    margin: 12.7mm 3.97mm;
   }
 
   body * {
@@ -93,13 +97,15 @@ body {
   .etiquetas-print * {
     visibility: visible;
   }
+  /* position: absolute tira o bloco do fluxo dos ancestrais, que continuam
+     ocupando espaco porque visibility: hidden esconde sem remover. */
   .etiquetas-print {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     box-sizing: border-box;
-    padding: 12.7mm 3.97mm 0 3.97mm;
+    padding: 0;
   }
   .etiquetas-print .etiquetas-grid {
     display: grid;
