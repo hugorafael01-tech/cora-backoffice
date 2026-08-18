@@ -136,7 +136,7 @@ export interface EntregaSequenciavel {
   id: string;
   zona: string | null;
   sequencia: number | null;
-  /** Ordem do assinante dentro do grupo (borda de bairro). null = sem ordem. */
+  /** Ordem do assinante dentro do grupo (borda de bairro). null = ORDEM_ROTA_PADRAO. */
   ordemRota: number | null;
   regiao: string;
   bairro: string;
@@ -182,18 +182,37 @@ export function ondaDaEntrega(
 const cmpTexto = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
 const cmpNumero = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { numeric: true });
 
-/** null / ausente ordena por ULTIMO, sem virar 0. */
+/** Zona/bairro sem ordem cadastrada fecha o grupo, sem virar 0. */
 const ouUltimo = (n: number | null | undefined) => n ?? Number.POSITIVE_INFINITY;
+
+/**
+ * Posicao de quem nao tem `ordem_rota`: o MEIO da faixa, nao o fim.
+ *
+ * Assim um valor sozinho consegue as duas coisas — 100-499 PUXA pra frente,
+ * 501-900 EMPURRA pra tras — e o resto do bairro continua intocado. Com "NULL
+ * por ultimo" so dava pra puxar: pra jogar alguem pro fim era preciso numerar
+ * todo mundo do bairro, o que transforma um ajuste de uma pessoa numa
+ * manutencao de lista.
+ *
+ * A faixa e esparsa de proposito: sobra espaco pra inserir entre dois
+ * assinantes ja ordenados sem renumerar nenhum. Gravar exatamente 500 nao tem
+ * efeito — e o mesmo que deixar em branco.
+ *
+ * Base sem nenhum override se comporta igual a antes: todo mundo empatado aqui,
+ * e a ordem cai no criterio estavel (bairro, logradouro, numero, nome).
+ */
+export const ORDEM_ROTA_PADRAO = 500;
 
 /**
  * Ordem canonica dentro da onda, do mais grosso pro mais fino:
  *
- *   1. `ordem` da ZONA          — N1 antes de N2 antes de N3
- *   2. `ordem` do BAIRRO        — Icarai antes de Boa Viagem, que e o ponto
- *                                 mais proximo da ponte e fecha a onda
+ *   1. `ordem` da ZONA           — N1 antes de N2 antes de N3
+ *   2. `ordem` do BAIRRO         — Icarai antes de Boa Viagem, que e o ponto
+ *                                  mais proximo da ponte e fecha a onda
  *   3. `ordem_rota` do ASSINANTE — desempate de quem mora na borda de dois
- *                                 bairros (NULL por ultimo: quem nao tem ordem
- *                                 definida nao muda de lugar)
+ *                                  bairros; sem valor = ORDEM_ROTA_PADRAO (meio
+ *                                  da faixa), entao um numero so puxa OU empurra
+ *                                  sem mexer no resto do bairro
  *   4. bairro, logradouro, numero, nome — criterio estavel
  *
  * NAO e otimizacao de rota — e previsibilidade: rodar de novo com os mesmos
@@ -209,7 +228,7 @@ export function comparaCanonico(
     ouUltimo(zonaDaEntrega(a, ctx.zonas)?.ordem) - ouUltimo(zonaDaEntrega(b, ctx.zonas)?.ordem) ||
     ouUltimo(ordemDoBairro(a.cidade, a.bairro, ctx.bairros)) -
       ouUltimo(ordemDoBairro(b.cidade, b.bairro, ctx.bairros)) ||
-    ouUltimo(a.ordemRota) - ouUltimo(b.ordemRota) ||
+    (a.ordemRota ?? ORDEM_ROTA_PADRAO) - (b.ordemRota ?? ORDEM_ROTA_PADRAO) ||
     cmpTexto(a.bairro, b.bairro) ||
     cmpTexto(a.rua, b.rua) ||
     cmpNumero(a.numero ?? '', b.numero ?? '') ||

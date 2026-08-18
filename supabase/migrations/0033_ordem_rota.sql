@@ -18,10 +18,20 @@
 -- a excecao do dia.
 --
 -- Chave de ordenacao final (src/lib/zonas.ts, comparaCanonico):
---   onda -> zonas_entrega.ordem -> bairro_zona_default.ordem -> ordem_rota
---        -> bairro -> logradouro -> numero -> nome
--- `ordem_rota` NULL ordena por ULTIMO dentro do grupo: quem nao tem ordem
--- definida nao muda de lugar em relacao a hoje.
+--   onda -> zonas_entrega.ordem -> bairro_zona_default.ordem
+--        -> COALESCE(ordem_rota, 500) -> bairro -> logradouro -> numero -> nome
+--
+-- `ordem_rota` vazio vale 500 — o MEIO da faixa, nao o fim:
+--     100-499  puxa pra frente do bairro
+--     500      (ou vazio) posicao natural, decidida pelo criterio estavel
+--     501-900  empurra pro fim do bairro
+-- Assim UM valor sozinho resolve os dois sentidos e ninguem mais precisa ser
+-- numerado. Com "vazio por ultimo" so dava pra puxar: jogar alguem pro fim
+-- exigiria numerar o bairro inteiro, virando manutencao de lista em vez de
+-- ajuste pontual. A faixa e esparsa de proposito — sobra espaco pra inserir
+-- entre dois ja ordenados sem renumerar nenhum.
+-- Base sem nenhum override se comporta exatamente como hoje: todo mundo
+-- empatado em 500 e a ordem cai no criterio estavel.
 --
 -- NAO altera `zonas_entrega`, nem as zonas, nem a que zona cada bairro pertence.
 -- Em `entregas` entra SO a coluna de snapshot, pelo mesmo criterio da 0026/0032.
@@ -80,11 +90,13 @@ ALTER TABLE bairro_zona_default
 -- ============================================================
 -- 2) ordem do assinante (borda de bairro)
 -- ============================================================
+-- Faixa 1-1000 (500 = neutro). Nao e enum nem tabela: e so um numero de
+-- posicao, e a folga entre os valores e o que permite inserir sem renumerar.
 ALTER TABLE subscriptions ADD COLUMN ordem_rota INTEGER
-  CONSTRAINT subscriptions_ordem_rota_positiva CHECK (ordem_rota IS NULL OR ordem_rota > 0);
+  CONSTRAINT subscriptions_ordem_rota_faixa CHECK (ordem_rota IS NULL OR ordem_rota BETWEEN 1 AND 1000);
 
 ALTER TABLE pedidos_pontuais ADD COLUMN ordem_rota INTEGER
-  CONSTRAINT pedidos_pontuais_ordem_rota_positiva CHECK (ordem_rota IS NULL OR ordem_rota > 0);
+  CONSTRAINT pedidos_pontuais_ordem_rota_faixa CHECK (ordem_rota IS NULL OR ordem_rota BETWEEN 1 AND 1000);
 
 
 -- ============================================================
@@ -93,39 +105,32 @@ ALTER TABLE pedidos_pontuais ADD COLUMN ordem_rota INTEGER
 -- Ref logica sem FK, igual a `zona` da 0032: a entrega congela o que valia na
 -- geracao. Nada mais em `entregas` e tocado.
 ALTER TABLE entregas ADD COLUMN ordem_rota INTEGER
-  CONSTRAINT entregas_ordem_rota_positiva CHECK (ordem_rota IS NULL OR ordem_rota > 0);
+  CONSTRAINT entregas_ordem_rota_faixa CHECK (ordem_rota IS NULL OR ordem_rota BETWEEN 1 AND 1000);
 
 
 -- ============================================================
--- 4) BACKFILL DE ordem_rota — NAO RODAR SEM CONFIRMAR COM O HUGO
+-- 4) backfill de ordem_rota (confirmado pelo Hugo, 18/08)
 -- ============================================================
--- Os dois casos do briefing, com os numeros que REALMENTE produzem o resultado
--- pedido. Confira antes de descomentar: a regra "NULL ordena por ultimo" faz o
--- caso (a) precisar de mais linhas do que parece.
+-- MARIA TEREZA — Av. Jornalista Alberto Francisco Torres, 59 (Icarai). Mora na
+-- borda com Boa Viagem e tem que ser a ULTIMA parada de Icarai, imediatamente
+-- antes de Boa Viagem. 900 esta na faixa de cima, entao ela passa os quatro
+-- colegas de Icarai (todos vazios = 500) sem que nenhum deles precise de valor,
+-- e a ordem relativa entre eles nao muda.
 --
--- (a) MARIA TEREZA — ultima parada de Icarai, imediatamente antes de Boa Viagem.
---     Como NULL ordena por ULTIMO dentro do grupo, dar ordem so pra ela a
---     colocaria em PRIMEIRO (qualquer numero < NULL). Pra ela ficar por ultimo,
---     os outros quatro de Icarai precisam de ordem explicita.
---     Ordem de hoje em Icarai (por logradouro), com Maria Tereza jogada pro fim:
---
--- UPDATE subscriptions SET ordem_rota = 1 WHERE nome = 'Isabel Considera';      -- Rua Belisario Augusto, 79
--- UPDATE subscriptions SET ordem_rota = 2 WHERE nome = 'Dani Considera';        -- Rua Mariz e Barros, 121
--- UPDATE subscriptions SET ordem_rota = 3 WHERE nome = 'Maria Helena Paixão';   -- Rua Otávio Carneiro, 129
--- UPDATE subscriptions SET ordem_rota = 4 WHERE nome = 'Marcelo';               -- Rua Professor Miguel Couto, 389
--- UPDATE subscriptions SET ordem_rota = 5 WHERE nome = 'Maria Tereza';          -- Av. Jornalista Alberto Francisco Torres, 59 (borda com Boa Viagem)
---
--- (b) SUZANA — Lagoa lado Jardim Botanico, zona R3.
---     NAO PRECISA de backfill: ela JA cai no lugar certo. O bairro Lagoa tem
---     ordem 2 (da linha de R1), e dentro de R3 isso a poe empatada com
---     Copacabana (2) e antes de Gavea (4); o empate e desfeito pelo nome do
---     bairro ("Copacabana" < "Lagoa"). Resultado: Copacabana -> Suzana -> Gavea,
---     que e exatamente o pedido.
---     ATENCAO: `ordem_rota` entra na chave DEPOIS da ordem do bairro, entao um
---     `ordem_rota = 3` nela NAO a moveria entre Copacabana e Gavea — moveria ela
---     pra ANTES de Copacabana (3 < NULL). Se a posicao dela tiver que ser
---     independente da ordem da Lagoa em R1, isso e mudanca na chave de
---     ordenacao, nao um UPDATE. Perguntar antes.
+-- Boa Viagem continua depois dela de qualquer jeito: a ordem do BAIRRO entra na
+-- chave antes de ordem_rota, entao 900 nao atravessa de Icarai (1) pra Boa
+-- Viagem (2).
+UPDATE subscriptions SET ordem_rota = 900
+WHERE nome = 'Maria Tereza' AND status = 'active';
+
+-- SUZANA — Lagoa lado Jardim Botanico, zona R3: NENHUM valor, de proposito.
+-- Ela ja cai no lugar certo. O bairro Lagoa tem ordem 2 (da linha de R1), o que
+-- dentro de R3 a poe empatada com Copacabana (2) e antes de Gavea (4); o empate
+-- e desfeito pelo nome do bairro ("Copacabana" < "Lagoa"). Resultado:
+-- Copacabana -> Suzana -> Gavea.
+-- `ordem_rota` nela NAO ajudaria: entra na chave depois da ordem do bairro,
+-- entao nao a moveria entre bairros — so mudaria a posicao dela contra quem
+-- estivesse empatado em ordem de bairro 2.
 
 
 -- ============================================================

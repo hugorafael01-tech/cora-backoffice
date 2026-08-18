@@ -12,6 +12,7 @@ import {
   recalculaSequencias,
   sugereZonaPorBairro,
   zonaDaEntrega,
+  ORDEM_ROTA_PADRAO,
   type BairroZonaDefault,
   type EntregaSequenciavel,
   type OrdemContexto,
@@ -253,20 +254,40 @@ describe('comparaCanonico', () => {
     ).toEqual(['gloria', 'ipanema']);
   });
 
-  it('ordem_rota desempata dentro do bairro, NULL por ultimo', () => {
+  // Quem nao tem ordem_rota fica no MEIO da faixa (ORDEM_ROTA_PADRAO), nao no
+  // fim: e o que permite um valor sozinho puxar OU empurrar.
+  it('ordem_rota abaixo do padrao puxa pra frente do bairro', () => {
     expect(
       ordena([
         e({ id: 'sem', zona: 'N3', bairro: 'Icarai', rua: 'Rua A' }),
-        e({ id: 'com', zona: 'N3', bairro: 'Icarai', rua: 'Rua Z', ordemRota: 1 }),
+        e({ id: 'puxado', zona: 'N3', bairro: 'Icarai', rua: 'Rua Z', ordemRota: 100 }),
       ])
-    ).toEqual(['com', 'sem']);
+    ).toEqual(['puxado', 'sem']);
   });
 
+  it('ordem_rota acima do padrao empurra pro fim do bairro', () => {
+    expect(
+      ordena([
+        e({ id: 'empurrado', zona: 'N3', bairro: 'Icarai', rua: 'Rua A', ordemRota: 900 }),
+        e({ id: 'sem', zona: 'N3', bairro: 'Icarai', rua: 'Rua Z' }),
+      ])
+    ).toEqual(['sem', 'empurrado']);
+  });
+
+  it('gravar exatamente o padrao e o mesmo que deixar em branco', () => {
+    const comValor = e({ id: 'x', zona: 'N3', bairro: 'Icarai', rua: 'Rua A', ordemRota: ORDEM_ROTA_PADRAO });
+    const semValor = e({ id: 'x', zona: 'N3', bairro: 'Icarai', rua: 'Rua A' });
+    const outro = e({ id: 'y', zona: 'N3', bairro: 'Icarai', rua: 'Rua Z' });
+    expect(comparaCanonico(comValor, outro, CTX)).toBe(comparaCanonico(semValor, outro, CTX));
+  });
+
+  // Vale pros dois lados: nem 100 tira alguem de Boa Viagem pra antes de Icarai,
+  // nem 900 empurra alguem de Icarai pra depois de Boa Viagem.
   it('ordem_rota nao atravessa a ordem do bairro', () => {
     expect(
       ordena([
-        e({ id: 'boa', zona: 'N3', bairro: 'Boa Viagem', ordemRota: 9 }),
-        e({ id: 'ica', zona: 'N3', bairro: 'Icarai' }),
+        e({ id: 'boa', zona: 'N3', bairro: 'Boa Viagem', ordemRota: 100 }),
+        e({ id: 'ica', zona: 'N3', bairro: 'Icarai', ordemRota: 900 }),
       ])
     ).toEqual(['ica', 'boa']);
   });
@@ -449,22 +470,10 @@ describe('casos reais de borda de bairro (briefing 17/08)', () => {
     expect(ordena(N3()).at(-1)).toBe('Anouk');
   });
 
-  // A armadilha do "NULL por ultimo": dar ordem SO pra Maria Tereza a jogaria
-  // pro PRIMEIRO lugar de Icarai, nao pro ultimo.
-  it('ordem_rota so nela a colocaria em primeiro, nao em ultimo', () => {
-    expect(ordena(N3({ 'Maria Tereza': 5 }))[0]).toBe('Maria Tereza');
-  });
-
-  // Por isso o backfill proposto na 0033 da ordem aos CINCO de Icarai.
-  it('com os cinco numerados, Maria Tereza fecha Icarai, logo antes de Boa Viagem', () => {
-    const ordens = {
-      'Isabel Considera': 1,
-      'Dani Considera': 2,
-      'Maria Helena Paixão': 3,
-      Marcelo: 4,
-      'Maria Tereza': 5,
-    };
-    expect(ordena(N3(ordens))).toEqual([
+  // O backfill da 0033: UMA linha, so pra ela. Os outros quatro de Icarai ficam
+  // em branco e nao mudam de lugar entre si.
+  it('ordem_rota 900 so nela ja fecha Icarai, logo antes de Boa Viagem', () => {
+    expect(ordena(N3({ 'Maria Tereza': 900 }))).toEqual([
       'Isabel Considera',
       'Dani Considera',
       'Maria Helena Paixão',
@@ -472,6 +481,18 @@ describe('casos reais de borda de bairro (briefing 17/08)', () => {
       'Maria Tereza',
       'Anouk',
     ]);
+  });
+
+  // A ordem relativa dos outros quatro e a mesma com e sem o override dela.
+  it('o override dela nao reordena o resto de Icarai', () => {
+    const semEla = (lista: string[]) => lista.filter((n) => n !== 'Maria Tereza');
+    expect(semEla(ordena(N3({ 'Maria Tereza': 900 })))).toEqual(semEla(ordena(N3())));
+  });
+
+  // Se um dia alguem precisar ABRIR a onda em vez de fechar, o mesmo campo faz,
+  // tambem com uma linha so.
+  it('a faixa de baixo puxa pra primeira parada do bairro', () => {
+    expect(ordena(N3({ Marcelo: 100 }))[0]).toBe('Marcelo');
   });
 
   // Suzana e Lagoa lado Jardim Botanico, zona R3. Nao ha linha de bairro que a
