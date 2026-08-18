@@ -29,11 +29,53 @@ export interface Zona {
   ativo: boolean;
 }
 
-/** Linha de `bairro_zona_default` — sugestao, nao fonte da verdade. */
+/**
+ * Linha de `bairro_zona_default`. Faz duas coisas que nao se confundem:
+ *   - `zona`  e SUGESTAO pro cadastro (sobrescrivel, nao e fonte da verdade);
+ *   - `ordem` e a posicao do bairro DENTRO da zona na rota real — essa manda,
+ *     porque nao ha nada por assinante que a substitua.
+ */
 export interface BairroZonaDefault {
   cidade: string;
   bairro: string;
   zona: string;
+  ordem: number;
+}
+
+/**
+ * Contexto de ordenacao: o cadastro de zonas e a ordem dos bairros. Anda junto
+ * porque a chave canonica precisa dos dois — zona sozinha nao ordena bairro.
+ */
+export interface OrdemContexto {
+  zonas: Map<string, Zona>;
+  bairros: Map<string, number>;
+}
+
+/** Chave de lookup de bairro, tolerante a acento e caixa. */
+function chaveBairro(cidade: string | null | undefined, bairro: string | null | undefined): string {
+  return `${normalize(cidade)}|${normalize(bairro)}`;
+}
+
+/**
+ * Mapa "cidade|bairro" -> ordem do bairro na rota.
+ *
+ * O lookup e por bairro, NAO por (zona, bairro): `bairro_zona_default` tem uma
+ * linha por bairro (UNIQUE da 0032, que mantem a sugestao de zona nao-ambigua).
+ * Isso importa no caso da Lagoa, que e R1 no cadastro mas tem um endereco em R3:
+ * ela leva a ordem 2 da linha de R1 pra dentro de R3, onde cai entre Copacabana
+ * (2) e Gavea (4) — que e a posicao certa. Ver 0033_ordem_rota.sql, bloco 4(b).
+ */
+export function indexaOrdemBairros(defaults: BairroZonaDefault[]): Map<string, number> {
+  return new Map(defaults.map((d) => [chaveBairro(d.cidade, d.bairro), d.ordem]));
+}
+
+/** Ordem do bairro na rota, ou null quando o bairro nao esta cadastrado. */
+export function ordemDoBairro(
+  cidade: string | null | undefined,
+  bairro: string | null | undefined,
+  bairros: Map<string, number>
+): number | null {
+  return bairros.get(chaveBairro(cidade, bairro)) ?? null;
 }
 
 /**
@@ -94,8 +136,11 @@ export interface EntregaSequenciavel {
   id: string;
   zona: string | null;
   sequencia: number | null;
+  /** Ordem do assinante dentro do grupo (borda de bairro). null = ORDEM_ROTA_PADRAO. */
+  ordemRota: number | null;
   regiao: string;
   bairro: string;
+  cidade: string;
   rua: string;
   numero: string | null;
   nome: string;
@@ -137,22 +182,53 @@ export function ondaDaEntrega(
 const cmpTexto = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
 const cmpNumero = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { numeric: true });
 
+/** Zona/bairro sem ordem cadastrada fecha o grupo, sem virar 0. */
+const ouUltimo = (n: number | null | undefined) => n ?? Number.POSITIVE_INFINITY;
+
 /**
- * Ordem canonica dentro da onda: `ordem` da zona primeiro, depois criterio
- * estavel (bairro, logradouro, numero, nome). NAO e otimizacao de rota — e
- * previsibilidade: rodar de novo com os mesmos dados da sempre o mesmo
- * resultado, entao o ajuste manual do Hugo nunca briga com um recalculo.
- * Entrega sem zona vai pro fim da onda (ordem infinita).
+ * Posicao de quem nao tem `ordem_rota`: o MEIO da faixa, nao o fim.
+ *
+ * Assim um valor sozinho consegue as duas coisas — 100-499 PUXA pra frente,
+ * 501-900 EMPURRA pra tras — e o resto do bairro continua intocado. Com "NULL
+ * por ultimo" so dava pra puxar: pra jogar alguem pro fim era preciso numerar
+ * todo mundo do bairro, o que transforma um ajuste de uma pessoa numa
+ * manutencao de lista.
+ *
+ * A faixa e esparsa de proposito: sobra espaco pra inserir entre dois
+ * assinantes ja ordenados sem renumerar nenhum. Gravar exatamente 500 nao tem
+ * efeito — e o mesmo que deixar em branco.
+ *
+ * Base sem nenhum override se comporta igual a antes: todo mundo empatado aqui,
+ * e a ordem cai no criterio estavel (bairro, logradouro, numero, nome).
+ */
+export const ORDEM_ROTA_PADRAO = 500;
+
+/**
+ * Ordem canonica dentro da onda, do mais grosso pro mais fino:
+ *
+ *   1. `ordem` da ZONA           — N1 antes de N2 antes de N3
+ *   2. `ordem` do BAIRRO         — Icarai antes de Boa Viagem, que e o ponto
+ *                                  mais proximo da ponte e fecha a onda
+ *   3. `ordem_rota` do ASSINANTE — desempate de quem mora na borda de dois
+ *                                  bairros; sem valor = ORDEM_ROTA_PADRAO (meio
+ *                                  da faixa), entao um numero so puxa OU empurra
+ *                                  sem mexer no resto do bairro
+ *   4. bairro, logradouro, numero, nome — criterio estavel
+ *
+ * NAO e otimizacao de rota — e previsibilidade: rodar de novo com os mesmos
+ * dados da sempre o mesmo resultado, entao o ajuste manual do Hugo nunca briga
+ * com um recalculo. Zona ou bairro sem ordem vao pro fim (nunca somem).
  */
 export function comparaCanonico(
   a: EntregaSequenciavel,
   b: EntregaSequenciavel,
-  porCodigo: Map<string, Zona>
+  ctx: OrdemContexto
 ): number {
-  const oa = zonaDaEntrega(a, porCodigo)?.ordem ?? Number.POSITIVE_INFINITY;
-  const ob = zonaDaEntrega(b, porCodigo)?.ordem ?? Number.POSITIVE_INFINITY;
   return (
-    oa - ob ||
+    ouUltimo(zonaDaEntrega(a, ctx.zonas)?.ordem) - ouUltimo(zonaDaEntrega(b, ctx.zonas)?.ordem) ||
+    ouUltimo(ordemDoBairro(a.cidade, a.bairro, ctx.bairros)) -
+      ouUltimo(ordemDoBairro(b.cidade, b.bairro, ctx.bairros)) ||
+    (a.ordemRota ?? ORDEM_ROTA_PADRAO) - (b.ordemRota ?? ORDEM_ROTA_PADRAO) ||
     cmpTexto(a.bairro, b.bairro) ||
     cmpTexto(a.rua, b.rua) ||
     cmpNumero(a.numero ?? '', b.numero ?? '') ||
@@ -186,12 +262,12 @@ export interface AtribuicaoSequencia {
  */
 export function atribuiSequenciasFaltantes<T extends EntregaSequenciavel>(
   entregas: T[],
-  porCodigo: Map<string, Zona>
+  ctx: OrdemContexto
 ): AtribuicaoSequencia[] {
   const saida: AtribuicaoSequencia[] = [];
 
   for (const onda of ['niteroi', 'rio'] as const) {
-    const doGrupo = daOnda(entregas, onda, porCodigo);
+    const doGrupo = daOnda(entregas, onda, ctx.zonas);
     const usadas = doGrupo
       .map((e) => e.sequencia)
       .filter((s): s is number => typeof s === 'number');
@@ -199,7 +275,7 @@ export function atribuiSequenciasFaltantes<T extends EntregaSequenciavel>(
 
     for (const e of doGrupo
       .filter((e) => e.sequencia == null)
-      .sort((a, b) => comparaCanonico(a, b, porCodigo))) {
+      .sort((a, b) => comparaCanonico(a, b, ctx))) {
       saida.push({ id: e.id, sequencia: proxima });
       proxima += 1;
     }
@@ -215,11 +291,11 @@ export function atribuiSequenciasFaltantes<T extends EntregaSequenciavel>(
  */
 export function recalculaSequencias<T extends EntregaSequenciavel>(
   entregas: T[],
-  porCodigo: Map<string, Zona>,
+  ctx: OrdemContexto,
   onda: Onda
 ): AtribuicaoSequencia[] {
-  return daOnda(entregas, onda, porCodigo)
-    .sort((a, b) => comparaCanonico(a, b, porCodigo))
+  return daOnda(entregas, onda, ctx.zonas)
+    .sort((a, b) => comparaCanonico(a, b, ctx))
     .map((e, i) => ({ id: e.id, sequencia: i + 1 }));
 }
 

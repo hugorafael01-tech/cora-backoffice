@@ -17,7 +17,7 @@ import {
   type EntregaLite,
   type GrupoEntregas,
 } from './expedicao';
-import { indexaZonas, type Zona } from './zonas';
+import { indexaOrdemBairros, indexaZonas, type OrdemContexto, type Zona } from './zonas';
 
 function zona(p: Partial<Zona> & { codigo: string }): Zona {
   return {
@@ -39,6 +39,17 @@ const ZONAS = indexaZonas([
   zona({ codigo: 'N3', onda: 'niteroi', ordem: 3 }),
   zona({ codigo: 'R2', cidade: 'Rio de Janeiro', onda: 'rio', ordem: 2 }),
 ]);
+
+const CTX: OrdemContexto = {
+  zonas: ZONAS,
+  bairros: indexaOrdemBairros([
+    { cidade: 'Niteroi', bairro: 'Fonseca', zona: 'N1', ordem: 1 },
+    { cidade: 'Niteroi', bairro: 'Icarai', zona: 'N3', ordem: 1 },
+    { cidade: 'Niteroi', bairro: 'Boa Viagem', zona: 'N3', ordem: 2 },
+    { cidade: 'Rio de Janeiro', bairro: 'Botafogo', zona: 'R2', ordem: 1 },
+    { cidade: 'Rio de Janeiro', bairro: 'Gloria', zona: 'R2', ordem: 3 },
+  ]),
+};
 
 const NOMES = new Map([
   ['original', 'Original'],
@@ -201,6 +212,7 @@ function entrega(p: Partial<EntregaLite>): EntregaLite {
     regiao: 'niteroi',
     zona: null,
     sequencia: null,
+    ordemRota: null,
     itens: [{ slug: 'original', nome: 'Original', qty: 2 }],
     observacao: null,
     status: 'pendente',
@@ -211,7 +223,7 @@ function entrega(p: Partial<EntregaLite>): EntregaLite {
 }
 
 function grupoDe(entregas: EntregaLite[]): GrupoEntregas {
-  const g = agrupaPorOnda(entregas, ZONAS);
+  const g = agrupaPorOnda(entregas, CTX);
   return g[0];
 }
 
@@ -282,39 +294,39 @@ describe('agrupaPorOnda', () => {
   ];
 
   it('Niteroi, Rio e entrega propria, nessa ordem', () => {
-    expect(agrupaPorOnda(lista, ZONAS).map((g) => g.grupo)).toEqual(['niteroi', 'rio', 'propria']);
+    expect(agrupaPorOnda(lista, CTX).map((g) => g.grupo)).toEqual(['niteroi', 'rio', 'propria']);
   });
 
   it('ordena pela sequencia dentro do grupo, nao pelo bairro', () => {
-    const [niteroi] = agrupaPorOnda(lista, ZONAS);
+    const [niteroi] = agrupaPorOnda(lista, CTX);
     expect(niteroi.entregas.map((e) => e.nome)).toEqual(['Bia', 'Ana']);
   });
 
   it('contadores total/entregues por grupo', () => {
-    const [niteroi, rio] = agrupaPorOnda(lista, ZONAS);
+    const [niteroi, rio] = agrupaPorOnda(lista, CTX);
     expect(niteroi).toMatchObject({ total: 2, entregues: 1 });
     expect(rio).toMatchObject({ total: 1, entregues: 0 });
   });
 
   it('entrega propria nao conta pacote pra bag', () => {
-    const propria = agrupaPorOnda(lista, ZONAS)[2];
+    const propria = agrupaPorOnda(lista, CTX)[2];
     expect(propria).toMatchObject({ total: 1, pacotes: 0, onda: null });
   });
 
   it('grupo sem entrega nao aparece', () => {
-    expect(agrupaPorOnda([lista[1]], ZONAS).map((g) => g.grupo)).toEqual(['niteroi']);
+    expect(agrupaPorOnda([lista[1]], CTX).map((g) => g.grupo)).toEqual(['niteroi']);
   });
 
   // Pacote sem zona precisa continuar visivel, sequenciavel e carregavel: campo
   // de cadastro vazio nao pode fazer uma entrega real sumir da lista.
   it('entrega sem zona fica na onda da regiao, no fim, e e contada como semZona', () => {
-    const [niteroi] = agrupaPorOnda([...lista, entrega({ id: '5', nome: 'Zoe' })], ZONAS);
+    const [niteroi] = agrupaPorOnda([...lista, entrega({ id: '5', nome: 'Zoe' })], CTX);
     expect(niteroi.entregas.map((e) => e.nome)).toEqual(['Bia', 'Ana', 'Zoe']);
     expect(niteroi).toMatchObject({ total: 3, semZona: 1, semSequencia: 1, pacotes: 3 });
   });
 
   it('zona desativada/desconhecida no snapshot cai no mesmo fallback', () => {
-    const [niteroi] = agrupaPorOnda([entrega({ id: '9', zona: 'XX' })], ZONAS);
+    const [niteroi] = agrupaPorOnda([entrega({ id: '9', zona: 'XX' })], CTX);
     expect(niteroi).toMatchObject({ grupo: 'niteroi', semZona: 1 });
   });
 });

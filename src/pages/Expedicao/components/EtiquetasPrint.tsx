@@ -11,9 +11,15 @@ import { MarcaZona } from './MarcaZona';
  * Ordem de destaque visual (briefing de logistica 17/08/2026):
  *   1. CODIGO DE SEQUENCIA + BAIRRO ("R-07 · BOTAFOGO") no maior corpo da
  *      etiqueta — e o que se le a um metro, na bancada e dentro da bag.
- *   2. MARCA DE ZONA (forma preenchida + codigo) na mesma linha, a direita:
- *      diz em que bag o pacote vai sem custar altura. Ver MarcaZona pra por que
- *      a forma manda e a cor so acompanha.
+ *   2. MARCA DE ZONA (forma preenchida + codigo) a direita, dimensionada pra ser
+ *      identificavel a UM METRO — que e a distancia de quem confere a pilha de
+ *      pacotes na bancada. Ver MarcaZona pra por que a forma manda e a cor so
+ *      acompanha.
+ *
+ *      A marca ocupa uma COLUNA ao lado do bloco codigo+nome, nao uma linha
+ *      propria: os 40px dela cabem dentro da altura que esse bloco ja tinha
+ *      (22px do codigo + 19px do nome), entao dobrar o simbolo custa ZERO de
+ *      altura e nenhum outro elemento precisou encolher pra acomodar.
  *   3. Nome, itens e endereco — como ja era antes das zonas.
  *   4. Zona que nao viaja na bag: tarja preta invertida
  *      "ENTREGA PRÓPRIA — NÃO VAI NA BAG". Pacote que nao viaja tem que ser
@@ -53,24 +59,28 @@ export function EtiquetasPrint({
 
           return (
             <div key={e.id} className="etiqueta text-[12px] text-black">
-              {/* 1 + 2: o par que se le de longe. */}
+              {/* 1 + 2 + nome: o bloco que se le de longe. A marca e a coluna da
+                  direita, entao a altura e ditada pelo texto da esquerda. */}
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 text-[22px] font-bold uppercase leading-none tracking-[0.01em]">
-                  {codigo && <span className="tabular-nums">{codigo} · </span>}
-                  <span>{e.bairro}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[22px] font-bold uppercase leading-none tracking-[0.01em]">
+                    {codigo && <span className="tabular-nums">{codigo} · </span>}
+                    <span>{e.bairro}</span>
+                  </div>
+
+                  {/* 4: so pra quem nao viaja na bag. */}
+                  {!naBag && (
+                    <div className="mt-1 bg-black px-1.5 py-0.5 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-white">
+                      Entrega própria — não vai na bag
+                    </div>
+                  )}
+
+                  <div className="mt-1 text-[19px] font-bold leading-none">{e.nome}</div>
                 </div>
-                <MarcaZona zona={zona} tamanho={20} className="flex-shrink-0 text-[14px]" />
+                <MarcaZona zona={zona} tamanho={40} className="flex-shrink-0 text-[16px]" />
               </div>
 
-              {/* 4: so pra quem nao viaja na bag. */}
-              {!naBag && (
-                <div className="mt-1 bg-black px-1.5 py-0.5 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-white">
-                  Entrega própria — não vai na bag
-                </div>
-              )}
-
               {/* 3: conteudo de sempre. */}
-              <div className="mt-1 text-[19px] font-bold leading-none">{e.nome}</div>
               <div className="text-[16px] font-semibold leading-snug">{resumo || 'sem itens'}</div>
               <div className="mt-0.5 border-t border-black/20 pt-0.5">
                 <div className="text-[14px] leading-snug">{logradouro}</div>

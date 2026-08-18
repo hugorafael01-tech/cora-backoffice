@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { ItemEntrega, EntregaLite, StatusEntrega } from '../lib/expedicao';
-import { indexaZonas, type FormaZona, type Onda, type Zona } from '../lib/zonas';
+import {
+  indexaOrdemBairros,
+  indexaZonas,
+  type BairroZonaDefault,
+  type FormaZona,
+  type Onda,
+  type Zona,
+} from '../lib/zonas';
 import type { DadosExpedicao } from '../pages/Expedicao/types';
 
 export interface UseExpedicaoResult {
@@ -77,23 +84,30 @@ export function useExpedicao(id: string | undefined): UseExpedicaoResult {
         const { data: rows, error: errEntregas } = await supabase
           .from('entregas')
           .select(
-            'id, nome, whatsapp, cep, rua, numero, complemento, bairro, cidade, regiao, zona, sequencia, itens, observacao, status, em_rota_at, entregue_at'
+            'id, nome, whatsapp, cep, rua, numero, complemento, bairro, cidade, regiao, zona, sequencia, ordem_rota, itens, observacao, status, em_rota_at, entregue_at'
           )
           .eq('semana_id', semanaId);
         if (errEntregas) throw errEntregas;
 
-        // Cadastro das zonas (cor/forma/ordem/onda) e capacidade da bag. As duas
-        // sao leitura pura: a zona se edita no cadastro do assinante e a
-        // capacidade em app_settings (o client so tem SELECT nela).
-        const [{ data: zonasRows, error: errZonas }, { data: settings }] = await Promise.all([
+        // Cadastro das zonas (cor/forma/ordem/onda), ordem dos bairros na rota e
+        // capacidade da bag. Tudo leitura pura: zona e ordem_rota se editam no
+        // cadastro do assinante e a capacidade em app_settings (o client so tem
+        // SELECT nela).
+        const [
+          { data: zonasRows, error: errZonas },
+          { data: bairrosRows, error: errBairros },
+          { data: settings },
+        ] = await Promise.all([
           supabase
             .from('zonas_entrega')
             .select('codigo, nome, cidade, onda, ordem, cor_hex, forma, entra_na_onda, ativo')
             .order('onda')
             .order('ordem'),
+          supabase.from('bairro_zona_default').select('cidade, bairro, zona, ordem'),
           supabase.from('app_settings').select('capacidade_bag').eq('id', 1).maybeSingle(),
         ]);
         if (errZonas) throw errZonas;
+        if (errBairros) throw errBairros;
 
         const entregas: EntregaLite[] = (rows ?? []).map((r) => ({
           id: r.id as string,
@@ -108,6 +122,7 @@ export function useExpedicao(id: string | undefined): UseExpedicaoResult {
           regiao: r.regiao as string,
           zona: (r.zona as string | null) ?? null,
           sequencia: (r.sequencia as number | null) ?? null,
+          ordemRota: (r.ordem_rota as number | null) ?? null,
           itens: parseItens(r.itens),
           observacao: (r.observacao as string | null) ?? null,
           status: r.status as StatusEntrega,
@@ -117,11 +132,18 @@ export function useExpedicao(id: string | undefined): UseExpedicaoResult {
 
         if (cancelado) return;
         const zonas = parseZonas(zonasRows as Array<Record<string, unknown>> | null);
+        const bairros: BairroZonaDefault[] = (bairrosRows ?? []).map((b) => ({
+          cidade: b.cidade as string,
+          bairro: b.bairro as string,
+          zona: b.zona as string,
+          ordem: Number(b.ordem) || 0,
+        }));
         setDados({
           semana,
           entregas,
           zonas,
-          zonasPorCodigo: indexaZonas(zonas),
+          bairros,
+          ordem: { zonas: indexaZonas(zonas), bairros: indexaOrdemBairros(bairros) },
           capacidadeBag: (settings?.capacidade_bag as number | null) ?? null,
         });
         setLoading(false);
