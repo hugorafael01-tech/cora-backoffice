@@ -510,4 +510,39 @@ describe('casos reais de borda de bairro (briefing 17/08)', () => {
       ])
     ).toEqual(['Chiara', 'Suzana', 'Camila Perlingeiro', 'Evandro']);
   });
+
+  // REGRESSAO. A posicao da Suzana em R3 esta certa hoje, mas por ACIDENTE, nao
+  // por regra: ninguem declarou onde a Lagoa entra em R3 (a zona dela e override
+  // no cadastro e a `bairro_zona_default` so tem a linha de R1). O lugar dela sai
+  // de duas coisas decididas com outra intencao — a Lagoa ter ordem 2 DENTRO DE
+  // R1, e "Copacabana" preceder "Lagoa" no desempate por nome de bairro.
+  //
+  // Ou seja: reordenar a Lagoa dentro de R1 move a Suzana no Rio, e nada mais no
+  // sistema acusa — o erro so aparece com o motoboy na rua. Este teste e o que
+  // transforma a coincidencia em contrato: se a heranca quebrar, quebra aqui.
+  //
+  // Afirma POSICAO RELATIVA, nao numero de sequencia: assinante novo em R3 muda
+  // os numeros e nao pode derrubar o teste.
+  it('R3: assinante de Lagoa override cai entre Copacabana e Gávea (posição herdada da ordem da Lagoa em R1)', () => {
+    const rio = (nome: string, bairro: string, rua: string, numero: string) =>
+      e({ id: nome, nome, zona: 'R3', regiao: 'rio', cidade: 'Rio de Janeiro', bairro, rua, numero });
+
+    const ordenados = ordena([
+      rio('Camila Perlingeiro', 'Gávea', 'Rua Marquês de São Vicente', '512'),
+      rio('Luiza Rafaella', 'Gávea', 'Rua Marquês de São Vicente', '61'),
+      rio('Evandro', 'Gávea', 'Rua Vice-Governador Rúbens Berardo', '65'),
+      rio('Suzana', 'Lagoa', 'Rua Frei Leandro', '26'),
+      rio('Chiara', 'Copacabana', 'Rua Guimarães Natal', '16'),
+      // Urca abre R3 e nao tem assinante hoje; entra pra provar que a Suzana fica
+      // DEPOIS de Copacabana em vez de so cair na cabeca da zona.
+      rio('Parada da Urca', 'Urca', 'Avenida Portugal', '100'),
+    ]);
+    const em = (nome: string) => ordenados.indexOf(nome);
+
+    expect(em('Parada da Urca')).toBeLessThan(em('Chiara'));
+    expect(em('Chiara')).toBeLessThan(em('Suzana'));
+    expect(em('Suzana')).toBeLessThan(em('Camila Perlingeiro'));
+    expect(em('Suzana')).toBeLessThan(em('Luiza Rafaella'));
+    expect(em('Suzana')).toBeLessThan(em('Evandro'));
+  });
 });
