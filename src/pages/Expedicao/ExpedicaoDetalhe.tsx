@@ -19,7 +19,7 @@ import {
   sequenciarExpedicao,
   voltarStatusEntrega,
 } from '../../lib/expedicaoActions';
-import type { Zona } from '../../lib/zonas';
+import type { OrdemContexto, Zona } from '../../lib/zonas';
 import { Shell } from '../Semana/components/Shell';
 import { EdHeader } from './components/EdHeader';
 import { EntregaRow } from './components/EntregaRow';
@@ -46,8 +46,12 @@ export function ExpedicaoDetalhe() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const zonas = useMemo(() => dados?.zonasPorCodigo ?? new Map<string, Zona>(), [dados]);
-  const grupos = useMemo(() => agrupaPorOnda(dados?.entregas ?? [], zonas), [dados, zonas]);
+  const ordem: OrdemContexto = useMemo(
+    () => dados?.ordem ?? { zonas: new Map<string, Zona>(), bairros: new Map<string, number>() },
+    [dados]
+  );
+  const zonas = ordem.zonas;
+  const grupos = useMemo(() => agrupaPorOnda(dados?.entregas ?? [], ordem), [dados, ordem]);
   const entregas = dados?.entregas ?? [];
   const totalCiclo = entregas.length;
   const entreguesCiclo = entregas.filter((e) => e.status === 'entregue').length;

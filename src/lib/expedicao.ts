@@ -13,7 +13,7 @@ import {
   GRUPO_LABEL,
   type GrupoOnda,
   type Onda,
-  type Zona,
+  type OrdemContexto,
 } from './zonas';
 
 export type Regiao = 'niteroi' | 'rio';
@@ -41,6 +41,8 @@ export interface EntregaLite {
   zona: string | null;
   /** Ordem da parada dentro da onda (1..n). null = ainda nao sequenciada. */
   sequencia: number | null;
+  /** Ordem do assinante no grupo (borda de bairro), congelada na geracao. */
+  ordemRota: number | null;
   itens: ItemEntrega[];
   observacao: string | null;
   status: StatusEntrega;
@@ -257,8 +259,9 @@ const ORDEM_GRUPOS: GrupoOnda[] = ['niteroi', 'rio', 'propria'];
  * Substituiu `agrupaPorRegiao`: a onda vem da ZONA do cadastro, nao da cidade.
  * A `regiao` do snapshot segue sendo o fallback de quem esta sem zona.
  */
-export function agrupaPorOnda(entregas: EntregaLite[], zonas: Map<string, Zona>): GrupoEntregas[] {
+export function agrupaPorOnda(entregas: EntregaLite[], ctx: OrdemContexto): GrupoEntregas[] {
   const grupos: GrupoEntregas[] = [];
+  const zonas = ctx.zonas;
 
   for (const grupo of ORDEM_GRUPOS) {
     const doGrupo = entregas
@@ -267,7 +270,7 @@ export function agrupaPorOnda(entregas: EntregaLite[], zonas: Map<string, Zona>)
         if (a.sequencia != null && b.sequencia != null) return a.sequencia - b.sequencia;
         if (a.sequencia != null) return -1;
         if (b.sequencia != null) return 1;
-        return comparaCanonico(a, b, zonas);
+        return comparaCanonico(a, b, ctx);
       });
     if (doGrupo.length === 0) continue;
 

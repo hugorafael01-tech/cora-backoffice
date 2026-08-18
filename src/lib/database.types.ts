@@ -144,6 +144,7 @@ export type Database = {
           cidade: string
           created_at: string
           id: string
+          ordem: number
           updated_at: string
           zona: string
         }
@@ -152,6 +153,7 @@ export type Database = {
           cidade: string
           created_at?: string
           id?: string
+          ordem: number
           updated_at?: string
           zona: string
         }
@@ -160,6 +162,7 @@ export type Database = {
           cidade?: string
           created_at?: string
           id?: string
+          ordem?: number
           updated_at?: string
           zona?: string
         }
@@ -438,6 +441,7 @@ export type Database = {
           nome: string
           numero: string | null
           observacao: string | null
+          ordem_rota: number | null
           origem: string
           pedido_pontual_id: string | null
           regiao: string
@@ -464,6 +468,7 @@ export type Database = {
           nome: string
           numero?: string | null
           observacao?: string | null
+          ordem_rota?: number | null
           origem: string
           pedido_pontual_id?: string | null
           regiao: string
@@ -490,6 +495,7 @@ export type Database = {
           nome?: string
           numero?: string | null
           observacao?: string | null
+          ordem_rota?: number | null
           origem?: string
           pedido_pontual_id?: string | null
           regiao?: string
@@ -866,6 +872,7 @@ export type Database = {
             | null
           motivo: string
           observacoes: string | null
+          ordem_rota: number | null
           pagador_cpf_cnpj: string | null
           pagador_email: string | null
           pagador_nome: string
@@ -898,6 +905,7 @@ export type Database = {
             | null
           motivo: string
           observacoes?: string | null
+          ordem_rota?: number | null
           pagador_cpf_cnpj?: string | null
           pagador_email?: string | null
           pagador_nome: string
@@ -930,6 +938,7 @@ export type Database = {
             | null
           motivo?: string
           observacoes?: string | null
+          ordem_rota?: number | null
           pagador_cpf_cnpj?: string | null
           pagador_email?: string | null
           pagador_nome?: string
@@ -1287,6 +1296,7 @@ export type Database = {
           next_billing_value: number | null
           nome: string
           numero: string
+          ordem_rota: number | null
           paused_at: string | null
           payment_status:
             | Database["public"]["Enums"]["payment_status_enum"]
@@ -1328,6 +1338,7 @@ export type Database = {
           next_billing_value?: number | null
           nome: string
           numero: string
+          ordem_rota?: number | null
           paused_at?: string | null
           payment_status?:
             | Database["public"]["Enums"]["payment_status_enum"]
@@ -1369,6 +1380,7 @@ export type Database = {
           next_billing_value?: number | null
           nome?: string
           numero?: string
+          ordem_rota?: number | null
           paused_at?: string | null
           payment_status?:
             | Database["public"]["Enums"]["payment_status_enum"]

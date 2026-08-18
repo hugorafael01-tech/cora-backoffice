@@ -16,11 +16,13 @@ import {
 } from './expedicao';
 import {
   atribuiSequenciasFaltantes,
+  indexaOrdemBairros,
   moveNaSequencia,
   recalculaSequencias,
   type AtribuicaoSequencia,
   type EntregaSequenciavel,
   type Onda,
+  type OrdemContexto,
   type Zona,
 } from './zonas';
 
@@ -68,7 +70,7 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   const { data: assinaturas, error: errAssinaturas } = await supabase
     .from('subscriptions')
     .select(
-      'id, nome, whatsapp, cep, rua, numero, complemento, bairro, cidade, zona, qty_original, qty_integral'
+      'id, nome, whatsapp, cep, rua, numero, complemento, bairro, cidade, zona, ordem_rota, qty_original, qty_integral'
     )
     .eq('status', 'active');
   if (errAssinaturas) throw errAssinaturas;
@@ -90,7 +92,7 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   const { data: pontuais, error: errPontuais } = await supabase
     .from('pedidos_pontuais')
     .select(
-      'id, composicao, destinatario_nome, destinatario_whatsapp, pagador_nome, pagador_whatsapp, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, zona'
+      'id, composicao, destinatario_nome, destinatario_whatsapp, pagador_nome, pagador_whatsapp, endereco_cep, endereco_rua, endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, zona, ordem_rota'
     )
     .eq('status', 'confirmado')
     .eq('semana_id', semanaId);
@@ -119,6 +121,7 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
       cidade: s.cidade,
       regiao: normalizaRegiao(s.cidade),
       zona: s.zona ?? null,
+      ordem_rota: s.ordem_rota ?? null,
       itens: itens as unknown as Json,
     };
   });
@@ -140,6 +143,7 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
       cidade: p.endereco_cidade,
       regiao: normalizaRegiao(p.endereco_cidade),
       zona: p.zona ?? null,
+      ordem_rota: p.ordem_rota ?? null,
       itens: itens as unknown as Json,
     };
   });
@@ -187,19 +191,24 @@ export async function gerarExpedicao(semanaId: string): Promise<GerarResult> {
   return { criadas, atualizadas, sequenciadas };
 }
 
-/** Le zonas ativas + entregas do ciclo — base das operacoes de sequencia. */
+/** Le zonas + ordem dos bairros + entregas do ciclo — base das operacoes de sequencia. */
 async function carregarParaSequenciar(
   semanaId: string
-): Promise<{ entregas: EntregaSequenciavel[]; porCodigo: Map<string, Zona> }> {
-  const [{ data: zonasRows, error: errZonas }, { data: rows, error: errEntregas }] =
-    await Promise.all([
-      supabase.from('zonas_entrega').select('codigo, onda, ordem, entra_na_onda, ativo'),
-      supabase
-        .from('entregas')
-        .select('id, zona, sequencia, regiao, bairro, rua, numero, nome')
-        .eq('semana_id', semanaId),
-    ]);
+): Promise<{ entregas: EntregaSequenciavel[]; ctx: OrdemContexto }> {
+  const [
+    { data: zonasRows, error: errZonas },
+    { data: bairrosRows, error: errBairros },
+    { data: rows, error: errEntregas },
+  ] = await Promise.all([
+    supabase.from('zonas_entrega').select('codigo, onda, ordem, entra_na_onda, ativo'),
+    supabase.from('bairro_zona_default').select('cidade, bairro, zona, ordem'),
+    supabase
+      .from('entregas')
+      .select('id, zona, sequencia, ordem_rota, regiao, bairro, cidade, rua, numero, nome')
+      .eq('semana_id', semanaId),
+  ]);
   if (errZonas) throw errZonas;
+  if (errBairros) throw errBairros;
   if (errEntregas) throw errEntregas;
 
   const porCodigo = new Map<string, Zona>(
@@ -225,14 +234,25 @@ async function carregarParaSequenciar(
     id: r.id as string,
     zona: (r.zona as string | null) ?? null,
     sequencia: (r.sequencia as number | null) ?? null,
+    ordemRota: (r.ordem_rota as number | null) ?? null,
     regiao: r.regiao as string,
     bairro: r.bairro as string,
+    cidade: r.cidade as string,
     rua: r.rua as string,
     numero: (r.numero as string | null) ?? null,
     nome: r.nome as string,
   }));
 
-  return { entregas, porCodigo };
+  const bairros = indexaOrdemBairros(
+    (bairrosRows ?? []).map((b) => ({
+      cidade: b.cidade as string,
+      bairro: b.bairro as string,
+      zona: b.zona as string,
+      ordem: Number(b.ordem) || 0,
+    }))
+  );
+
+  return { entregas, ctx: { zonas: porCodigo, bairros } };
 }
 
 /**
@@ -256,8 +276,8 @@ async function gravarSequencias(atrib: AtribuicaoSequencia[]): Promise<number> {
  * numeradas.
  */
 export async function sequenciarExpedicao(semanaId: string): Promise<number> {
-  const { entregas, porCodigo } = await carregarParaSequenciar(semanaId);
-  return gravarSequencias(atribuiSequenciasFaltantes(entregas, porCodigo));
+  const { entregas, ctx } = await carregarParaSequenciar(semanaId);
+  return gravarSequencias(atribuiSequenciasFaltantes(entregas, ctx));
 }
 
 /**
@@ -266,8 +286,8 @@ export async function sequenciarExpedicao(semanaId: string): Promise<number> {
  * automatico seria o "sistema desfazendo o ajuste" que o briefing proibe.
  */
 export async function recalcularSequenciaOnda(semanaId: string, onda: Onda): Promise<number> {
-  const { entregas, porCodigo } = await carregarParaSequenciar(semanaId);
-  return gravarSequencias(recalculaSequencias(entregas, porCodigo, onda));
+  const { entregas, ctx } = await carregarParaSequenciar(semanaId);
+  return gravarSequencias(recalculaSequencias(entregas, ctx, onda));
 }
 
 /** Move uma entrega uma posicao na onda, trocando de numero com a vizinha. */
@@ -276,8 +296,8 @@ export async function moverEntregaNaSequencia(
   id: string,
   direcao: 'cima' | 'baixo'
 ): Promise<void> {
-  const { entregas, porCodigo } = await carregarParaSequenciar(semanaId);
-  await gravarSequencias(moveNaSequencia(entregas, porCodigo, id, direcao));
+  const { entregas, ctx } = await carregarParaSequenciar(semanaId);
+  await gravarSequencias(moveNaSequencia(entregas, ctx.zonas, id, direcao));
 }
 
 /** pendente -> em_rota (em_rota_at=now) -> entregue (entregue_at=now). Em entregue, no-op. */
