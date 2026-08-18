@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  agrupaPorRegiao,
+  agrupaPorOnda,
   enderecoCurto,
   flattenComposicaoPontual,
   flattenComposition,
@@ -9,10 +9,36 @@ import {
   normalizaRegiao,
   proximoStatus,
   resumoItens,
+  ocupacaoBag,
+  ordemCarregamento,
+  rotuloSequencia,
   statusAnterior,
   textoRota,
   type EntregaLite,
+  type GrupoEntregas,
 } from './expedicao';
+import { indexaZonas, type Zona } from './zonas';
+
+function zona(p: Partial<Zona> & { codigo: string }): Zona {
+  return {
+    nome: p.codigo,
+    cidade: 'Niterói',
+    onda: 'niteroi',
+    ordem: 1,
+    corHex: '#000000',
+    forma: 'circulo',
+    entraNaOnda: true,
+    ativo: true,
+    ...p,
+  };
+}
+
+const ZONAS = indexaZonas([
+  zona({ codigo: 'H', onda: 'niteroi', ordem: 0, entraNaOnda: false }),
+  zona({ codigo: 'N1', onda: 'niteroi', ordem: 1 }),
+  zona({ codigo: 'N3', onda: 'niteroi', ordem: 3 }),
+  zona({ codigo: 'R2', cidade: 'Rio de Janeiro', onda: 'rio', ordem: 2 }),
+]);
 
 const NOMES = new Map([
   ['original', 'Original'],
@@ -173,6 +199,8 @@ function entrega(p: Partial<EntregaLite>): EntregaLite {
     bairro: 'Icarai',
     cidade: 'Niteroi',
     regiao: 'niteroi',
+    zona: null,
+    sequencia: null,
     itens: [{ slug: 'original', nome: 'Original', qty: 2 }],
     observacao: null,
     status: 'pendente',
@@ -182,22 +210,36 @@ function entrega(p: Partial<EntregaLite>): EntregaLite {
   };
 }
 
+function grupoDe(entregas: EntregaLite[]): GrupoEntregas {
+  const g = agrupaPorOnda(entregas, ZONAS);
+  return g[0];
+}
+
 describe('linhaRota / textoRota', () => {
-  it('formato N. Nome — endereco — bairro — itens (sem obs)', () => {
-    expect(linhaRota(1, entrega({ nome: 'Ana', numero: '20', complemento: 'ap 301' }))).toBe(
-      '1. Ana — Rua A, 20, ap 301 — Icarai — 2x Original'
+  it('formato rotulo. Nome — endereco — bairro — itens (sem obs)', () => {
+    expect(linhaRota('N-01', entrega({ nome: 'Ana', numero: '20', complemento: 'ap 301' }))).toBe(
+      'N-01. Ana — Rua A, 20, ap 301 — Icarai — 2x Original'
     );
   });
   it('inclui obs quando preenchida; "sem itens" quando vazio', () => {
-    expect(linhaRota(2, entrega({ nome: 'Bia', itens: [], observacao: 'portao azul' }))).toBe(
-      '2. Bia — Rua A, 10 — Icarai — sem itens — portao azul'
+    expect(linhaRota('N-02', entrega({ nome: 'Bia', itens: [], observacao: 'portao azul' }))).toBe(
+      'N-02. Bia — Rua A, 10 — Icarai — sem itens — portao azul'
     );
   });
-  it('textoRota numera na ordem da lista', () => {
-    const txt = textoRota([entrega({ nome: 'Ana' }), entrega({ nome: 'Bia' })]);
+  it('textoRota usa o mesmo codigo impresso na etiqueta', () => {
+    const txt = textoRota(
+      grupoDe([
+        entrega({ id: 'a', nome: 'Ana', zona: 'N1', sequencia: 1 }),
+        entrega({ id: 'b', nome: 'Bia', zona: 'N3', sequencia: 2 }),
+      ])
+    );
     expect(txt.split('\n')).toHaveLength(2);
+    expect(txt).toContain('N-01. Ana');
+    expect(txt).toContain('N-02. Bia');
+  });
+  it('cai no numero de ordem quando a entrega ainda nao tem sequencia', () => {
+    const txt = textoRota(grupoDe([entrega({ id: 'a', nome: 'Ana' })]));
     expect(txt).toContain('1. Ana');
-    expect(txt).toContain('2. Bia');
   });
   // Contato do assinante nao circula fora da Cora (decisao do Hugo, 04/08): a
   // rota vai pro celular do entregador, entao telefone nao entra nela. O
@@ -205,8 +247,8 @@ describe('linhaRota / textoRota', () => {
   it('nao vaza o telefone do assinante na rota', () => {
     const fone = '(21) 98888-7777';
     const e = entrega({ nome: 'Ana', whatsapp: fone });
-    expect(linhaRota(1, e)).not.toContain('8888');
-    expect(textoRota([e])).not.toContain('8888');
+    expect(linhaRota('N-01', e)).not.toContain('8888');
+    expect(textoRota(grupoDe([e]))).not.toContain('8888');
   });
 });
 
@@ -223,27 +265,94 @@ describe('proximoStatus / statusAnterior', () => {
   });
 });
 
-describe('agrupaPorRegiao', () => {
+describe('agrupaPorOnda', () => {
   const lista: EntregaLite[] = [
-    entrega({ id: '1', nome: 'Ana', bairro: 'Santa Rosa', regiao: 'niteroi', status: 'entregue' }),
-    entrega({ id: '2', nome: 'Bia', bairro: 'Icarai', regiao: 'niteroi' }),
-    entrega({ id: '3', nome: 'Caio', bairro: 'Botafogo', regiao: 'rio', cidade: 'Rio de Janeiro' }),
+    entrega({ id: '1', nome: 'Ana', bairro: 'Fonseca', zona: 'N1', sequencia: 2, status: 'entregue' }),
+    entrega({ id: '2', nome: 'Bia', bairro: 'Icarai', zona: 'N3', sequencia: 1 }),
+    entrega({
+      id: '3',
+      nome: 'Caio',
+      bairro: 'Botafogo',
+      regiao: 'rio',
+      cidade: 'Rio de Janeiro',
+      zona: 'R2',
+      sequencia: 1,
+    }),
+    entrega({ id: '4', nome: 'Hugo', bairro: 'Fonseca', zona: 'H' }),
   ];
 
-  it('Niteroi antes de Rio; bairros em ordem alfabetica', () => {
-    const grupos = agrupaPorRegiao(lista);
-    expect(grupos.map((g) => g.regiao)).toEqual(['niteroi', 'rio']);
-    expect(grupos[0].entregas.map((e) => e.bairro)).toEqual(['Icarai', 'Santa Rosa']);
+  it('Niteroi, Rio e entrega propria, nessa ordem', () => {
+    expect(agrupaPorOnda(lista, ZONAS).map((g) => g.grupo)).toEqual(['niteroi', 'rio', 'propria']);
+  });
+
+  it('ordena pela sequencia dentro do grupo, nao pelo bairro', () => {
+    const [niteroi] = agrupaPorOnda(lista, ZONAS);
+    expect(niteroi.entregas.map((e) => e.nome)).toEqual(['Bia', 'Ana']);
   });
 
   it('contadores total/entregues por grupo', () => {
-    const grupos = agrupaPorRegiao(lista);
-    expect(grupos[0]).toMatchObject({ total: 2, entregues: 1 });
-    expect(grupos[1]).toMatchObject({ total: 1, entregues: 0 });
+    const [niteroi, rio] = agrupaPorOnda(lista, ZONAS);
+    expect(niteroi).toMatchObject({ total: 2, entregues: 1 });
+    expect(rio).toMatchObject({ total: 1, entregues: 0 });
+  });
+
+  it('entrega propria nao conta pacote pra bag', () => {
+    const propria = agrupaPorOnda(lista, ZONAS)[2];
+    expect(propria).toMatchObject({ total: 1, pacotes: 0, onda: null });
   });
 
   it('grupo sem entrega nao aparece', () => {
-    const soNiteroi = agrupaPorRegiao([lista[1]]);
-    expect(soNiteroi.map((g) => g.regiao)).toEqual(['niteroi']);
+    expect(agrupaPorOnda([lista[1]], ZONAS).map((g) => g.grupo)).toEqual(['niteroi']);
+  });
+
+  // Pacote sem zona precisa continuar visivel, sequenciavel e carregavel: campo
+  // de cadastro vazio nao pode fazer uma entrega real sumir da lista.
+  it('entrega sem zona fica na onda da regiao, no fim, e e contada como semZona', () => {
+    const [niteroi] = agrupaPorOnda([...lista, entrega({ id: '5', nome: 'Zoe' })], ZONAS);
+    expect(niteroi.entregas.map((e) => e.nome)).toEqual(['Bia', 'Ana', 'Zoe']);
+    expect(niteroi).toMatchObject({ total: 3, semZona: 1, semSequencia: 1, pacotes: 3 });
+  });
+
+  it('zona desativada/desconhecida no snapshot cai no mesmo fallback', () => {
+    const [niteroi] = agrupaPorOnda([entrega({ id: '9', zona: 'XX' })], ZONAS);
+    expect(niteroi).toMatchObject({ grupo: 'niteroi', semZona: 1 });
+  });
+});
+
+describe('rotuloSequencia', () => {
+  it('monta o codigo com o prefixo da onda e zero-pad de 2 digitos', () => {
+    expect(rotuloSequencia({ sequencia: 7 }, 'rio')).toBe('R-07');
+    expect(rotuloSequencia({ sequencia: 1 }, 'niteroi')).toBe('N-01');
+    expect(rotuloSequencia({ sequencia: 103 }, 'rio')).toBe('R-103');
+  });
+  it('null sem sequencia ou sem onda (entrega propria)', () => {
+    expect(rotuloSequencia({ sequencia: null }, 'rio')).toBeNull();
+    expect(rotuloSequencia({ sequencia: 3 }, null)).toBeNull();
+  });
+});
+
+describe('ordemCarregamento', () => {
+  // Ultima parada no fundo da bag, primeira no topo: o motoboy tira o pacote de
+  // cima a cada parada em vez de garimpar.
+  it('inverte a ordem de entrega e nao muta a lista original', () => {
+    const lista = [
+      entrega({ id: 'a', sequencia: 1 }),
+      entrega({ id: 'b', sequencia: 2 }),
+      entrega({ id: 'c', sequencia: 3 }),
+    ];
+    expect(ordemCarregamento(lista).map((e) => e.id)).toEqual(['c', 'b', 'a']);
+    expect(lista.map((e) => e.id)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('ocupacaoBag', () => {
+  it('sem capacidade configurada nao alerta', () => {
+    expect(ocupacaoBag(19, null)).toMatchObject({ acima: false, excedente: 0, capacidade: null });
+  });
+  it('dentro da capacidade (inclusive no limite exato)', () => {
+    expect(ocupacaoBag(20, 20)).toMatchObject({ acima: false, excedente: 0 });
+  });
+  it('acima da capacidade informa o excedente', () => {
+    expect(ocupacaoBag(23, 20)).toMatchObject({ acima: true, excedente: 3 });
   });
 });
