@@ -123,4 +123,26 @@ body {
     border: none;
     border-radius: 0;
   }
+  /* A observacao e texto livre de bancada (ja chegou a 217 caracteres na base) e
+     a etiqueta tem altura fixa com overflow: hidden — sem limite ela empurra
+     endereco e itens pra fora e o corte acontece em silencio. Duas linhas com
+     reticencias mantem a hierarquia (sequencia > nome > itens > endereco > obs)
+     e deixam o corte VISIVEL. O texto inteiro continua na tela e na rota.
+     Regra explicita em vez da utility do Tailwind: `line-clamp-2` estava sendo
+     sobrescrita pra display: flow-root e o clamp nao aplicava. */
+  .etiquetas-print .etiqueta-obs {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  /* A cor da zona e a tarja de "entrega propria" sao informacao, nao decoracao:
+     sem isto o Chrome descarta fundo e preenchimento na impressao e a tarja sai
+     branca. O layout ainda funciona sem cor (forma + contorno + texto), mas
+     quando a impressora TEM cor ela precisa sair. */
+  .etiquetas-print .marca-zona svg,
+  .etiquetas-print .bg-black {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }

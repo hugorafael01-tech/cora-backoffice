@@ -3,19 +3,27 @@ import {
   enderecoCompleto,
   enderecoCurto,
   resumoItens,
+  rotuloSequencia,
   statusLabel,
   type EntregaLite,
   type StatusEntrega,
 } from '../../../lib/expedicao';
+import { zonaDaEntrega, type Onda, type Zona } from '../../../lib/zonas';
+import { MarcaZona } from './MarcaZona';
 
 interface Props {
   entrega: EntregaLite;
-  numero: number;
+  /** Onda do grupo; null em "entrega própria" (sem sequência). */
+  onda: Onda | null;
+  zonas: Map<string, Zona>;
   busy: boolean;
+  podeSubir: boolean;
+  podeDescer: boolean;
   onAvancar: (id: string) => void;
   onVoltar: (id: string) => void;
   onSalvarObs: (id: string, texto: string) => void;
   onRemover: (id: string) => void;
+  onMover: (id: string, direcao: 'cima' | 'baixo') => void;
 }
 
 const TINT: Record<StatusEntrega, string> = {
@@ -32,12 +40,16 @@ const CHIP: Record<StatusEntrega, string> = {
 
 export function EntregaRow({
   entrega: e,
-  numero,
+  onda,
+  zonas,
   busy,
+  podeSubir,
+  podeDescer,
   onAvancar,
   onVoltar,
   onSalvarObs,
   onRemover,
+  onMover,
 }: Props) {
   const [aberta, setAberta] = useState(false);
   const [obs, setObs] = useState(e.observacao ?? '');
@@ -51,6 +63,9 @@ export function EntregaRow({
   }
 
   const resumo = resumoItens(e.itens);
+  const zona = zonaDaEntrega(e, zonas);
+  const codigo = rotuloSequencia(e, onda);
+  const semZona = zona === null;
 
   return (
     <li className={`rounded-lg border ${TINT[e.status]}`}>
@@ -68,9 +83,18 @@ export function EntregaRow({
         }}
         className="flex cursor-pointer items-start gap-3 px-3.5 py-3"
       >
-        <span className="mt-0.5 w-5 flex-shrink-0 text-[12px] tabular-nums text-warm-400">
-          {numero}.
-        </span>
+        {/* Mesmo par que sai impresso na etiqueta: codigo de sequencia em cima,
+            marca de zona embaixo. Conferir tela x pacote e so casar os dois. */}
+        <div className="flex w-14 flex-shrink-0 flex-col items-start gap-1">
+          <span className="text-[15px] font-bold leading-none tabular-nums text-ink-700">
+            {codigo ?? '—'}
+          </span>
+          <MarcaZona
+            zona={zona}
+            tamanho={16}
+            className={`text-[11px] ${semZona ? 'text-danger-text' : 'text-warm-500'}`}
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate font-medium text-warm-800">{e.nome}</span>
@@ -80,10 +104,13 @@ export function EntregaRow({
               {statusLabel(e.status)}
             </span>
           </div>
-          <div className="mt-0.5 truncate text-[13px] text-warm-600">
-            {resumo || 'sem itens'}
-          </div>
+          <div className="mt-0.5 truncate text-[13px] text-warm-600">{resumo || 'sem itens'}</div>
           <div className="mt-0.5 truncate text-[12px] text-warm-500">{enderecoCurto(e)}</div>
+          {semZona && (
+            <div className="mt-1 text-[11px] text-danger-text">
+              Sem zona no cadastro — a etiqueta sai sem marca de bag.
+            </div>
+          )}
         </div>
         <button
           aria-label={aberta ? 'Recolher' : 'Expandir'}
@@ -103,9 +130,45 @@ export function EntregaRow({
       {aberta && (
         <div className="space-y-3 border-t border-warm-200/70 px-3.5 py-3 text-[13px]">
           <div className="text-warm-600">{enderecoCompleto(e)}</div>
+          <div className="text-warm-600">
+            Zona:{' '}
+            <span className="text-warm-700">
+              {zona ? `${zona.codigo} — ${zona.nome}` : 'não definida'}
+            </span>
+            {semZona && (
+              <span className="text-warm-500"> · define no cadastro do assinante</span>
+            )}
+          </div>
           {e.whatsapp && (
             <div className="text-warm-600">
               WhatsApp: <span className="text-warm-700">{e.whatsapp}</span>
+            </div>
+          )}
+
+          {/* Ajuste manual da ordem: troca de numero com a vizinha, entao so duas
+              paradas mudam e o resto da bag fica parado. */}
+          {onda && e.sequencia != null && (
+            <div>
+              <label className="mb-1 block text-[11px] uppercase tracking-[0.04em] text-warm-500">
+                Ordem na onda
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => !busy && onMover(e.id, 'cima')}
+                  disabled={busy || !podeSubir}
+                  className="h-9 rounded-md border border-warm-300 bg-white px-3 text-[12px] text-warm-700 hover:bg-warm-100 disabled:cursor-not-allowed disabled:text-warm-300"
+                >
+                  ↑ Antes
+                </button>
+                <button
+                  onClick={() => !busy && onMover(e.id, 'baixo')}
+                  disabled={busy || !podeDescer}
+                  className="h-9 rounded-md border border-warm-300 bg-white px-3 text-[12px] text-warm-700 hover:bg-warm-100 disabled:cursor-not-allowed disabled:text-warm-300"
+                >
+                  ↓ Depois
+                </button>
+                <span className="text-[12px] text-warm-500">troca de posição com a vizinha</span>
+              </div>
             </div>
           )}
 

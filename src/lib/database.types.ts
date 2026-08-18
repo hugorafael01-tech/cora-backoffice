@@ -59,18 +59,21 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          capacidade_bag: number | null
           id: number
           max_subscriptions: number
           subscriptions_open: boolean
           updated_at: string
         }
         Insert: {
+          capacidade_bag?: number | null
           id?: number
           max_subscriptions?: number
           subscriptions_open?: boolean
           updated_at?: string
         }
         Update: {
+          capacidade_bag?: number | null
           id?: number
           max_subscriptions?: number
           subscriptions_open?: boolean
@@ -132,6 +135,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_assinatura_itens"
             referencedColumns: ["subscription_id"]
+          },
+        ]
+      }
+      bairro_zona_default: {
+        Row: {
+          bairro: string
+          cidade: string
+          created_at: string
+          id: string
+          updated_at: string
+          zona: string
+        }
+        Insert: {
+          bairro: string
+          cidade: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          zona: string
+        }
+        Update: {
+          bairro?: string
+          cidade?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          zona?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bairro_zona_default_zona_fkey"
+            columns: ["zona"]
+            isOneToOne: false
+            referencedRelation: "zonas_entrega"
+            referencedColumns: ["codigo"]
           },
         ]
       }
@@ -405,11 +443,13 @@ export type Database = {
           regiao: string
           rua: string
           semana_id: string
+          sequencia: number | null
           status: string
           subscription_id: string | null
           updated_at: string
           weekly_order_id: string | null
           whatsapp: string | null
+          zona: string | null
         }
         Insert: {
           bairro: string
@@ -429,11 +469,13 @@ export type Database = {
           regiao: string
           rua: string
           semana_id: string
+          sequencia?: number | null
           status?: string
           subscription_id?: string | null
           updated_at?: string
           weekly_order_id?: string | null
           whatsapp?: string | null
+          zona?: string | null
         }
         Update: {
           bairro?: string
@@ -453,11 +495,13 @@ export type Database = {
           regiao?: string
           rua?: string
           semana_id?: string
+          sequencia?: number | null
           status?: string
           subscription_id?: string | null
           updated_at?: string
           weekly_order_id?: string | null
           whatsapp?: string | null
+          zona?: string | null
         }
         Relationships: [
           {
@@ -831,6 +875,7 @@ export type Database = {
           status: string
           updated_at: string
           valor_total: number | null
+          zona: string | null
         }
         Insert: {
           composicao?: Json
@@ -862,6 +907,7 @@ export type Database = {
           status?: string
           updated_at?: string
           valor_total?: number | null
+          zona?: string | null
         }
         Update: {
           composicao?: Json
@@ -893,6 +939,7 @@ export type Database = {
           status?: string
           updated_at?: string
           valor_total?: number | null
+          zona?: string | null
         }
         Relationships: [
           {
@@ -1256,6 +1303,7 @@ export type Database = {
           valor_mensal: number
           valor_paes: number
           whatsapp: string
+          zona: string | null
           zona_entrega: string | null
         }
         Insert: {
@@ -1296,6 +1344,7 @@ export type Database = {
           valor_mensal: number
           valor_paes: number
           whatsapp: string
+          zona?: string | null
           zona_entrega?: string | null
         }
         Update: {
@@ -1336,6 +1385,7 @@ export type Database = {
           valor_mensal?: number
           valor_paes?: number
           whatsapp?: string
+          zona?: string | null
           zona_entrega?: string | null
         }
         Relationships: []
@@ -1446,6 +1496,48 @@ export type Database = {
             referencedColumns: ["subscription_id"]
           },
         ]
+      }
+      zonas_entrega: {
+        Row: {
+          ativo: boolean
+          cidade: string
+          codigo: string
+          cor_hex: string
+          created_at: string
+          entra_na_onda: boolean
+          forma: string
+          nome: string
+          onda: string
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cidade: string
+          codigo: string
+          cor_hex: string
+          created_at?: string
+          entra_na_onda?: boolean
+          forma: string
+          nome: string
+          onda: string
+          ordem: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cidade?: string
+          codigo?: string
+          cor_hex?: string
+          created_at?: string
+          entra_na_onda?: boolean
+          forma?: string
+          nome?: string
+          onda?: string
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
