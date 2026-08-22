@@ -1,4 +1,4 @@
--- 0034_cardapio_publico.sql
+-- 0035_cardapio_publico.sql
 -- Cardapio da semana sai do banco (task 86e2fqk33, Escopo A).
 --
 -- Hoje o cardapio tem duas fontes de verdade: a tabela `cardapios`, que o
@@ -20,7 +20,7 @@
 -- NAO toca em `produtos`, nem em preco cadastrado, nem no cutoff.
 --
 -- Aplicar pelo SQL Editor do Supabase (padrao 0019+).
--- Probes PRE/POS em 0034_cardapio_publico.verificacao.sql.
+-- Probes PRE/POS em 0035_cardapio_publico.verificacao.sql.
 
 
 -- ============================================================
@@ -145,9 +145,16 @@ COMMENT ON VIEW cardapio_publico IS
   'Projecao publica de cardapios + semanas + produtos; as tabelas seguem fechadas. '
   'Conteudo editorial (desc/sobre/ingredientes/img) NAO mora aqui — fica no catalogo em codigo, casado por slug.';
 
--- Licao da 0019/0020/0027: o Supabase concede GRANT default amplo pra
--- anon/authenticated em TODA relacao nova de `public`, view inclusive. Sem este
--- REVOKE a view nasceria com INSERT/UPDATE/DELETE concedidos.
+-- Licao da 0019/0020/0027 — e, desde 22/08, da 0034: o Supabase concede GRANT
+-- default amplo pra anon/authenticated em TODA relacao nova de `public`, view
+-- inclusive. Sem este REVOKE a view nasceria com INSERT/UPDATE/DELETE
+-- concedidos.
+--
+-- A 0034 e o que acontece quando esse REVOKE nao e escrito na hora de criar:
+-- `v_assinatura_itens` (0003) e `planejamento_semana` (0013) ficaram anos
+-- legiveis com a anon key, a segunda expondo CEP de assinante. A diferenca
+-- aqui nao e a view ser security definer — e que a exposicao e desenhada:
+-- projecao de 5 colunas escolhidas, e leitura e so leitura.
 REVOKE ALL ON cardapio_publico FROM anon, authenticated;
 GRANT SELECT ON cardapio_publico TO anon, authenticated;
 -- `authenticated` junto com `anon` de proposito: o Cardapio do portal e a

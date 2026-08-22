@@ -10,7 +10,7 @@
  * Briefing tecnico: Docs/CORA_Briefing_Backoffice_Fase1_Etapa1_Semana_v3.md (par.13)
  * Wireframe definitivo do Planejamento: Planejamento_wireframes_v2.html (Fase 3/4)
  *
- * Desde a migration 0034 esta tela nao monta so o plano de producao: o portal
+ * Desde a migration 0035 esta tela nao monta so o plano de producao: o portal
  * le `cardapios` direto (task 86e2fqk33), entao o que se marca aqui e o que o
  * assinante ve e o preco que ele paga. Dai o destaque e os precos explicitos.
  */
@@ -69,7 +69,7 @@ export function SemanaCardapio() {
   }
 
   // Um destaque so: clicar em outro item move, clicar no mesmo desliga. A UI
-  // impede o segundo destaque em vez de deixar o indice unico da 0034 rejeitar.
+  // impede o segundo destaque em vez de deixar o indice unico da 0035 rejeitar.
   function toggleDestaque(pid: string) {
     setDestaqueOverride(destaqueId === pid ? null : pid);
     setConfirmandoSemDestaque(false);
@@ -107,7 +107,7 @@ export function SemanaCardapio() {
       }
 
       // Limpar o destaque antigo ANTES de marcar o novo: `ux_cardapios_destaque
-      // _por_semana` (0034) e unico parcial e rejeitaria os dois convivendo,
+      // _por_semana` (0035) e unico parcial e rejeitaria os dois convivendo,
       // mesmo que por um instante. No-op se a linha ja saiu no delete acima.
       if (destaqueNoBanco && destaqueNoBanco !== destaqueId) {
         const { error: errLimpa } = await supabase

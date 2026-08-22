@@ -1,5 +1,5 @@
 -- ============================================================
--- Verificacao da Migration 0034 (cardapio_publico) — rodar no SQL Editor
+-- Verificacao da Migration 0035 (cardapio_publico) — rodar no SQL Editor
 -- ============================================================
 -- Uma query por vez: o SQL Editor so mostra o output do ULTIMO SELECT.
 -- ============================================================
