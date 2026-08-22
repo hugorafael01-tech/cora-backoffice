@@ -236,6 +236,7 @@ export type Database = {
       cardapios: {
         Row: {
           created_at: string
+          destaque: boolean
           id: string
           preco_avulso: number
           produto_id: string
@@ -244,6 +245,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          destaque?: boolean
           id?: string
           preco_avulso: number
           produto_id: string
@@ -252,6 +254,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          destaque?: boolean
           id?: string
           preco_avulso?: number
           produto_id?: string
@@ -1553,6 +1556,16 @@ export type Database = {
       }
     }
     Views: {
+      cardapio_publico: {
+        Row: {
+          data_entrega: string | null
+          destaque: boolean | null
+          preco_avulso: number | null
+          slug: string | null
+          tipo: Database["public"]["Enums"]["tipo_cardapio_enum"] | null
+        }
+        Relationships: []
+      }
       planejamento_semana: {
         Row: {
           qty_pontual: number | null
