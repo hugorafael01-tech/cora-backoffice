@@ -1,0 +1,97 @@
+-- 0034_revoke_views_publicas.sql
+--
+-- ⚠️ JA APLICADA EM PRODUCAO EM 22/08/2026, COMO HOTFIX, ANTES DE VIRAR ARQUIVO.
+--
+-- O Hugo rodou o REVOKE direto no SQL Editor no dia, sem esperar PR: era
+-- exposicao ATIVA de dado pessoal. Esta migration existe pra o repo alcancar o
+-- banco, nao pra mudar nada — quem rodar hoje nao muda estado nenhum.
+--
+-- NAO reaplicar as instrucoes deste arquivo achando que falta rodar. As probes
+-- de 0034_revoke_views_publicas.verificacao.sql conferem AUSENCIA de grant, e e
+-- so isso que precisa ser conferido. (REVOKE e idempotente, entao reaplicar nao
+-- quebraria — mas conferir e mais barato e nao mascara um estado inesperado.)
+--
+--
+-- O QUE ESTAVA ABERTO
+-- -------------------
+-- Duas views de `public` respondiam a anon key — a mesma que vai no bundle do
+-- portal, publica por definicao:
+--
+--   v_assinatura_itens   (0003)  36 linhas: subscription_id, bairro, cidade,
+--                                CEP, status da assinatura, produto, quantidade
+--   planejamento_semana  (0013)  12 linhas: volume por produto por semana
+--
+-- `v_assinatura_itens` e o caso serio: bairro + cidade + CEP + status, por
+-- assinante. Nao tem nome nem e-mail, mas CEP no Rio/Niteroi e quase-endereco e
+-- o conjunto reidentifica.
+--
+-- O REVOKE tirou tambem de `authenticated`, nao so de `anon`: assinante logado
+-- no portal E `authenticated`, entao o SELECT ali expunha o CEP de todos pra
+-- qualquer assinante — pior que o caso anonimo, nao melhor.
+--
+--
+-- POR QUE ACONTECEU
+-- -----------------
+-- Nao foi policy errada. As tabelas por baixo (`subscriptions`, `weekly_orders`,
+-- `pedidos_pontuais`) estao certas, e a 0019 inclusive revogou o SELECT do
+-- `anon` em `subscriptions`. O furo sao duas coisas se somando:
+--
+--   1. O Supabase concede GRANT default amplo pra anon/authenticated em toda
+--      relacao nova de `public` — VIEW INCLUSIVE. A 0003 e a 0013 nasceram antes
+--      da licao da 0019 e nunca receberam o REVOKE.
+--   2. View sem `security_invoker` roda como DONA e passa por baixo da RLS das
+--      tabelas. Fechar a tabela nao fecha a view que le a tabela.
+--
+-- Ou seja: revogar o grant da TABELA nao alcanca a VIEW que a le. Sao dois
+-- objetos, e cada um precisa do seu REVOKE.
+--
+--
+-- POR QUE NAO E `DROP VIEW`
+-- -------------------------
+-- Conferido em 22/08 (grep em src/, api/ e scripts/ dos dois repos): nenhuma
+-- das duas e consultada por codigo. As mencoes que existem sao comentario
+-- (`useSemana.ts` diz explicitamente que NAO usa a de demanda) e entradas
+-- geradas do `database.types.ts`. Mas as duas seguem uteis pra consulta ad-hoc
+-- pelo SQL Editor, entao ficam de pe: `postgres` e `service_role` mantem os
+-- grants, e sao esses que o SQL Editor e o lado servidor usam.
+--
+--
+-- E A `cardapio_publico` DA 0035?
+-- -------------------------------
+-- Ela e o caso oposto e deliberado: exposicao publica E a intencao (o cardapio
+-- da semana e a vitrine). Por isso ela leva projecao explicita de 5 colunas e um
+-- `REVOKE ALL` seguido de `GRANT SELECT` — o mesmo cuidado que faltou aqui,
+-- aplicado na hora de criar em vez de anos depois.
+
+
+-- ============================================================
+-- 1) fecha as duas views
+-- ============================================================
+-- `ALL` e nao `SELECT`: o GRANT default do Supabase inclui INSERT/UPDATE/DELETE.
+-- Nas duas o INSERT era inofensivo na pratica (view com JOIN nao e atualizavel),
+-- mas deixar privilegio concedido que ninguem usa e como o furo comeca.
+REVOKE ALL ON public.v_assinatura_itens  FROM anon, authenticated;
+REVOKE ALL ON public.planejamento_semana FROM anon, authenticated;
+
+
+-- ============================================================
+-- 2) DEPOIS DE APLICAR — o que isso NAO resolve
+-- ============================================================
+-- Fecha as duas views conhecidas; NAO muda o comportamento default do Supabase.
+-- Toda relacao nova de `public` continua nascendo com GRANT amplo pra
+-- anon/authenticated, view inclusive. Enquanto for assim, cada migration que
+-- cria relacao precisa do seu proprio REVOKE (padrao das 0019/0020/0027, e da
+-- 0035).
+--
+-- A varredura do resto de `public` ja foi feita em 22/08, e o resultado e bom
+-- (POS.4 e POS.5 da verificacao reproduzem):
+--
+--   * NENHUMA view sobrou com grant pra anon/authenticated. A classe de
+--     problema que abriu este arquivo esta vazia — estas duas eram as unicas.
+--   * As ~32 relacoes que ainda tem grant sao TODAS tabelas, e TODAS com RLS
+--     ligada e policy. Ali o grant e o modelo normal do Supabase: quem decide e
+--     a RLS, nao o grant. Nenhuma tabela com grant e RLS desligada.
+--
+-- Ou seja, nao sobrou follow-up de limpeza. O que sobra e a regra pra frente:
+-- relacao nova nasce com REVOKE explicito, e view nova declara
+-- `security_invoker` de proposito num sentido ou no outro.
