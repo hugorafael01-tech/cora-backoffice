@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { slugify } from './producao';
+import { distribuiHidratacaoPorEtapa, slugify } from './producao';
 import type { Database, Json } from './database.types';
 import type { LinhaVolume, ProdutoFormato } from '../pages/Producao/types';
 
@@ -206,16 +206,39 @@ export async function criarVariacao(input: VariacaoInput): Promise<LinhaVolume> 
     if (errLev) throw errLev;
   }
 
-  // Override da linha de agua com a hidratacao alvo da variacao.
-  // Se a receita nao tiver linha de agua (ex.: Brioche), o update afeta 0 linhas — ok.
+  // Override da(s) linha(s) de agua com a hidratacao alvo da variacao.
+  // Se a receita nao tiver linha de agua (ex.: Brioche), nao ha o que ajustar.
+  //
+  // Desde a 0036 a agua pode estar DIVIDIDA em etapas (autolise/batimento, ou
+  // autolise/escaldo no Multigraos). Um update por (versao, ingrediente)
+  // gravaria o alvo INTEIRO em cada linha e multiplicaria a hidratacao pelo
+  // numero de etapas — 75% viraria 150%. O alvo e distribuido preservando a
+  // proporcao entre as etapas, que e a mesma aritmetica da migration: a divisao
+  // e proporcao do proprio ingrediente, e a soma tem que fechar o alvo.
   const aguaId = await getIngredienteId('agua-mineral');
   if (aguaId) {
-    const { error: errAgua } = await supabase
+    const { data: linhasAgua, error: errLerAgua } = await supabase
       .from('ingredientes_receita')
-      .update({ percentual_baker: input.hidratacaoAlvo / 100 })
+      .select('id, percentual_baker')
       .eq('versao_receita_id', versaoId)
-      .eq('ingrediente_id', aguaId);
-    if (errAgua) throw errAgua;
+      .eq('ingrediente_id', aguaId)
+      .order('ordem', { ascending: true })
+      .order('id', { ascending: true });
+    if (errLerAgua) throw errLerAgua;
+
+    const linhas = linhasAgua ?? [];
+    const novos = distribuiHidratacaoPorEtapa(
+      linhas.map((l) => Number(l.percentual_baker) || 0),
+      input.hidratacaoAlvo / 100,
+    );
+
+    for (let idx = 0; idx < linhas.length; idx++) {
+      const { error: errAgua } = await supabase
+        .from('ingredientes_receita')
+        .update({ percentual_baker: novos[idx] })
+        .eq('id', linhas[idx].id as string);
+      if (errAgua) throw errAgua;
+    }
   }
 
   return carregarLinhaVolume(versaoId, 'teste');
