@@ -712,6 +712,7 @@ export type Database = {
       }
       ingredientes_receita: {
         Row: {
+          etapa: string
           id: string
           ingrediente_id: string
           notas: string | null
@@ -720,6 +721,7 @@ export type Database = {
           versao_receita_id: string
         }
         Insert: {
+          etapa?: string
           id?: string
           ingrediente_id: string
           notas?: string | null
@@ -728,6 +730,7 @@ export type Database = {
           versao_receita_id: string
         }
         Update: {
+          etapa?: string
           id?: string
           ingrediente_id?: string
           notas?: string | null

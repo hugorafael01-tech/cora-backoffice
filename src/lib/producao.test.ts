@@ -5,6 +5,7 @@ import {
   calcLevainBuild,
   derivaEtapaAgora,
   diasContexto,
+  distribuiHidratacaoPorEtapa,
   duracaoMin,
   ehEtapaDivisao,
   farinhaPorPaoG,
@@ -328,5 +329,50 @@ describe('slugify', () => {
   });
   it('trim de hifens nas pontas', () => {
     expect(slugify('  Ciabatta!  ')).toBe('ciabatta');
+  });
+});
+
+describe('distribuiHidratacaoPorEtapa (agua dividida em etapas, 0036)', () => {
+  it('linha unica recebe o alvo inteiro (receita nao dividida)', () => {
+    expect(distribuiHidratacaoPorEtapa([0.7], 0.75)).toEqual([0.75]);
+  });
+
+  it('receita sem linha de agua (Brioche) devolve vazio', () => {
+    expect(distribuiHidratacaoPorEtapa([], 0.75)).toEqual([]);
+  });
+
+  it('preserva a proporcao 85/15 do Original e fecha o alvo', () => {
+    const r = distribuiHidratacaoPorEtapa([0.595, 0.105], 0.7);
+    expect(r).toEqual([0.595, 0.105]);
+    expect(r[0] + r[1]).toBeCloseTo(0.7, 10);
+  });
+
+  it('reescala a proporcao 85/15 quando o alvo muda', () => {
+    const r = distribuiHidratacaoPorEtapa([0.595, 0.105], 0.8);
+    expect(r).toEqual([0.68, 0.12]); // 85% e 15% de 0.80
+    expect(r[0] + r[1]).toBeCloseTo(0.8, 10);
+  });
+
+  it('NAO multiplica a hidratacao pelo numero de etapas', () => {
+    // O bug que a 0036 introduziria: gravar o alvo em cada linha somaria 1.50.
+    const r = distribuiHidratacaoPorEtapa([0.525, 0.225], 0.75);
+    expect(r.reduce((a, b) => a + b, 0)).toBeCloseTo(0.75, 10);
+  });
+
+  it('fecha o alvo mesmo quando a proporcao nao cabe em 4 casas (Multigraos)', () => {
+    // 0.58 / 1.12 = 0.5178571..., que nao e exato em NUMERIC(6,4).
+    const r = distribuiHidratacaoPorEtapa([0.58, 0.54], 1.0);
+    expect(r.reduce((a, b) => a + b, 0)).toBeCloseTo(1.0, 10);
+    r.forEach((v) => expect(v).toBe(Math.round(v * 10000) / 10000));
+  });
+
+  it('divide em partes iguais quando o total atual e zero', () => {
+    expect(distribuiHidratacaoPorEtapa([0, 0], 0.8)).toEqual([0.4, 0.4]);
+  });
+
+  it('mantem 4 casas decimais em todas as linhas', () => {
+    const r = distribuiHidratacaoPorEtapa([0.6375, 0.1125], 0.73);
+    r.forEach((v) => expect(v).toBe(Math.round(v * 10000) / 10000));
+    expect(r.reduce((a, b) => a + b, 0)).toBeCloseTo(0.73, 10);
   });
 });

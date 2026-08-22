@@ -311,3 +311,35 @@ export function slugify(nome: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+/**
+ * Distribui a hidratacao alvo entre as linhas de agua de uma versao,
+ * preservando a proporcao que elas ja tinham entre si.
+ *
+ * Desde a 0036 a agua pode estar DIVIDIDA em etapas (autolise/batimento, ou
+ * autolise/escaldo no Multigraos). Gravar o alvo em cada linha multiplicaria a
+ * hidratacao pelo numero de etapas — 75% viraria 150%. A divisao entre etapas e
+ * proporcao do proprio ingrediente (mesma aritmetica da migration) e a soma tem
+ * que fechar o alvo exatamente.
+ *
+ * `percentual_baker` e NUMERIC(6,4): arredonda em 4 casas aqui em vez de deixar
+ * o Postgres arredondar linha a linha, e o resto cai na ultima pra soma fechar.
+ * Lista vazia devolve vazia (receita sem agua, ex.: Brioche); total atual zerado
+ * divide em partes iguais, porque nao ha proporcao a preservar.
+ */
+export function distribuiHidratacaoPorEtapa(atuais: number[], alvo: number): number[] {
+  if (atuais.length === 0) return [];
+  const total = atuais.reduce((s, n) => s + n, 0);
+  const q4 = (n: number) => Math.round(n * 10000) / 10000;
+
+  const out: number[] = [];
+  let acumulado = 0;
+  for (let i = 0; i < atuais.length; i++) {
+    const ultimo = i === atuais.length - 1;
+    const fatia = total > 0 ? atuais[i] / total : 1 / atuais.length;
+    const valor = ultimo ? q4(alvo - acumulado) : q4(alvo * fatia);
+    acumulado += valor;
+    out.push(valor);
+  }
+  return out;
+}
