@@ -89,6 +89,28 @@ FROM pg_constraint
 WHERE conrelid = 'ingredientes_receita'::regclass AND contype IN ('u', 'c')
 ORDER BY contype, conname;
 
+-- ============================================================
+-- NOTA (23/08/2026) — POR QUE A FOCACCIA NAO FECHA MAIS NO POS.3
+-- ============================================================
+-- Depois desta migration a Focaccia foi remodelada usando a coluna nova:
+-- ganhou as etapas `maceracao`, `infusao`, `salamoia` e `finalizacao`. Entre
+-- elas entrou uma linha de AGUA na `salamoia` (0.0150), que e salmoura de
+-- superficie, nao hidratacao da massa.
+--
+-- Resultado: o POS.3 abaixo soma TODAS as linhas de agua e mostra a Focaccia
+-- em 0.7650, contra os 0.7500 registrados como esperado. Isso NAO e regressao
+-- da migration — as duas linhas de massa continuam 0.5250 + 0.2250 = 0.7500,
+-- que e o que bate com `hidratacao_alvo = 75`.
+--
+-- Pra conferir a agua DE MASSA, filtrar pelas etapas de massa:
+--   AND ir.etapa IN ('autolise_mistura', 'batimento', 'escaldo', 'tangzhong')
+-- O criterio dessa lista (e o que fazer quando aparecer etapa nova) esta em
+-- `ETAPAS_DE_MASSA`, em src/lib/producao.ts.
+--
+-- As outras 7 divisoes seguem fechando exatamente o total anterior.
+-- ============================================================
+
+
 -- POS.3 — *** A CONFERENCIA OBRIGATORIA DO BRIEFING ***
 --   Pra cada ingrediente dividido, a soma das etapas TEM que ser igual ao
 --   total anterior (PRE.4). Se alguma linha nao fechar, a migration esta
