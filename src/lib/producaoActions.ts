@@ -209,17 +209,15 @@ export async function criarVariacao(input: VariacaoInput): Promise<LinhaVolume> 
   // Override da(s) linha(s) de agua com a hidratacao alvo da variacao.
   // Se a receita nao tiver linha de agua (ex.: Brioche), nao ha o que ajustar.
   //
-  // Desde a 0036 a agua pode estar DIVIDIDA em etapas (autolise/batimento, ou
-  // autolise/escaldo no Multigraos). Um update por (versao, ingrediente)
-  // gravaria o alvo INTEIRO em cada linha e multiplicaria a hidratacao pelo
-  // numero de etapas — 75% viraria 150%. O alvo e distribuido preservando a
-  // proporcao entre as etapas, que e a mesma aritmetica da migration: a divisao
-  // e proporcao do proprio ingrediente, e a soma tem que fechar o alvo.
+  // Desde a 0036 a agua pode estar dividida em etapas, e nem toda linha de agua
+  // e massa: a Focaccia tem agua na `salamoia`, que e salmoura de superficie.
+  // Quem decide o que e hidratacao e `ETAPAS_DE_MASSA` (producao.ts), que
+  // carrega o criterio. Linha fora dessas etapas nao e tocada.
   const aguaId = await getIngredienteId('agua-mineral');
   if (aguaId) {
     const { data: linhasAgua, error: errLerAgua } = await supabase
       .from('ingredientes_receita')
-      .select('id, percentual_baker')
+      .select('id, percentual_baker, etapa')
       .eq('versao_receita_id', versaoId)
       .eq('ingrediente_id', aguaId)
       .order('ordem', { ascending: true })
@@ -228,11 +226,16 @@ export async function criarVariacao(input: VariacaoInput): Promise<LinhaVolume> 
 
     const linhas = linhasAgua ?? [];
     const novos = distribuiHidratacaoPorEtapa(
-      linhas.map((l) => Number(l.percentual_baker) || 0),
+      linhas.map((l) => ({
+        etapa: (l.etapa as string | null) ?? null,
+        percentual: Number(l.percentual_baker) || 0,
+      })),
       input.hidratacaoAlvo / 100,
     );
 
     for (let idx = 0; idx < linhas.length; idx++) {
+      // Linha nao-massa volta com o valor original: nao gasta UPDATE nela.
+      if (novos[idx] === (Number(linhas[idx].percentual_baker) || 0)) continue;
       const { error: errAgua } = await supabase
         .from('ingredientes_receita')
         .update({ percentual_baker: novos[idx] })

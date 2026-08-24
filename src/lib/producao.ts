@@ -313,31 +313,77 @@ export function slugify(nome: string): string {
 }
 
 /**
- * Distribui a hidratacao alvo entre as linhas de agua de uma versao,
- * preservando a proporcao que elas ja tinham entre si.
+ * Etapas em que a agua entra como HIDRATACAO DA MASSA — a agua que conta no
+ * percentual de hidratacao do padeiro e que uma variacao de receita reescala.
  *
- * Desde a 0036 a agua pode estar DIVIDIDA em etapas (autolise/batimento, ou
- * autolise/escaldo no Multigraos). Gravar o alvo em cada linha multiplicaria a
- * hidratacao pelo numero de etapas — 75% viraria 150%. A divisao entre etapas e
- * proporcao do proprio ingrediente (mesma aritmetica da migration) e a soma tem
- * que fechar o alvo exatamente.
+ * CRITERIO pra decidir se uma etapa nova entra aqui: a agua daquela etapa
+ * termina dentro da massa que vai ao forno, e mudar a hidratacao alvo tem que
+ * mudar essa agua junto.
+ *   - Preparo que VOLTA pra massa entra. O escaldo das sementes (Multigraos) e
+ *     o tangzhong (Brioche) sao feitos na vespera e dormem na geladeira, mas
+ *     entram na massa no dia seguinte — sao hidratacao.
+ *   - Preparo e cobertura que ficam FORA da massa nao entram. A salamoia da
+ *     Focaccia e salmoura de superficie: pedir 80% de hidratacao nao pode
+ *     diluir a salmoura junto, nem contar a agua dela como hidratacao.
+ *
+ * Na duvida: se a agua nao conta na conta de hidratacao do padeiro, nao entra.
+ *
+ * A lista e aberta de proposito, igual a coluna `etapa` (0036): etapa nova nao
+ * quebra nada, so nao e reescalada ate ser adicionada aqui de propria vontade.
+ */
+export const ETAPAS_DE_MASSA: readonly string[] = [
+  'autolise_mistura',
+  'batimento',
+  'escaldo',
+  'tangzhong',
+];
+
+/** `true` se a etapa e uma das que contam como hidratacao da massa. */
+export function ehEtapaDeMassa(etapa: string | null | undefined): boolean {
+  return etapa != null && ETAPAS_DE_MASSA.includes(etapa);
+}
+
+export interface LinhaAgua {
+  etapa: string | null;
+  percentual: number;
+}
+
+/**
+ * Distribui a hidratacao alvo entre as linhas de agua DA MASSA, preservando a
+ * proporcao que elas ja tinham entre si.
+ *
+ * Desde a 0036 a agua pode estar dividida em etapas, e desde a remodelagem da
+ * Focaccia nem toda linha de agua e massa. Gravar o alvo em cada linha
+ * multiplicaria a hidratacao pelo numero de etapas; distribuir entre TODAS as
+ * linhas diluiria a salmoura da Focaccia junto e ainda erraria a massa (o alvo
+ * seria repartido com agua que nao e hidratacao).
+ *
+ * Retorna um valor por linha, na MESMA ordem da entrada. Linha fora das etapas
+ * de massa volta com o percentual original — nao e tocada.
  *
  * `percentual_baker` e NUMERIC(6,4): arredonda em 4 casas aqui em vez de deixar
- * o Postgres arredondar linha a linha, e o resto cai na ultima pra soma fechar.
- * Lista vazia devolve vazia (receita sem agua, ex.: Brioche); total atual zerado
- * divide em partes iguais, porque nao ha proporcao a preservar.
+ * o Postgres arredondar linha a linha, e o resto cai na ultima linha de massa
+ * pra soma fechar o alvo. Sem nenhuma linha de massa (receita sem agua na
+ * massa, ex.: Brioche) devolve tudo intocado.
  */
-export function distribuiHidratacaoPorEtapa(atuais: number[], alvo: number): number[] {
-  if (atuais.length === 0) return [];
-  const total = atuais.reduce((s, n) => s + n, 0);
+export function distribuiHidratacaoPorEtapa(linhas: LinhaAgua[], alvo: number): number[] {
+  const daMassa = linhas.map((l) => ehEtapaDeMassa(l.etapa));
+  const total = linhas.reduce((s, l, i) => (daMassa[i] ? s + l.percentual : s), 0);
+  const qtd = daMassa.filter(Boolean).length;
+  if (qtd === 0) return linhas.map((l) => l.percentual);
+
   const q4 = (n: number) => Math.round(n * 10000) / 10000;
+  const ultimoDaMassa = daMassa.lastIndexOf(true);
 
   const out: number[] = [];
   let acumulado = 0;
-  for (let i = 0; i < atuais.length; i++) {
-    const ultimo = i === atuais.length - 1;
-    const fatia = total > 0 ? atuais[i] / total : 1 / atuais.length;
-    const valor = ultimo ? q4(alvo - acumulado) : q4(alvo * fatia);
+  for (let i = 0; i < linhas.length; i++) {
+    if (!daMassa[i]) {
+      out.push(linhas[i].percentual);
+      continue;
+    }
+    const fatia = total > 0 ? linhas[i].percentual / total : 1 / qtd;
+    const valor = i === ultimoDaMassa ? q4(alvo - acumulado) : q4(alvo * fatia);
     acumulado += valor;
     out.push(valor);
   }

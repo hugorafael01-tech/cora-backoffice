@@ -6,6 +6,7 @@ import {
   derivaEtapaAgora,
   diasContexto,
   distribuiHidratacaoPorEtapa,
+  ehEtapaDeMassa,
   duracaoMin,
   ehEtapaDivisao,
   farinhaPorPaoG,
@@ -332,9 +333,29 @@ describe('slugify', () => {
   });
 });
 
+describe('ehEtapaDeMassa (criterio de hidratacao)', () => {
+  it('inclui as etapas cuja agua termina na massa', () => {
+    ['autolise_mistura', 'batimento', 'escaldo', 'tangzhong'].forEach((e) =>
+      expect(ehEtapaDeMassa(e)).toBe(true),
+    );
+  });
+
+  it('exclui preparo e cobertura que ficam fora da massa', () => {
+    ['salamoia', 'maceracao', 'infusao', 'finalizacao'].forEach((e) =>
+      expect(ehEtapaDeMassa(e)).toBe(false),
+    );
+  });
+
+  it('etapa desconhecida ou ausente nao conta como massa', () => {
+    expect(ehEtapaDeMassa('etapa_que_nao_existe_ainda')).toBe(false);
+    expect(ehEtapaDeMassa(null)).toBe(false);
+    expect(ehEtapaDeMassa(undefined)).toBe(false);
+  });
+});
+
 describe('distribuiHidratacaoPorEtapa (agua dividida em etapas, 0036)', () => {
   it('linha unica recebe o alvo inteiro (receita nao dividida)', () => {
-    expect(distribuiHidratacaoPorEtapa([0.7], 0.75)).toEqual([0.75]);
+    expect(distribuiHidratacaoPorEtapa([{ etapa: 'batimento', percentual: 0.7 }], 0.75)).toEqual([0.75]);
   });
 
   it('receita sem linha de agua (Brioche) devolve vazio', () => {
@@ -342,37 +363,83 @@ describe('distribuiHidratacaoPorEtapa (agua dividida em etapas, 0036)', () => {
   });
 
   it('preserva a proporcao 85/15 do Original e fecha o alvo', () => {
-    const r = distribuiHidratacaoPorEtapa([0.595, 0.105], 0.7);
+    const r = distribuiHidratacaoPorEtapa([{ etapa: 'batimento', percentual: 0.595 }, { etapa: 'batimento', percentual: 0.105 }], 0.7);
     expect(r).toEqual([0.595, 0.105]);
     expect(r[0] + r[1]).toBeCloseTo(0.7, 10);
   });
 
   it('reescala a proporcao 85/15 quando o alvo muda', () => {
-    const r = distribuiHidratacaoPorEtapa([0.595, 0.105], 0.8);
+    const r = distribuiHidratacaoPorEtapa([{ etapa: 'batimento', percentual: 0.595 }, { etapa: 'batimento', percentual: 0.105 }], 0.8);
     expect(r).toEqual([0.68, 0.12]); // 85% e 15% de 0.80
     expect(r[0] + r[1]).toBeCloseTo(0.8, 10);
   });
 
   it('NAO multiplica a hidratacao pelo numero de etapas', () => {
     // O bug que a 0036 introduziria: gravar o alvo em cada linha somaria 1.50.
-    const r = distribuiHidratacaoPorEtapa([0.525, 0.225], 0.75);
+    const r = distribuiHidratacaoPorEtapa([{ etapa: 'batimento', percentual: 0.525 }, { etapa: 'batimento', percentual: 0.225 }], 0.75);
     expect(r.reduce((a, b) => a + b, 0)).toBeCloseTo(0.75, 10);
   });
 
   it('fecha o alvo mesmo quando a proporcao nao cabe em 4 casas (Multigraos)', () => {
     // 0.58 / 1.12 = 0.5178571..., que nao e exato em NUMERIC(6,4).
-    const r = distribuiHidratacaoPorEtapa([0.58, 0.54], 1.0);
+    const r = distribuiHidratacaoPorEtapa([{ etapa: 'autolise_mistura', percentual: 0.58 }, { etapa: 'escaldo', percentual: 0.54 }], 1.0);
     expect(r.reduce((a, b) => a + b, 0)).toBeCloseTo(1.0, 10);
     r.forEach((v) => expect(v).toBe(Math.round(v * 10000) / 10000));
   });
 
   it('divide em partes iguais quando o total atual e zero', () => {
-    expect(distribuiHidratacaoPorEtapa([0, 0], 0.8)).toEqual([0.4, 0.4]);
+    expect(distribuiHidratacaoPorEtapa([{ etapa: 'batimento', percentual: 0 }, { etapa: 'batimento', percentual: 0 }], 0.8)).toEqual([0.4, 0.4]);
   });
 
   it('mantem 4 casas decimais em todas as linhas', () => {
-    const r = distribuiHidratacaoPorEtapa([0.6375, 0.1125], 0.73);
+    const r = distribuiHidratacaoPorEtapa([{ etapa: 'batimento', percentual: 0.6375 }, { etapa: 'batimento', percentual: 0.1125 }], 0.73);
     r.forEach((v) => expect(v).toBe(Math.round(v * 10000) / 10000));
     expect(r.reduce((a, b) => a + b, 0)).toBeCloseTo(0.73, 10);
+  });
+});
+
+describe('distribuiHidratacaoPorEtapa: agua que NAO e da massa', () => {
+  // Focaccia como esta em producao: autolise 0.5250 + batimento 0.2250 de massa
+  // (= 0.75, que bate com hidratacao_alvo 75) + salamoia 0.0150 de superficie.
+  const focaccia = [
+    { etapa: 'autolise_mistura', percentual: 0.525 },
+    { etapa: 'batimento', percentual: 0.225 },
+    { etapa: 'salamoia', percentual: 0.015 },
+  ];
+
+  it('nao toca na agua da salamoia', () => {
+    const r = distribuiHidratacaoPorEtapa(focaccia, 0.8);
+    expect(r[2]).toBe(0.015);
+  });
+
+  it('o alvo fecha SO entre as etapas de massa', () => {
+    const r = distribuiHidratacaoPorEtapa(focaccia, 0.8);
+    expect(r[0] + r[1]).toBeCloseTo(0.8, 10);
+    expect(r[0]).toBeCloseTo(0.56, 10); // 70% de 0.80
+    expect(r[1]).toBeCloseTo(0.24, 10); // 30% de 0.80
+  });
+
+  it('a salmoura nao entra na proporcao (senao a massa erraria o alvo)', () => {
+    // Distribuindo entre as 3 linhas, a massa fecharia 0.7843 em vez de 0.80.
+    const r = distribuiHidratacaoPorEtapa(focaccia, 0.8);
+    expect(r[0] + r[1]).not.toBeCloseTo((0.75 / 0.765) * 0.8, 6);
+  });
+
+  it('alvo igual ao atual nao muda nada, nem a salamoia', () => {
+    expect(distribuiHidratacaoPorEtapa(focaccia, 0.75)).toEqual([0.525, 0.225, 0.015]);
+  });
+
+  it('sem nenhuma linha de massa devolve tudo intocado', () => {
+    const so = [{ etapa: 'salamoia', percentual: 0.015 }];
+    expect(distribuiHidratacaoPorEtapa(so, 0.8)).toEqual([0.015]);
+  });
+
+  it('etapa nova desconhecida fica de fora ate ser declarada', () => {
+    const comNova = [
+      { etapa: 'autolise_mistura', percentual: 0.6 },
+      { etapa: 'vaporizacao', percentual: 0.02 },
+    ];
+    const r = distribuiHidratacaoPorEtapa(comNova, 0.7);
+    expect(r).toEqual([0.7, 0.02]);
   });
 });
