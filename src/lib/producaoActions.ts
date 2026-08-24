@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { distribuiHidratacaoPorEtapa, slugify } from './producao';
+import { distribuiHidratacaoPorEtapa, ehEtapaDeMassa, slugify } from './producao';
 import type { Database, Json } from './database.types';
 import type { LinhaVolume, ProdutoFormato } from '../pages/Producao/types';
 
@@ -49,14 +49,16 @@ export async function carregarLinhaVolume(
   const levainId = await getLevainId();
   const { data: ingredientes } = await supabase
     .from('ingredientes_receita')
-    .select('ingrediente_id, percentual_baker')
+    .select('ingrediente_id, percentual_baker, etapa')
     .eq('versao_receita_id', versaoReceitaId);
 
-  let somaBaker = 0;
+  // So etapa de massa entra no denominador da farinha (0037); cobertura fica
+  // fora. O levain nunca se divide, entao ler a linha dele segue direto.
+  let somaBakerMassa = 0;
   let levainPct: number | null = null;
   for (const ir of ingredientes ?? []) {
     const pct = Number(ir.percentual_baker) || 0;
-    somaBaker += pct;
+    if (ehEtapaDeMassa((ir.etapa as string | null) ?? null)) somaBakerMassa += pct;
     if (levainId && ir.ingrediente_id === levainId) levainPct = pct;
   }
 
@@ -69,7 +71,7 @@ export async function carregarLinhaVolume(
     fonte,
     rascunho: versao.status === 'rascunho',
     pesoMassaG: versao.peso_massa_g ?? null,
-    somaBaker,
+    somaBakerMassa,
     levainPct,
     qty: 0,
     temProducao: false,
@@ -269,7 +271,7 @@ async function slugUnico(nome: string): Promise<string> {
 
 /**
  * Pao novo de teste: novo produto + receita + versao rascunho. Nasce SEM
- * ingredientes (briefing) -> somaBaker 0 -> levain '-' e massa = qty x peso.
+ * ingredientes (briefing) -> somaBakerMassa 0 -> levain '-' e massa = qty x peso.
  * hidratacao/prefermento ficam registrados em notas pro modulo Receitas autorar.
  */
 export async function criarPaoNovo(input: PaoNovoInput): Promise<LinhaVolume> {

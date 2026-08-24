@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { farinhaPorPaoG } from '../lib/producao';
+import { ehEtapaDeMassa, farinhaPorPaoG } from '../lib/producao';
 import type {
   DadosPreparacao,
   Ficha,
@@ -110,7 +110,7 @@ async function montarPreparacao(semanaId: string): Promise<DadosPreparacao> {
   // --- Ingredientes (formulacao + nome/slug/unidade) ---
   const { data: ingRows } = await supabase
     .from('ingredientes_receita')
-    .select('versao_receita_id, ingrediente_id, percentual_baker, ordem')
+    .select('versao_receita_id, ingrediente_id, percentual_baker, ordem, etapa')
     .in('versao_receita_id', versaoIds);
 
   const idsIngredientes = new Set<string>();
@@ -132,11 +132,15 @@ async function montarPreparacao(semanaId: string): Promise<DadosPreparacao> {
   const produtoById = new Map((produtos ?? []).map((p) => [p.id as string, p]));
 
   // Soma baker por versao + linhas de ingrediente por versao
+  // So as etapas de massa entram no denominador da farinha (0037). Cobertura e
+  // crosta seguem na ficha e no mise, mas fora da conta de farinha/pao.
   const somaBakerPorVersao = new Map<string, number>();
   const ingPorVersao = new Map<string, typeof ingRows>();
   for (const r of ingRows ?? []) {
     const vid = r.versao_receita_id as string;
-    somaBakerPorVersao.set(vid, (somaBakerPorVersao.get(vid) ?? 0) + (Number(r.percentual_baker) || 0));
+    if (ehEtapaDeMassa((r.etapa as string | null) ?? null)) {
+      somaBakerPorVersao.set(vid, (somaBakerPorVersao.get(vid) ?? 0) + (Number(r.percentual_baker) || 0));
+    }
     const arr = ingPorVersao.get(vid) ?? [];
     arr!.push(r);
     ingPorVersao.set(vid, arr);
@@ -157,8 +161,8 @@ async function montarPreparacao(semanaId: string): Promise<DadosPreparacao> {
     const receita = receitaById.get(v.receita_id as string);
     const produto = receita ? produtoById.get(receita.produto_id as string) : null;
     const pesoMassaG = v.peso_massa_g ?? null;
-    const somaBaker = somaBakerPorVersao.get(versaoId) ?? 0;
-    const farinha = farinhaPorPaoG(pesoMassaG, somaBaker);
+    const somaBakerMassa = somaBakerPorVersao.get(versaoId) ?? 0;
+    const farinha = farinhaPorPaoG(pesoMassaG, somaBakerMassa);
 
     const ingredientesFicha: FichaIngrediente[] = (ingPorVersao.get(versaoId) ?? [])
       .slice()

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { derivaEstado } from '../lib/semana';
+import { ehEtapaDeMassa } from '../lib/producao';
 import type {
   DadosProducao,
   FonteLinha,
@@ -27,7 +28,7 @@ export interface UseProducaoVolumeResult {
  * houver), deixando a tela idempotente: reabrir mostra o que ja foi planejado.
  *
  * O preview de massa/levain e calculado em lib/producao.ts a partir de pesoMassaG +
- * somaBaker + levainPct (espelho do trigger). O banco continua sendo a fonte da verdade.
+ * somaBakerMassa + levainPct (espelho do trigger). O banco continua sendo a fonte da verdade.
  */
 export function useProducaoVolume(id: string | undefined): UseProducaoVolumeResult {
   const [dados, setDados] = useState<DadosProducao | null>(null);
@@ -176,7 +177,7 @@ async function carregarLinhas(semanaId: string): Promise<LinhaVolume[]> {
     .select('id, nome, formato')
     .in('id', produtoIds.length ? produtoIds : [UUID_VAZIO]);
 
-  // 5. Ingredientes por versao -> somaBaker + levainPct
+  // 5. Ingredientes por versao -> somaBakerMassa + levainPct
   const { data: levainIng } = await supabase
     .from('ingredientes')
     .select('id')
@@ -186,7 +187,7 @@ async function carregarLinhas(semanaId: string): Promise<LinhaVolume[]> {
 
   const { data: ingredientes } = await supabase
     .from('ingredientes_receita')
-    .select('versao_receita_id, ingrediente_id, percentual_baker')
+    .select('versao_receita_id, ingrediente_id, percentual_baker, etapa')
     .in('versao_receita_id', allVersaoIds);
 
   const somaBakerPorVersao = new Map<string, number>();
@@ -194,7 +195,10 @@ async function carregarLinhas(semanaId: string): Promise<LinhaVolume[]> {
   for (const ir of ingredientes ?? []) {
     const vid = ir.versao_receita_id as string;
     const pct = Number(ir.percentual_baker) || 0;
-    somaBakerPorVersao.set(vid, (somaBakerPorVersao.get(vid) ?? 0) + pct);
+    // So etapa de massa entra no denominador da farinha (0037).
+    if (ehEtapaDeMassa((ir.etapa as string | null) ?? null)) {
+      somaBakerPorVersao.set(vid, (somaBakerPorVersao.get(vid) ?? 0) + pct);
+    }
     if (levainId && ir.ingrediente_id === levainId) {
       levainPctPorVersao.set(vid, pct);
     }
@@ -228,7 +232,7 @@ async function carregarLinhas(semanaId: string): Promise<LinhaVolume[]> {
       fonte,
       rascunho,
       pesoMassaG: v.peso_massa_g ?? null,
-      somaBaker: somaBakerPorVersao.get(versaoId) ?? 0,
+      somaBakerMassa: somaBakerPorVersao.get(versaoId) ?? 0,
       levainPct: levainPctPorVersao.get(versaoId) ?? null,
       qty: qtyPorVersao.get(versaoId) ?? 0,
       temProducao,

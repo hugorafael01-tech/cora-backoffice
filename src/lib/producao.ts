@@ -42,24 +42,29 @@ export interface PreviewLinha {
 /**
  * Espelha o trigger producoes_set_prevista() (0021):
  *   massa  = qty x peso_massa_g
- *   farinha/pao = peso_massa_g / soma_baker      (peso_farinha_por_pao())
+ *   farinha/pao = peso_massa_g / soma_baker_DA_MASSA  (peso_farinha_por_pao())
  *   levain = qty x farinha/pao x baker%_levain
  *
  * Guards identicos ao banco:
  * - peso_massa_g nulo            -> massa = null
- * - soma_baker == 0 OU peso nulo -> farinha/pao = null -> levain = null
+ * - soma_baker da massa == 0 OU peso nulo -> farinha/pao = null -> levain = null
+ *
+ * "da massa" = so as etapas de ETAPAS_DE_MASSA. Cobertura e crosta ficam fora
+ * do denominador (0037): dividir peso de MASSA por uma soma que inclui
+ * cobertura subestima a farinha. O baker de cada linha continua relativo a
+ * farinha, entao com a farinha certa a cobertura sai certa junto.
  *   (cobre o pao novo de teste, que nasce sem ingredientes)
  * - sem linha de levain (pct nulo) -> levain = null
  */
 export function previewLinha(
   qty: number,
   pesoMassaG: number | null,
-  somaBaker: number,
+  somaBakerMassa: number,
   levainPct: number | null
 ): PreviewLinha {
   const massaKg = pesoMassaG == null ? null : round3((qty * pesoMassaG) / 1000);
 
-  const farinhaPorPao = farinhaPorPaoG(pesoMassaG, somaBaker);
+  const farinhaPorPao = farinhaPorPaoG(pesoMassaG, somaBakerMassa);
 
   const levainKg =
     farinhaPorPao == null || levainPct == null
@@ -75,8 +80,8 @@ export function previewLinha(
  * (pao novo de teste sem ingredientes). Usado pela ficha pra derivar g/pao de
  * cada ingrediente (farinha x baker%) sem chamar a rpc.
  */
-export function farinhaPorPaoG(pesoMassaG: number | null, somaBaker: number): number | null {
-  return somaBaker > 0 && pesoMassaG != null ? pesoMassaG / somaBaker : null;
+export function farinhaPorPaoG(pesoMassaG: number | null, somaBakerMassa: number): number | null {
+  return somaBakerMassa > 0 && pesoMassaG != null ? pesoMassaG / somaBakerMassa : null;
 }
 
 function round3(n: number): number {
@@ -337,6 +342,18 @@ export const ETAPAS_DE_MASSA: readonly string[] = [
   'escaldo',
   'tangzhong',
 ];
+
+/**
+ * Soma os baker que compoem a MASSA, ignorando cobertura, crosta e preparo de
+ * superficie. E o denominador de `farinhaPorPaoG` e o espelho exato do filtro
+ * de `peso_farinha_por_pao()` (0037) — os dois tem que concordar, senao a tela
+ * mostra uma farinha e o banco calcula outra.
+ */
+export function somaBakerDaMassa(
+  linhas: { etapa: string | null; percentual: number }[],
+): number {
+  return linhas.reduce((s, l) => (ehEtapaDeMassa(l.etapa) ? s + l.percentual : s), 0);
+}
 
 /** `true` se a etapa e uma das que contam como hidratacao da massa. */
 export function ehEtapaDeMassa(etapa: string | null | undefined): boolean {
