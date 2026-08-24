@@ -20,7 +20,7 @@ export interface LinhaVolume {
   fonte: FonteLinha;
   rascunho: boolean; // versao em status rascunho (receita de teste)
   pesoMassaG: number | null;
-  somaBaker: number; // soma dos percentual_baker da versao
+  somaBakerMassa: number; // soma dos percentual_baker das ETAPAS DE MASSA (0037)
   levainPct: number | null; // baker% da linha de levain (null = sem levain)
   qty: number;
   temProducao: boolean; // ja existe producao desta versao na semana

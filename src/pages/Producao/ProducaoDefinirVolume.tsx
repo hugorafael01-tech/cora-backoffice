@@ -69,7 +69,7 @@ export function ProducaoDefinirVolume() {
       const { massaKg: m, levainKg: lev } = previewLinha(
         l.qty,
         l.pesoMassaG,
-        l.somaBaker,
+        l.somaBakerMassa,
         l.levainPct
       );
       paes += l.qty;

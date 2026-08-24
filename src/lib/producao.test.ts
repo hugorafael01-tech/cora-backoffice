@@ -7,6 +7,7 @@ import {
   diasContexto,
   distribuiHidratacaoPorEtapa,
   ehEtapaDeMassa,
+  somaBakerDaMassa,
   duracaoMin,
   ehEtapaDivisao,
   farinhaPorPaoG,
@@ -441,5 +442,82 @@ describe('distribuiHidratacaoPorEtapa: agua que NAO e da massa', () => {
     ];
     const r = distribuiHidratacaoPorEtapa(comNova, 0.7);
     expect(r).toEqual([0.7, 0.02]);
+  });
+});
+
+describe('somaBakerDaMassa (denominador da farinha/pao, 0037)', () => {
+  // Focaccia como esta em producao apos a remodelagem.
+  const focaccia = [
+    { etapa: 'autolise_mistura', percentual: 0.525 },
+    { etapa: 'batimento', percentual: 0.3 },   // levain
+    { etapa: 'batimento', percentual: 1.0 },   // farinha
+    { etapa: 'batimento', percentual: 0.225 }, // agua
+    { etapa: 'batimento', percentual: 0.03 },  // azeite
+    { etapa: 'batimento', percentual: 0.024 }, // sal
+    { etapa: 'maceracao', percentual: 0.23 },
+    { etapa: 'maceracao', percentual: 0.019 },
+    { etapa: 'maceracao', percentual: 0.008 },
+    { etapa: 'maceracao', percentual: 0.002 },
+    { etapa: 'infusao', percentual: 0.046 },
+    { etapa: 'infusao', percentual: 0.003 },
+    { etapa: 'salamoia', percentual: 0.015 },
+    { etapa: 'salamoia', percentual: 0.002 },
+    { etapa: 'finalizacao', percentual: 0.002 },
+  ];
+
+  it('bate com a planilha do Hugo: 2.756 g / 1.310 g = 2,104', () => {
+    expect(somaBakerDaMassa(focaccia)).toBeCloseTo(2.104, 10);
+    expect(2756 / 1310).toBeCloseTo(2.104, 3);
+  });
+
+  it('a farinha/pao da Focaccia sai 149,7 g, nao 129,6 g', () => {
+    expect(farinhaPorPaoG(315, somaBakerDaMassa(focaccia))).toBeCloseTo(149.71, 1);
+    // o que a formula antiga dava, somando cobertura no denominador:
+    const somaTudo = focaccia.reduce((a, l) => a + l.percentual, 0);
+    expect(farinhaPorPaoG(315, somaTudo)).toBeCloseTo(129.58, 1);
+  });
+
+  it('cobertura e crosta ficam fora do denominador', () => {
+    const soMassa = focaccia.filter((l) => ehEtapaDeMassa(l.etapa));
+    expect(somaBakerDaMassa(focaccia)).toBeCloseTo(
+      soMassa.reduce((a, l) => a + l.percentual, 0), 10);
+  });
+
+  it('escaldo e tangzhong CONTAM (voltam pra massa)', () => {
+    // Multigraos: agua escaldo 0.54 + autolise 0.58 sao hidratacao.
+    const multigraos = [
+      { etapa: 'batimento', percentual: 0.4 },
+      { etapa: 'batimento', percentual: 1.0 },
+      { etapa: 'escaldo', percentual: 0.54 },
+      { etapa: 'autolise_mistura', percentual: 0.58 },
+      { etapa: 'escaldo', percentual: 0.012 },
+      { etapa: 'finalizacao', percentual: 0.06 }, // aveia de crosta (0037)
+    ];
+    expect(somaBakerDaMassa(multigraos)).toBeCloseTo(2.532, 10);
+  });
+
+  it('receita sem cobertura nenhuma nao muda de denominador', () => {
+    const original = [
+      { etapa: 'batimento', percentual: 0.2 },
+      { etapa: 'batimento', percentual: 0.8 },
+      { etapa: 'autolise_mistura', percentual: 0.595 },
+      { etapa: 'batimento', percentual: 0.105 },
+      { etapa: 'batimento', percentual: 0.02 },
+    ];
+    const tudo = original.reduce((a, l) => a + l.percentual, 0);
+    expect(somaBakerDaMassa(original)).toBeCloseTo(tudo, 10);
+  });
+
+  it('etapa desconhecida nao infla o denominador', () => {
+    const r = somaBakerDaMassa([
+      { etapa: 'batimento', percentual: 1.0 },
+      { etapa: 'etapa_futura', percentual: 0.5 },
+    ]);
+    expect(r).toBe(1.0);
+  });
+
+  it('lista vazia devolve 0 (farinha vira null)', () => {
+    expect(somaBakerDaMassa([])).toBe(0);
+    expect(farinhaPorPaoG(315, somaBakerDaMassa([]))).toBeNull();
   });
 });

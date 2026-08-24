@@ -12,7 +12,7 @@ export function VolumeRow({ linha, onQty, onRemover }: Props) {
   const { massaKg, levainKg } = previewLinha(
     linha.qty,
     linha.pesoMassaG,
-    linha.somaBaker,
+    linha.somaBakerMassa,
     linha.levainPct
   );
   const zero = linha.qty === 0;
