@@ -38,9 +38,15 @@ export function useFinanceiro(): UseFinanceiroResult {
       setError(null);
       try {
         const [subsRes, evtRes] = await Promise.all([
+          // Só quem tem cobrança viva no ciclo: 'active' e 'pending_payment' (quem
+          // assinou e ainda não pagou — o caso que mais precisa aparecer aqui).
+          // 'cancelled' e 'paused' ficam de fora: não geram cobrança, mas o registro
+          // permanece no banco (histórico de churn). Mesmo par usado pelo gate de
+          // capacidade do portal e por useDemandaSemana.
           supabase
             .from('subscriptions')
-            .select('id, nome, payment_status, last_payment_at, asaas_customer_id'),
+            .select('id, nome, payment_status, last_payment_at, asaas_customer_id')
+            .in('status', ['active', 'pending_payment']),
           supabase
             .from('asaas_webhook_events')
             .select('id, event_type, asaas_customer_id, received_at, payload')
