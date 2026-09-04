@@ -1,0 +1,57 @@
+-- ============================================================
+-- Migration 0045 - subscriptions.pagador_subscription_id
+-- ============================================================
+-- Fase 2 da geracao de cobrancas (briefing
+-- Docs/CORA_Briefing_CC_Fase2_Previa_Conferencia.md). Mudanca de escopo do
+-- bloco 2a decidida pelo Hugo em 04/09: a previa agrupa por PAGADOR, nao por
+-- assinatura.
+--
+-- POR QUE: dois pares confirmados em que uma pessoa paga duas assinaturas.
+--   Sabina paga a dela e a da Maria Helena  (cartao, fora da primeira leva)
+--   Aldina paga a dela e a da Fernanda      (boleto, DENTRO da primeira leva)
+-- Hoje isso so existe como conhecimento do Hugo. A tela precisa somar o total
+-- do pagador e detalhar as cestas embaixo, e sem uma coluna nao ha como saber
+-- quem paga por quem. Casar por CPF nao serve: a Sabina e a Maria Helena tem o
+-- MESMO CPF, a Aldina e a Fernanda tem CPFs DIFERENTES — os dois pares sao o
+-- mesmo conceito e o CPF os separa em dois fenomenos distintos.
+--
+-- SELF-REFERENCE, e nao tabela `pagadores` nova: o pagador da Aldina e a
+-- propria assinatura da Aldina. Uma tabela a parte criaria uma entidade que
+-- nao existe no negocio (nao ha pagador sem assinatura) e obrigaria a manter
+-- duas linhas em sincronia pra dizer o que uma FK diz sozinha.
+--
+-- NULL = paga a propria assinatura. E o caso de 38 das 40 ativas, entao null
+-- como default implicito e o estado normal, nao a excecao. NAO apontar a
+-- linha pra si mesma pra dizer "pago o meu": isso criaria duas
+-- representacoes do mesmo fato (null e self) e todo leitor teria que tratar
+-- as duas. A regra e uma so: `COALESCE(pagador_subscription_id, id)` da o
+-- pagador de qualquer linha.
+--
+-- PREENCHIMENTO MANUAL do Hugo, DEPOIS de aplicar: 2 linhas apenas (a da
+-- Maria Helena aponta pra da Sabina; a da Fernanda aponta pra da Aldina).
+-- Molde do UPDATE no .verificacao.sql.
+--
+-- SEM CHECK de ciclo (A paga B, B paga A) e sem NOT NULL. Um CHECK de
+-- profundidade exigiria subquery, que Postgres nao aceita em CHECK (licao
+-- registrada no BACKOFFICE_STATUS.md) — viraria trigger, e trigger pra
+-- proteger 2 linhas preenchidas a mao pelo Hugo custa mais do que resolve. A
+-- previa trata o pagador como UM nivel: quem tem a coluna preenchida e
+-- agrupado sob quem ela aponta, e ponto. Se um dia isso virar auto-servico,
+-- ai sim vale a trava.
+--
+-- A `faturas` NAO muda nesta fase: continua uma por assinatura, e a constraint
+-- (subscription_id, periodo_referencia) segue intacta. Se a cobranca vai ao
+-- Asaas agrupada ou separada e decisao da Fase 3, olhando a previa pronta.
+--
+-- Sobre expandir `subscriptions` (tabela legacy): mesmo racional da 0039.
+-- Grants sao de tabela, nao de coluna — sem GRANT novo. NAO recriar policy de
+-- escrita pro authenticated (dropada na 0019).
+--
+-- Expand-only, nullable, sem backfill. Aplicar pelo SQL Editor. Probes em
+-- 0045_subscriptions_pagador.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+ALTER TABLE subscriptions
+  ADD COLUMN pagador_subscription_id uuid NULL REFERENCES subscriptions(id);
