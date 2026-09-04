@@ -1,0 +1,42 @@
+-- ============================================================
+-- Migration 0044 - forma_pagamento_enum ganha 'boleto_pix'
+-- ============================================================
+-- REGISTRO DE MIGRATION JA APLICADA. O statement abaixo foi rodado direto no
+-- banco em 04/09/2026, FORA de sessao, antes de este arquivo existir. O banco
+-- ficou uma migration a frente do repo e este arquivo fecha a divida. NAO
+-- reaplicar: `ALTER TYPE ... ADD VALUE` sem `IF NOT EXISTS` da erro se o valor
+-- ja estiver la (e ele esta). Conferido em 04/09: o enum e
+-- ('cartao','boleto','pix','boleto_pix'), com 'boleto_pix' no fim.
+--
+-- POR QUE O VALOR NOVO: o export do painel do Asaas mostrou que 25 das 40
+-- ativas estao como "Pergunte ao cliente" — billingType UNDEFINED, a cobranca
+-- que aceita boleto E Pix, em que o assinante escolhe a cada pagamento e
+-- alterna entre os dois. Isso nao e 'boleto' nem 'pix': gravar uma das duas
+-- seria gravar mentira sobre 25 dos 27 que entram na cobranca unica, e a
+-- Fase 3 leria essa mentira pra decidir o billingType do POST /v3/payments.
+--
+-- A 0042 nasceu com tres valores porque a Fase 0 so tinha a inferencia por
+-- webhook pra olhar, e ela nao distinguia UNDEFINED de escolha real. O export
+-- do painel desempatou. A previa da Fase 2 filtra por
+-- `forma_pagamento <> 'cartao'` justamente por isso — NUNCA por
+-- `IN ('boleto','pix')`, que hoje deixaria 25 dos 27 de fora em silencio.
+--
+-- Base depois do preenchimento manual do Hugo (04/09, conferido no banco):
+--   cartao 13, boleto 2, boleto_pix 25, null 0   (40 ativas sem 'dev')
+--
+-- ARMADILHAS DO `ADD VALUE`, pra quem for escrever a proxima:
+--   - E IRREVERSIVEL. Postgres nao remove valor de enum; desfazer exige
+--     recriar o tipo e reescrever toda coluna que o usa.
+--   - O valor novo NAO pode ser usado na mesma transacao que o adiciona. Se um
+--     dia isto for aplicado por `supabase db push` (que roda em transacao),
+--     qualquer UPDATE usando 'boleto_pix' tem que ficar em migration separada.
+--   - Entra sempre no FIM da ordem do enum, a menos que se peca BEFORE/AFTER.
+--     Nada aqui depende da ordem, entao ficou no fim mesmo.
+--
+-- Expand-only. Probes em 0044_forma_pagamento_boleto_pix.verificacao.sql —
+-- so o bloco POS vale, pelo motivo explicado la.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+ALTER TYPE forma_pagamento_enum ADD VALUE 'boleto_pix';
