@@ -1,0 +1,37 @@
+-- ============================================================
+-- Migration 0040 - subscriptions.origem_aquisicao
+-- ============================================================
+-- Fase 1 do briefing "Geracao de cobrancas" (04/09/2026). Statement 3 de 6.
+-- Sem dependencia das migrations irmas; pode ser aplicada em qualquer ponto
+-- da sequencia 0038-0043.
+--
+-- POR QUE: atribuicao de aquisicao. O portal (Fase 6, PR separado neste repo
+-- NAO — o codigo e do cora-portal) captura o parametro `?origem=` na entrada
+-- do site, guarda em sessionStorage ate o submit e grava aqui. Sem `origem`,
+-- grava null e nada acontece.
+--
+-- TEXT LIVRE, de proposito. Nao vira enum: o conjunto de origens muda ao sabor
+-- de campanha e indicacao, e enum novo por campanha seria uma migration por
+-- campanha. O custo e nao ter validacao no banco — aceito, porque o campo nao
+-- decide nada (nao bloqueia assinatura, nao entra em cobranca, e so leitura de
+-- relatorio).
+--
+-- Nullable e sem default: null e o caso normal (quem chegou sem parametro).
+-- Nao ha backfill — as 40 assinaturas ativas ficam null e isso e correto, elas
+-- sao anteriores a captura.
+--
+-- DECISAO DE MARCA (nao reintroduzir): nenhum campo visivel no checkout, e
+-- nenhum vocabulario de cupom. Programa de indicacao e estudo futuro
+-- (ClickUp 86e34ge73). Esta coluna e so o destino do parametro de URL.
+--
+-- Sobre expandir `subscriptions` (tabela legacy): mesmo racional documentado
+-- na 0039. Grants sao de tabela, nao de coluna — sem GRANT novo.
+--
+-- Expand-only. Aplicar pelo SQL Editor. Probes em
+-- 0040_subscriptions_origem_aquisicao.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+ALTER TABLE subscriptions
+  ADD COLUMN origem_aquisicao text NULL;
