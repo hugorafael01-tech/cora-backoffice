@@ -1,0 +1,43 @@
+-- ============================================================
+-- Migration 0042 - Enum forma_pagamento_enum (cartao / boleto / pix)
+-- ============================================================
+-- Fase 1 do briefing "Geracao de cobrancas" (04/09/2026). Statement 5 de 6.
+-- Entrou na Fase 1 como o 6o statement por decisao do Hugo em 04/09, depois do
+-- levantamento da Fase 0.
+--
+-- POR QUE: a Fase 2 cobra SO os assinantes de boleto/Pix (cartao continua na
+-- recorrencia do Asaas durante a transicao), e hoje nao existe no banco nenhum
+-- jeito de saber quem e quem. A inferencia pelos webhooks NAO fecha: no
+-- levantamento de 04/09, das 40 assinaturas ativas (sem 'dev') sairam 15
+-- cartao, 22 boleto/Pix e 3 sem nenhum evento de pagamento — contra os 26 de
+-- boleto/Pix que o briefing conta. Um filtro de cobranca nao pode rodar em cima
+-- de um conjunto que nao fecha, entao a fonte da verdade passa a ser esta
+-- coluna, preenchida a mao pelo Hugo conferindo o painel do Asaas.
+--
+-- NAO REUSAR `metodo_pagamento_enum` (pix, transferencia, boleto, asaas), que a
+-- `pedidos_pontuais` usa. Ele descreve como um pedido AVULSO foi liquidado
+-- (inclusive 'transferencia' e 'asaas', que aqui nao querem dizer nada) e nao
+-- tem 'cartao', que e justamente o valor que separa quem entra da cobranca de
+-- quem fica fora. Enum emprestado com valores errados nos dois sentidos custa
+-- mais caro que um tipo novo.
+--
+-- ARMADILHA PRA FASE 3 (nao mudar o enum por causa disso): este campo e a forma
+-- de pagamento DO ASSINANTE, nao o billingType que vai no POST /v3/payments.
+-- Nos 275 eventos ja gravados, 145 vieram com billingType 'UNDEFINED' — que no
+-- Asaas e a cobranca que aceita boleto E Pix, e e a que devolve linha digitavel
+-- e payload Pix na mesma resposta (os dois campos da 0041). A traducao
+-- forma_pagamento -> billingType e decisao da Fase 3, nao deste enum.
+--
+-- Convencao do repo: enums com sufixo _enum, valores snake_case e sem acento
+-- (escrever 'cartao', nunca a forma acentuada).
+--
+-- A coluna que usa este tipo entra na 0043. Esta migration sozinha nao muda
+-- nenhuma tabela.
+--
+-- Expand-only. Aplicar pelo SQL Editor. Probes em
+-- 0042_forma_pagamento_enum.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+CREATE TYPE forma_pagamento_enum AS ENUM ('cartao', 'boleto', 'pix');

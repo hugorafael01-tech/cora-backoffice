@@ -1,0 +1,29 @@
+-- ============================================================
+-- Migration 0038 - Enum pause_reason_enum (pausa voluntaria x inadimplencia)
+-- ============================================================
+-- Fase 1 do briefing "Geracao de cobrancas" (04/09/2026), doc de arquitetura
+-- Docs/CORA_Plano_Cobranca_Unica_v2_1.md. Primeira das 6 statements da fase.
+--
+-- POR QUE: a regua de atraso do plano v2 pausa a assinatura em D+7 (dia 15) se
+-- o boleto do dia 8 nao for pago. Uma assinatura pausada por inadimplencia e
+-- uma pausada a pedido do cliente ficam com o MESMO subscription_status
+-- ('paused'), e sao coisas diferentes: a primeira volta sozinha quando o
+-- pagamento entra, a segunda so volta se o cliente pedir. Sem este eixo, a
+-- unica forma de distinguir seria olhar o historico de webhooks na mao.
+--
+-- Mesmo padrao da 0020, que separou o eixo de PAGAMENTO (payment_status_enum)
+-- do eixo da ASSINATURA (subscription_status). Aqui o eixo novo e o MOTIVO da
+-- pausa — nao substitui nem altera o subscription_status.
+--
+-- Convencao do repo: enums com sufixo _enum, valores snake_case sem acento.
+--
+-- A coluna que usa este tipo entra na 0039 (um statement por arquivo, regra da
+-- sessao). Esta migration sozinha nao muda nenhuma tabela.
+--
+-- Expand-only. Aplicar pelo SQL Editor do Supabase (padrao 0019+: historico
+-- local dessincronizado da CLI). Probes em 0038_pause_reason_enum.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+CREATE TYPE pause_reason_enum AS ENUM ('voluntaria', 'inadimplencia');

@@ -1,0 +1,36 @@
+-- ============================================================
+-- Migration 0039 - subscriptions.pause_reason
+-- ============================================================
+-- Fase 1 do briefing "Geracao de cobrancas" (04/09/2026). Statement 2 de 6.
+-- Depende da 0038 (CREATE TYPE pause_reason_enum) — aplicar NESTA ORDEM.
+--
+-- Coluna nullable de proposito: null = a assinatura nao esta pausada, ou foi
+-- pausada antes desta coluna existir. Nao ha backfill; o campo comeca vazio e
+-- passa a ser escrito quando a regua de atraso (fora do escopo desta sessao)
+-- e a pausa voluntaria comecarem a grava-lo. Nao ha CHECK amarrando
+-- pause_reason a status = 'paused': o par pode ficar temporariamente
+-- inconsistente durante uma transicao e um CHECK ai derrubaria a escrita do
+-- webhook, que e o lado errado do trade-off (mesma logica do "sem CHECK
+-- aritmetico" da 0027).
+--
+-- SOBRE MEXER EM `subscriptions` (tabela legacy Portal-era, ver
+-- BACKOFFICE_STATUS.md "Tabelas legacy NAO mexer"): excecao deliberada, com o
+-- mesmo racional da 0031 pra app_settings e o precedente direto da 0018 e da
+-- 0020, que ja expandiram esta tabela. O eixo de pausa e atributo DA
+-- assinatura e o `status` que ele qualifica vive aqui; tabela satelite so pra
+-- este campo obrigaria todo leitor de status a consultar duas fontes.
+--
+-- Nao mexe em policy nem em grant. Os grants de `subscriptions` sao de TABELA,
+-- nao de coluna (conferido em 04/09: authenticated tem SELECT nas 38 colunas,
+-- anon nao tem nada), entao a coluna nova ja nasce legivel pro admin e invisivel
+-- pro anon, sem GRANT novo. NAO recriar policy de escrita pro authenticated —
+-- a subscriptions_update_own foi dropada na 0019 de proposito.
+--
+-- Expand-only. Aplicar pelo SQL Editor. Probes em
+-- 0039_subscriptions_pause_reason.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+ALTER TABLE subscriptions
+  ADD COLUMN pause_reason pause_reason_enum NULL;

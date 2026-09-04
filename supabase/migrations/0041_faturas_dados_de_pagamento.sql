@@ -1,0 +1,49 @@
+-- ============================================================
+-- Migration 0041 - faturas.linha_digitavel + faturas.pix_payload
+-- ============================================================
+-- Fase 1 do briefing "Geracao de cobrancas" (04/09/2026). Statement 4 de 6.
+-- Um ALTER com as duas colunas = UM statement (a regra da sessao e um
+-- statement por arquivo, nao uma coluna por arquivo). As duas nascem juntas,
+-- da mesma resposta da API, pro mesmo consumidor.
+--
+-- POR QUE: na geracao (Fase 3) o retorno do POST /v3/payments do Asaas e
+-- gravado aqui. Com a linha digitavel e o payload Pix copia-e-cola na
+-- `faturas`, a futura tela "Pagamentos" do portal mostra os tres jeitos de
+-- pagar sem NENHUMA chamada ao Asaas em runtime — e recupera o boleto
+-- registrado que hoje so chega pelo e-mail do Asaas. Custo zero agora: os dois
+-- campos ja vem (ou saem dos endpoints de identificationField e pixQrCode) na
+-- mesma ida que ja vamos fazer.
+--
+-- NAO criar `invoice_url`: ja existe `faturas.asaas_invoice_url` (0027) com
+-- exatamente esse papel. O briefing pedia `invoice_url`; conferido no banco em
+-- 04/09, a coluna existe com o outro nome e e ela que a geracao preenche.
+-- Criar a irma seria duas colunas pro mesmo dado.
+--
+-- Ambas nullable, sem default: null e o estado legitimo de (a) fatura de
+-- cartao, que nao tem boleto nem Pix, e (b) fatura criada antes desta coluna.
+-- A `faturas` esta VAZIA hoje (0 linhas em 04/09), entao nao ha backfill nem
+-- risco de lock — o ALTER e instantaneo.
+--
+-- NOTA DE SEMANTICA (nao e mudanca de schema, e mudanca de uso): a 0027 nasceu
+-- "pago-only, dirigida por webhook — fatura nasce ja 'paga'". A Fase 3 inverte
+-- isso: a fatura passa a ser inserida ANTES da chamada da API, como 'pendente'
+-- (valor que o fatura_status_enum ja tem), e e o INSERT que da a idempotencia,
+-- via faturas_subscription_id_periodo_referencia_key. Nenhum DDL e preciso pra
+-- isso; fica registrado aqui porque quem ler a 0027 sozinha vai achar o
+-- contrario.
+--
+-- RLS INTOCADA. Hoje `faturas` tem UMA policy: admin_read_faturas (SELECT pra
+-- authenticated com is_admin()). Escrita so service_role. A tela Pagamentos do
+-- portal vai precisar de uma policy de SELECT do assinante sobre a propria
+-- fatura — isso NAO entra aqui (tela Pagamentos e fora do escopo da sessao) e
+-- esta anotada como pendencia no BACKOFFICE_STATUS.md.
+--
+-- Expand-only. Aplicar pelo SQL Editor. Probes em
+-- 0041_faturas_dados_de_pagamento.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+ALTER TABLE faturas
+  ADD COLUMN linha_digitavel text NULL,
+  ADD COLUMN pix_payload     text NULL;

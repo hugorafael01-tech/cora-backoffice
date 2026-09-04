@@ -1,0 +1,42 @@
+-- ============================================================
+-- Migration 0043 - subscriptions.forma_pagamento
+-- ============================================================
+-- Fase 1 do briefing "Geracao de cobrancas" (04/09/2026). Statement 6 de 6,
+-- ultima da fase. Depende da 0042 (CREATE TYPE forma_pagamento_enum) —
+-- aplicar NESTA ORDEM.
+--
+-- Fonte da verdade de quem entra na cobranca unica: a Fase 2 monta a previa
+-- SO pra forma_pagamento IN ('boleto','pix'). O racional completo (por que a
+-- inferencia por webhook nao serve, por que enum novo) esta no cabecalho da
+-- 0042.
+--
+-- NULLABLE E SEM DEFAULT, de proposito, apesar de o campo ser obrigatorio pra
+-- previa. Um DEFAULT aqui seria pior que o vazio: chutaria uma forma de
+-- pagamento pras 40 assinaturas de uma vez e o erro entraria silencioso na
+-- primeira cobranca real. Null significa "ninguem conferiu ainda" e e um
+-- estado que a previa consegue reclamar em voz alta.
+--
+-- PREENCHIMENTO E MANUAL, pelo Hugo, conferindo o painel do Asaas, DEPOIS de
+-- aplicar esta migration. Enquanto houver ativa com forma_pagamento null, a
+-- previa da Fase 2 esta incompleta por construcao — e ela deve alertar isso na
+-- tela, nao filtrar em silencio. Query de apoio pra partir de algum lugar (com
+-- o aviso de que a inferencia NAO fecha) em
+-- 0043_subscriptions_forma_pagamento.verificacao.sql.
+--
+-- Sem CHECK e sem NOT NULL agora. Virar NOT NULL depois do preenchimento e uma
+-- migration de contract, que so roda quando as 40 estiverem conferidas — nao
+-- antes, e nao nesta sessao (mesmo padrao expand-contract da Frente D).
+--
+-- Sobre expandir `subscriptions` (tabela legacy): mesmo racional documentado
+-- na 0039. Grants sao de tabela, nao de coluna — sem GRANT novo. NAO recriar
+-- policy de escrita pro authenticated (dropada na 0019): o preenchimento e
+-- pelo SQL Editor ou via service_role.
+--
+-- Expand-only. Aplicar pelo SQL Editor. Probes em
+-- 0043_subscriptions_forma_pagamento.verificacao.sql.
+--
+-- Data: 2026-09-04
+-- ============================================================
+
+ALTER TABLE subscriptions
+  ADD COLUMN forma_pagamento forma_pagamento_enum NULL;
