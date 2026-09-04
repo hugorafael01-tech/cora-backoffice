@@ -106,7 +106,9 @@ export type CodigoAlerta =
   | 'preco_divergente'
   | 'total_extras_divergente'
   | 'sem_cliente_asaas'
-  | 'grupo_forma_mista';
+  | 'grupo_forma_mista'
+  | 'pagador_nao_encontrado'
+  | 'ajuste_nao_reconstruivel';
 
 export interface AlertaPrevia {
   codigo: CodigoAlerta;
@@ -322,16 +324,33 @@ function rateioDeEntrada(
 /**
  * Ajuste proporcional de aumento no meio do mes ANTERIOR.
  *
- * LIMITE CONHECIDO DO SCHEMA: nao existe historico de valor. A unica pista e o
- * par next_billing_change_date/next_billing_value, que e prospectivo — depois
- * que a mudanca entra em vigor, `valor_mensal` e sobrescrito e o valor velho
- * some. Entao so da pra calcular o ajuste enquanto a mudanca ainda esta
- * agendada, e so quando ela e AUMENTO (reducao nao gera ajuste: pela regra de
- * 29/08 ela nao vale no mes corrente).
+ * Contexto (Hugo, 04/09): aumento no meio do mes so acontece em MUDANCA DE
+ * PLANO (1 -> 2 -> 3 paes), proporcional as semanas restantes. Aumento por
+ * outro motivo so vale na virada, e ai nao ha ajuste a fazer.
  *
- * Quando nao da pra calcular, devolve 0 — nunca chuta. Se um dia isso virar
- * dinheiro de verdade, o caminho e uma tabela de historico, nao heuristica
- * aqui.
+ * ==========================================================================
+ * ACHADO DE 04/09: HOJE O AJUSTE E IRRECONSTRUIVEL PELO BANCO.
+ * ==========================================================================
+ * O PATCH de mudanca de plano do portal (cora-portal,
+ * api/subscriptions/index.js) SOBRESCREVE `valor_mensal` na hora e diz, em
+ * comentario proprio, que NAO toca `next_billing_*` — "regra de quando a
+ * mudanca vale fica pra fase 2". E ninguem mais escreve nessas duas colunas em
+ * repo nenhum: a 0014 so as criou, o portal so as LE pra mostrar "mudanca
+ * pendente", e as 40 ativas estao com as duas nulas.
+ *
+ * Consequencia: quando um plano muda no dia 10, o valor velho desaparece no
+ * mesmo instante e, no dia 26, a previa nao tem como saber que houve mudanca —
+ * a assinatura parece ter sempre valido o valor novo. O unico registro do valor
+ * anterior e o e-mail que o portal manda pro Hugo, que nao esta no banco.
+ *
+ * Por isso a funcao abaixo, na pratica, so vai calcular alguma coisa se algum
+ * dia `next_billing_*` passar a ser populado. Enquanto nao for, ela devolve 0 —
+ * mas NAO em silencio: `montaPrevia` levanta `ajuste_nao_reconstruivel` sempre
+ * que houver assinatura sem esse dado, justamente pra que "nao houve ajuste" e
+ * "nao da pra saber se houve" nao se pareçam na tela.
+ *
+ * A saida (tabela de historico de valor vs lancamento manual em outubro) e
+ * decisao do Hugo, e nao esta implementada aqui.
  */
 function ajusteProporcional(sub: SubscriptionPrevia, periodoReferencia: string): number {
   const { next_billing_change_date: quando, next_billing_value: novo } = sub;
@@ -487,18 +506,44 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
   const grupos = new Map<string, GrupoPagador>();
 
   for (const sub of entrada.subscriptions) {
-    const pagadorId = sub.pagador_subscription_id ?? sub.id;
-    const pagador = porId.get(pagadorId) ?? sub;
+    const apontado = sub.pagador_subscription_id;
+    let pagadorId = apontado ?? sub.id;
+    let pagador = porId.get(pagadorId);
+
+    if (apontado !== null && pagador === undefined) {
+      // A coluna aponta pra uma assinatura que nao veio na leitura: ou nao
+      // existe mais, ou nao esta ativa, ou e uma linha 'dev'. Antes isto caia
+      // num `?? sub` que remontava o grupo em silencio com o nome e a forma de
+      // pagamento do DEPENDENTE — a tela mostraria um pagador que nao e o
+      // pagador, e o filtro de cartao passaria a olhar a forma errada.
+      //
+      // Agora: alerta, e o dependente volta a ser pagador de si mesmo. Ele
+      // continua aparecendo (nunca some da previa), so nao finge estar
+      // agrupado sob alguem que nao esta la.
+      alertas.push({
+        codigo: 'pagador_nao_encontrado',
+        mensagem:
+          `${sub.nome} aponta para um pagador que nao esta entre as assinaturas ativas ` +
+          `(pode ter sido cancelada ou pausada). Cobrada separadamente, como pagadora de si mesma.`,
+        subscriptionId: sub.id,
+      });
+      pagadorId = sub.id;
+      pagador = sub;
+    }
+
     const linha = linhas.get(sub.id);
     /* c8 ignore next */
     if (!linha) continue;
 
     let grupo = grupos.get(pagadorId);
     if (!grupo) {
+      // `pagador` so e undefined no caminho ja tratado acima (que reatribui
+      // pagadorId e pagador). O `?? sub` fecha o tipo sem inventar caso novo.
+      const raiz = pagador ?? sub;
       grupo = {
         pagadorId,
-        pagadorNome: pagador.nome,
-        formaPagamento: pagador.forma_pagamento,
+        pagadorNome: raiz.nome,
+        formaPagamento: raiz.forma_pagamento,
         assinaturas: [],
         total: 0,
       };
@@ -546,11 +591,49 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
 
   saida.sort((a, b) => a.pagadorNome.localeCompare(b.pagadorNome, 'pt-BR'));
 
+  // ---- escopo dos alertas ----------------------------------------------
+  // So sobrevive alerta de quem esta NA TELA. Os pedidos dos 13 de cartao
+  // passam por esta funcao (a leitura nao os filtra, pra que forma nula
+  // apareca), e sem este corte eles gerariam alerta de preco e de entrega numa
+  // tela que lista so os 27 — o Hugo veria um aviso sobre alguem que nao esta
+  // ali. Alerta irrelevante treina a ignorar alerta, e ai o relevante passa
+  // batido junto.
+  //
+  // subscriptionId null = alerta da previa inteira, nao de uma linha; esse
+  // sempre fica.
+  const idsNaPrevia = new Set(
+    saida.flatMap((g) => g.assinaturas.map((a) => a.subscriptionId)),
+  );
+  const alertasNoEscopo = alertas.filter(
+    (a) => a.subscriptionId === null || idsNaPrevia.has(a.subscriptionId),
+  );
+
+  // Enquanto ninguem popular next_billing_*, "nao houve ajuste" e "nao da pra
+  // saber se houve" sao o mesmo 0. Este alerta separa os dois. Ele se aposenta
+  // sozinho no dia em que todas as linhas da previa tiverem o dado: a condicao
+  // e a ausencia do dado, nao a ausencia do mecanismo.
+  const semDadoDeAjuste = saida
+    .flatMap((g) => g.assinaturas)
+    .some((a) => {
+      const sub = porId.get(a.subscriptionId);
+      return sub !== undefined && sub.next_billing_change_date === null;
+    });
+  if (semDadoDeAjuste) {
+    alertasNoEscopo.push({
+      codigo: 'ajuste_nao_reconstruivel',
+      mensagem:
+        'Ajuste proporcional de mudanca de plano nao e reconstruivel pelo banco: o PATCH do ' +
+        'portal sobrescreve valor_mensal na hora e nao grava next_billing_*. Se houve mudanca ' +
+        'de plano no mes anterior, o ajuste NAO esta nesta previa — confira a mao.',
+      subscriptionId: null,
+    });
+  }
+
   return {
     periodoReferencia,
     janela,
     grupos: saida,
     totalGeral: dinheiro(saida.reduce((s, g) => s + g.total, 0)),
-    alertas,
+    alertas: alertasNoEscopo,
   };
 }

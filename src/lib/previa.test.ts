@@ -384,3 +384,98 @@ describe('mensalidade', () => {
     expect(previa.grupos[0].assinaturas[0].ajuste).toBe(0);
   });
 });
+
+describe('escopo dos alertas', () => {
+  it('alerta de extra de quem e cartao nao vaza pra tela dos 27', () => {
+    // A leitura NAO filtra cartao (pra que forma nula apareca), entao os
+    // pedidos dos 13 passam por aqui. Mas a tela lista so os 27: alerta sobre
+    // quem nao esta ali treina a ignorar alerta.
+    const cartao = sub({ id: 'c', nome: 'Cartao', forma_pagamento: 'cartao' });
+    const p = pedido({
+      id: 'wo-c', subscription_id: 'c',
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0 }],
+    });
+    const previa = montaPrevia(
+      entrada({ subscriptions: [cartao], weeklyOrders: [p], entregas: entregues([p]) }),
+      '2026-10',
+    );
+    expect(previa.grupos).toEqual([]);
+    expect(codigos(previa)).not.toContain('preco_zero');
+  });
+
+  it('alerta de entrega pendente de quem e cartao tambem nao vaza', () => {
+    const cartao = sub({ id: 'c', nome: 'Cartao', forma_pagamento: 'cartao' });
+    const p = pedido({ id: 'wo-c', subscription_id: 'c' });
+    const previa = montaPrevia(
+      entrada({
+        subscriptions: [cartao], weeklyOrders: [p],
+        entregas: [{ weekly_order_id: p.id, status: 'em_rota' }],
+      }),
+      '2026-10',
+    );
+    expect(codigos(previa)).not.toContain('entrega_nao_confirmada');
+  });
+
+  it('o mesmo alerta aparece quando quem pediu entra na previa', () => {
+    // Espelho do teste acima: prova que o corte e pelo escopo, nao um bug que
+    // apagou o alerta pra todo mundo.
+    const p = pedido({
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0 }],
+    });
+    const previa = montaPrevia(
+      entrada({ weeklyOrders: [p], entregas: entregues([p]) }), '2026-10');
+    expect(codigos(previa)).toContain('preco_zero');
+  });
+});
+
+describe('pagador ausente', () => {
+  it('quem aponta pra pagador inativo e cobrado separado, com alerta', () => {
+    // A assinatura da pagadora foi cancelada/pausada e nao veio na leitura de
+    // ativas. Antes, o `?? sub` remontava o grupo em silencio com o nome e a
+    // forma do dependente.
+    const orfa = sub({
+      id: 'orf', nome: 'Orfa', forma_pagamento: 'boleto',
+      pagador_subscription_id: 'sumiu',
+    });
+    const previa = montaPrevia(entrada({ subscriptions: [orfa] }), '2026-10');
+    expect(codigos(previa)).toContain('pagador_nao_encontrado');
+    // nao some da previa: vira pagadora de si mesma
+    expect(previa.grupos).toHaveLength(1);
+    expect(previa.grupos[0].pagadorId).toBe('orf');
+    expect(previa.grupos[0].pagadorNome).toBe('Orfa');
+  });
+
+  it('pagador presente nao levanta o alerta', () => {
+    const a = sub({ id: 'ald', nome: 'Aldina', forma_pagamento: 'boleto' });
+    const f = sub({ id: 'fer', nome: 'Fernanda', forma_pagamento: 'boleto',
+      pagador_subscription_id: 'ald' });
+    const previa = montaPrevia(entrada({ subscriptions: [a, f] }), '2026-10');
+    expect(codigos(previa)).not.toContain('pagador_nao_encontrado');
+  });
+});
+
+describe('ajuste irreconstruivel', () => {
+  it('alerta quando falta o dado que permitiria reconstruir o ajuste', () => {
+    // Hoje NADA popula next_billing_*: o PATCH do portal sobrescreve
+    // valor_mensal e nao grava as duas colunas. Sem o alerta, "nao houve
+    // ajuste" e "nao da pra saber se houve" viram o mesmo 0 na tela.
+    const previa = montaPrevia(entrada(), '2026-10');
+    expect(previa.grupos[0].assinaturas[0].ajuste).toBe(0);
+    expect(codigos(previa)).toContain('ajuste_nao_reconstruivel');
+    expect(previa.alertas.find((a) => a.codigo === 'ajuste_nao_reconstruivel')!.subscriptionId)
+      .toBeNull();
+  });
+
+  it('se aposenta sozinho quando todas as linhas tem o dado', () => {
+    const previa = montaPrevia(
+      entrada({
+        subscriptions: [sub({
+          next_billing_change_date: '2026-09-17', next_billing_value: 134,
+        })],
+      }),
+      '2026-10',
+    );
+    expect(codigos(previa)).not.toContain('ajuste_nao_reconstruivel');
+    expect(previa.grupos[0].assinaturas[0].ajuste).toBe(10);
+  });
+});
