@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { montaPrevia } from './previa';
-import { montaEntradaGolden, type Golden } from './previaGolden';
+import {
+  conteudoParaHash,
+  hashGolden,
+  montaEntradaGolden,
+  type Golden,
+} from './previaGolden';
 import bruto from './previa.golden.json';
 
 /**
@@ -16,12 +21,24 @@ import bruto from './previa.golden.json';
  * commitado nos dois repos, com cada lado afirmando contra ele. O gemeo precisa
  * provar uma coisa so — mesma entrada, mesma saida.
  *
- * Mudou uma regra: muda aqui, roda `npx vite-node scripts/gera-golden.ts`,
- * copia o JSON pro portal, roda `npm run test:previa` la.
+ * Mudou uma regra: muda aqui, roda `npm run golden`, copia o JSON pro portal,
+ * roda `npm run test:previa` la.
+ *
+ * O FIXTURE VIAJA COM O GEMEO, NO MESMO PR. Como cada lado afirma contra a
+ * propria copia, regenerar de um lado so deixa os DOIS verdes enquanto ja
+ * divergiram. O hash impresso abaixo nao impede isso — torna visivel: os dois
+ * testes imprimem o mesmo numero quando estao em sincronia.
  */
 const golden = bruto as unknown as Golden;
 
 describe('golden do gemeo', () => {
+  it('o hash confere e fica visivel', () => {
+    // Impresso de proposito: e o que se compara com a saida do
+    // `npm run test:previa` do portal pra saber se os dois leem o MESMO fixture.
+    console.log(`\n  golden hash: ${golden.hash}\n`);
+    expect(hashGolden(conteudoParaHash(golden))).toBe(golden.hash);
+  });
+
   it('a saida bate com o fixture', () => {
     expect(montaPrevia(montaEntradaGolden(golden), golden.periodoReferencia)).toEqual(golden.saida);
   });
