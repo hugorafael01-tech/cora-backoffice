@@ -1,5 +1,6 @@
 {
-  "_leia": "GOLDEN FIXTURE DO GEMEO. Mesmo arquivo em cora-backoffice/src/lib/ e cora-portal/api/_lib/. A entrada e a saida esperada da montagem da previa; os dois repos afirmam contra ele. Mudou regra: muda no backoffice, roda 'REGENERA_GOLDEN=1 npx vitest run src/lib/previa.golden.test.ts', copia o arquivo pro portal e roda 'npm run test:previa' la. Divergiu, um dos dois fica vermelho.",
+  "_leia": "GOLDEN FIXTURE DO GEMEO. Mesmo arquivo em cora-backoffice/src/lib/ e cora-portal/api/_lib/. A entrada e a saida esperada da montagem da previa; os dois repos afirmam contra ele. Mudou regra: muda no backoffice, roda 'REGENERA_GOLDEN=1 npx vitest run src/lib/previa.golden.test.ts', copia o arquivo pro portal e roda 'npm run test:previa' la. Divergiu, um dos dois fica vermelho. O campo hash e a impressao digital do conteudo: os dois testes o imprimem, e o fixture viaja com o gemeo no MESMO PR.",
+  "hash": "0b47b856f1beaf",
   "periodoReferencia": "2026-11",
   "entrada": {
     "subscriptions": [

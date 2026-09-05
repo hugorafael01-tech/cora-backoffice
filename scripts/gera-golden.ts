@@ -16,12 +16,21 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { montaPrevia } from '../src/lib/previa';
-import { montaEntradaGolden, type Golden } from '../src/lib/previaGolden';
+import {
+  conteudoParaHash,
+  hashGolden,
+  montaEntradaGolden,
+  type Golden,
+} from '../src/lib/previaGolden';
 
 const caminho = new URL('../src/lib/previa.golden.json', import.meta.url);
 const bruto = JSON.parse(readFileSync(caminho, 'utf8')) as Golden;
 
 bruto.saida = montaPrevia(montaEntradaGolden(bruto), bruto.periodoReferencia);
+bruto.hash = hashGolden(conteudoParaHash(bruto));
 writeFileSync(caminho, `${JSON.stringify(bruto, null, 2)}\n`);
 
 console.log('golden regenerado:', caminho.pathname);
+console.log('hash:', bruto.hash);
+console.log('\nCopie o arquivo pro cora-portal/api/_lib/ e rode `npm run test:previa` la.');
+console.log('Os dois lados tem que imprimir ESTE hash. No mesmo PR.');

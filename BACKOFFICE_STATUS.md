@@ -2,7 +2,9 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 5 de setembro de 2026 (12ª sessão) — **Fase 3, Bloco A: o gêmeo da prévia existe no portal, amarrado por golden fixture.** `src/lib/previa.ts` transposto para `cora-portal/api/_lib/previa.js`. **(a) O golden SUBSTITUI o porte dos 36 testes** (decisão do Hugo): suíte espelhada em estilo estrangeiro seria uma segunda coisa a manter, que divergiria. As regras seguem cobertas só aqui; o gêmeo prova mesma entrada, mesma saída. **(b) O fixture é rico de propósito** — grupo de pagador, troca, cortesia, zerado sem justificativa, proporcional de entrada, ajuste, a quinta 29/10 fora da janela, entrega não confirmada e um cartão cujo alerta é descartado pelo escopo — e um segundo teste impede que ele empobreça sem ninguém notar. **(c) Conferi que o teste realmente pega divergência**, sabotando o `dinheiro()` do gêmeo: 5 verificações vermelhas e exit 1. **(d) As mensagens são comparadas texto a texto**, não só os códigos, porque é o que pega diferença de `toLocaleString` entre browser e serverless. Passou. **(e) `vite-node` entrou como devDependency** só para o `npm run golden`, e o script mora fora de `src/` para não abrir types de node ao app. **(f) Registrada a ação da migração do cartão** para o par Sabina/Maria Helena, que é sequência a executar e não pendência vaga. Bloco A fechado; B e C não começaram. 228 testes aqui, `npm run test:previa` verde no portal.
+**Última atualização:** 5 de setembro de 2026 (13ª sessão) — **Hash no golden do gêmeo, e a regra da conciliação da Fase 4 registrada.** Duas correções pedidas pelo Hugo antes do Bloco B. **(a) O golden tinha um ponto cego:** o fixture está nos dois repos e cada lado afirma contra a própria cópia, então regenerar de um lado só deixava os **dois verdes enquanto já divergiam**. O JSON ganhou `hash` (cyrb53 do conteúdo, escrito à mão porque a função também precisa atravessar) e os dois testes o imprimem em toda rodada — `0b47b856f1beaf` hoje. Cada lado também confere que o hash bate com o conteúdo, o que pega edição à mão. Conferido nos dois cenários: fixture editado sem regenerar quebra, e regeneração de um lado só passa a mostrar hashes diferentes. **A regra de espelhamento no mesmo PR passa a valer para o fixture.** **(b) `vite.config.ts` ganhou `test.disableConsoleIntercept`**, porque o reporter padrão do vitest engolia o `console.log` de teste que passa — o hash não aparecia, e um hash que ninguém vê não serve para nada. **(c) Registrada a regra da Fase 4:** a conciliação compara **conjunto de pagadores, valores e códigos de alerta, nunca o texto das mensagens** — copy é apresentação, e uma vírgula não pode bloquear cobrança real. O gêmeo segue cópia integral e o golden segue comparando mensagem texto a texto; é lá que divergência de copy deve morrer. **(d) As duas Fernandas: encerrado, nada a fazer** — na operação o Hugo segue a etiqueta de endereço. 229 testes, `npm run test:previa` verde no portal. Bloco B começa agora.
+
+Antes (12ª sessão) — 5 de setembro de 2026 (12ª sessão) — **Fase 3, Bloco A: o gêmeo da prévia existe no portal, amarrado por golden fixture.** `src/lib/previa.ts` transposto para `cora-portal/api/_lib/previa.js`. **(a) O golden SUBSTITUI o porte dos 36 testes** (decisão do Hugo): suíte espelhada em estilo estrangeiro seria uma segunda coisa a manter, que divergiria. As regras seguem cobertas só aqui; o gêmeo prova mesma entrada, mesma saída. **(b) O fixture é rico de propósito** — grupo de pagador, troca, cortesia, zerado sem justificativa, proporcional de entrada, ajuste, a quinta 29/10 fora da janela, entrega não confirmada e um cartão cujo alerta é descartado pelo escopo — e um segundo teste impede que ele empobreça sem ninguém notar. **(c) Conferi que o teste realmente pega divergência**, sabotando o `dinheiro()` do gêmeo: 5 verificações vermelhas e exit 1. **(d) As mensagens são comparadas texto a texto**, não só os códigos, porque é o que pega diferença de `toLocaleString` entre browser e serverless. Passou. **(e) `vite-node` entrou como devDependency** só para o `npm run golden`, e o script mora fora de `src/` para não abrir types de node ao app. **(f) Registrada a ação da migração do cartão** para o par Sabina/Maria Helena, que é sequência a executar e não pendência vaga. Bloco A fechado; B e C não começaram. 228 testes aqui, `npm run test:previa` verde no portal.
 
 Antes (11ª sessão) — 4 de setembro de 2026 (11ª sessão) — **Fase 2c: a prévia aprende a diferença entre troca de produto, cortesia e preço que faltou cadastrar.** Saiu de conferir a prévia de outubro na tela da 2b: os 4 alertas de `preco_zero` e os 4 de `preco_divergente` **não eram erro nenhum**. **(a) Tarefa 1, verificada antes de codar: `composition = null` é cesta padrão com todos os slots usados**, não "ainda não escolheu" — o comentário do endpoint do portal diz que null "limpa o swap (volta ao padrao da assinatura)", e a Julia tem null em 13 e 20/08 com extras pagos normalmente. A regra do briefing valia. **(b) Regra de slot vago:** zerado até `total_paes - (original + integral)` é troca, cobrado zero e sem alerta; consome slot na ordem do array e só vira troca se couber inteiro. **(c) `motivo: 'cortesia'` no jsonb** silencia o zerado que sobrou. Só leitura: quem escreve é o Hugo, por SQL. **(d) `preco_divergente` deixa de disparar para troca e cortesia** — nelas o zero é a regra, e o alerta era ruído por construção. **(e) Achado que muda o critério de pronto:** o **David Hertz está `paused`**, então nunca entrou na prévia nem gerou alerta (é por isso que o briefing conta 4 alertas para 5 linhas), e a **Julia ainda vai alertar até o Hugo gravar o `motivo`** no jsonb dela. Simulei contra o banco: as 3 trocas já silenciam sozinhas. **(f) Armadilha registrada:** o endpoint do portal valida `soma(composition) === total_paes`, então pedido feito pela tela **nunca** tem slot vago — todos os do banco vieram de escrita SQL direta, e formalizar a troca exige mudar aquela validação junto. 8 testes novos, 226 no total, lint, tsc e build limpos.
 
@@ -99,7 +101,9 @@ Antes (3ª sessão) — **PR #75 mergeado e migration 0033 APLICADA** (`main` em
 
 ## Branches em voo
 
-**Em voo (05/09/2026, 12ª sessão):** `feat/gemeo-previa-fase3a` **nos dois repos** — aqui o golden fixture, o teste, o `previaGolden.ts`, o `scripts/gera-golden.ts` e o STATUS; no `cora-portal`, o gêmeo `api/_lib/previa.js`, a cópia do golden e o `scripts/test-previa.mjs`. Também `docs/briefing-fase3` (PR #89), só com o briefing. **Nada de banco.** `main` em `5a54b1e`. Blocos B e C da Fase 3 não começaram.
+**Em voo (05/09/2026, 13ª sessão):** `feat/golden-hash-e-fase4` aqui e `feat/golden-hash` no `cora-portal`, em PR draft — o hash do golden nos dois lados, o `disableConsoleIntercept` e as duas regras novas no STATUS. **Nada de banco.** `main` em `fa7b4a6` (backoffice) e `9280cc9` (portal). Bloco B da Fase 3 não começou.
+
+Antes (05/09, 12ª sessão) — `feat/gemeo-previa-fase3a` **nos dois repos** — aqui o golden fixture, o teste, o `previaGolden.ts`, o `scripts/gera-golden.ts` e o STATUS; no `cora-portal`, o gêmeo `api/_lib/previa.js`, a cópia do golden e o `scripts/test-previa.mjs`. Também `docs/briefing-fase3` (PR #89), só com o briefing. **Nada de banco.** `main` em `5a54b1e`. Blocos B e C da Fase 3 não começaram.
 
 Antes (04/09, 11ª sessão) — `feat/previa-troca-cortesia` (PR draft) — a Fase 2c em `previa.ts`, `usePrevia.ts` e `ExtrasDetalhe.tsx`. E `docs/briefing-fase2c` (PR #87 draft), só com o briefing. **Nada de banco:** nenhuma migration; a cortesia é jsonb. `main` em `68de341`. **Pendência operacional do Hugo:** gravar `motivo: 'cortesia'` no extra da Julia de 27/08, por SQL — sem isso a prévia de outubro fecha com 1 alerta de `preco_zero`.
 
@@ -216,6 +220,18 @@ cora-portal/api/_lib/previa.golden.json   CÓPIA byte a byte
 3. copia o JSON para `cora-portal/api/_lib/`
 4. `npm run test:previa` lá
 
+**O hash fecha o ponto cego (05/09).** O fixture está commitado nos dois lados e cada um afirma contra a **própria** cópia — então regenerar de um lado só deixava os dois verdes enquanto já divergiam. O JSON ganhou um campo `hash` (cyrb53 do conteúdo, sem `node:crypto` porque a função também precisa atravessar), e **os dois testes o imprimem em toda rodada**:
+
+```
+  golden hash: 0b47b856f1beaf
+```
+
+Não impede a divergência, torna visível: os dois lados imprimem o mesmo número quando estão em sincronia. E cada lado ainda confere que o hash bate com o conteúdo, o que pega a edição à mão sem regeneração.
+
+**Por isso o fixture viaja com o gêmeo, no MESMO PR.** A regra de espelhamento vale para o JSON tanto quanto para o `previa.js`.
+
+Efeito colateral de configuração: o reporter padrão do vitest engole `console.log` de teste que passa, o que derrubava o propósito do hash. `vite.config.ts` ganhou `test.disableConsoleIntercept: true` (e o `defineConfig` passou a vir de `vitest/config`, que é o que conhece a chave `test`).
+
 A entrada do fixture cobre de propósito: grupo de pagador, troca por slot vago, cortesia declarada, zerado sem justificativa (que **tem** que alertar), proporcional de entrada, ajuste de aumento, a quinta 29/10 fora da janela, entrega não confirmada, e um assinante de cartão cujo alerta tem que ser descartado pelo escopo. Um segundo teste afirma que o fixture continua cobrindo isso, para que ninguém o empobreça sem notar.
 
 O teste de mensagens compara **texto a texto**, e não só os códigos: é o que pega divergência de `toLocaleString` entre o runtime do browser e o do serverless. Passou.
@@ -266,6 +282,22 @@ Simulado contra o banco em 04/09, a prévia de 2026-10 fica assim:
 | David Hertz 03/09 | não aparece: a assinatura está **pausada** |
 
 Duas notas sobre a tabela do briefing. A Julia precisa do `motivo` escrito por SQL no jsonb — o código lê, mas ninguém escreveu ainda. E o **David está `paused` e com `forma_pagamento` nula**, então não entra na prévia e nunca gerou alerta (por isso o briefing conta 4 alertas para 5 linhas). Exibir as linhas dele exige o bloco "não entram nesta cobrança", que é pendência pós-outubro.
+
+#### Regra para a Fase 4: o que a conciliação compara
+
+**Conjunto de pagadores, valores e códigos de alerta. Nunca o texto das mensagens.**
+
+A conciliação da Fase 4 compara a prévia da tela com a que o portal recalcula antes de criar as cobranças, e bloqueia a geração quando discordam. O que ela olha tem que ser **o que move dinheiro**:
+
+| compara | não compara |
+|---|---|
+| conjunto de `pagadorId` esperado vs criado | o texto de `mensagem` |
+| soma dos valores por grupo e o total geral | a ordem das palavras |
+| os `codigo` dos alertas | |
+
+**Por quê:** mensagem é apresentação. Um ajuste de copy — uma vírgula, um "confira" que vira "confirme" — bloquearia geração real de cobrança. E o risco de `toLocaleString` que o golden pegou (o ICU do serverless formatando `R$ 1234,50` onde o browser formata `R$ 1.234,50`) voltaria como **bloqueio de cobrança** em vez de teste vermelho, que é onde ele deve morrer.
+
+O gêmeo continua sendo **cópia integral**, e o golden continua comparando as mensagens texto a texto — é lá que a divergência de copy tem que aparecer. A conciliação em runtime olha só o dinheiro.
 
 #### Ação da migração do cartão: o par Sabina / Maria Helena
 
