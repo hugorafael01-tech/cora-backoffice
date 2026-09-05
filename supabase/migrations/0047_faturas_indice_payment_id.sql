@@ -1,0 +1,24 @@
+-- ============================================================
+-- Migration 0047 - indice nao-unico em faturas.asaas_payment_id
+-- ============================================================
+-- Fase 3, bloco B. Par da 0046: aplicar DEPOIS dela.
+--
+-- O DROP CONSTRAINT da 0046 leva junto o indice que sustentava o UNIQUE, e a
+-- busca por pagamento continua existindo — e vai existir mais: a conciliacao da
+-- Fase 4 parte do `asaas_payment_id` pra achar as N faturas do grupo, e a Fase
+-- 5 idem. Sem indice isso vira sequential scan.
+--
+-- NAO-UNICO de proposito: as N faturas de um grupo compartilham o mesmo id de
+-- pagamento. Esse e o ponto inteiro da 0046.
+--
+-- Sem `WHERE asaas_payment_id IS NOT NULL`: a coluna e nula so entre o insert e
+-- a resposta da API (segundos), e um indice parcial economizaria nada num
+-- volume de dezenas de linhas por mes. Indice simples e mais previsivel de ler.
+--
+-- Aplicar pelo SQL Editor. Probes em
+-- 0047_faturas_indice_payment_id.verificacao.sql.
+--
+-- Data: 2026-09-05
+-- ============================================================
+
+CREATE INDEX faturas_asaas_payment_id_idx ON faturas (asaas_payment_id);

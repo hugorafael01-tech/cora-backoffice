@@ -1,0 +1,40 @@
+-- ============================================================
+-- Migration 0046 - faturas.asaas_payment_id deixa de ser UNIQUE
+-- ============================================================
+-- Fase 3, bloco B (briefing Docs/CORA_Briefing_CC_Fase3_Geracao_API_v2.md).
+--
+-- POR QUE: a cobranca e UMA POR PAGADOR, mas a `faturas` continua UMA POR
+-- ASSINATURA (decisao do Hugo, 05/09). O grupo da Aldina vira um boleto de
+-- R$ 278 e duas linhas de fatura, uma dela e uma da Fernanda — e as duas
+-- guardam o MESMO `asaas_payment_id`, porque e o mesmo pagamento. O UNIQUE de
+-- hoje impede exatamente isso.
+--
+-- Por que a `faturas` nao vira uma por pagador: ela preserva o detalhe por
+-- cesta (que vira o extrato no e-mail da Fase 3) e a idempotencia em
+-- (subscription_id, periodo_referencia), que e o que impede cobrar duas vezes.
+-- A alternativa avaliada e descartada foi uma tabela `cobrancas` por pagador:
+-- mais limpa no conceito, mais schema e mais reescrita da previa; pra 26 grupos
+-- com 1 par agrupado, nao paga.
+--
+-- GRATUITO AGORA, CARO DEPOIS: `faturas` tem 0 linhas (conferido em 05/09).
+-- Soltar um UNIQUE com a tabela cheia exigiria conferir duplicata antes; aqui
+-- nao ha o que conferir.
+--
+-- O QUE **NAO** MUDA: a constraint
+-- `faturas_subscription_id_periodo_referencia_key` fica intacta. E ELA a
+-- idempotencia da geracao — o insert antes da chamada a API. O
+-- `asaas_payment_id` nunca foi idempotencia de geracao; era guarda do webhook,
+-- que grava em `asaas_webhook_events` (com UNIQUE proprio em `asaas_event_id`)
+-- e nao em `faturas`. Nada escreve em `faturas` hoje.
+--
+-- O DROP LEVA O INDICE JUNTO. A 0047 recria como indice nao-unico — a Fase 4
+-- busca fatura por pagamento. Aplicar as duas, nesta ordem.
+--
+-- Expand-only no sentido de que nao remove dado nem coluna: so afrouxa uma
+-- restricao. Aplicar pelo SQL Editor. Probes em
+-- 0046_faturas_solta_unique_payment_id.verificacao.sql.
+--
+-- Data: 2026-09-05
+-- ============================================================
+
+ALTER TABLE faturas DROP CONSTRAINT faturas_asaas_payment_id_key;
