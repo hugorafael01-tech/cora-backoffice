@@ -52,6 +52,8 @@ export type FormaPagamento = 'cartao' | 'boleto' | 'pix' | 'boleto_pix';
 export interface SubscriptionPrevia {
   id: string;
   nome: string;
+  /** Quantos paes a assinatura tem. Base do calculo de slots vagos (troca). */
+  total_paes: number;
   forma_pagamento: FormaPagamento | null;
   valor_mensal: number;
   valor_frete: number;
@@ -67,6 +69,12 @@ export interface ExtraItem {
   nome: string;
   qty: number;
   preco_unit: number;
+  /**
+   * Justificativa gravada no proprio jsonb. Hoje so 'cortesia' tem efeito, e
+   * quem escreve e o Hugo, por SQL, enquanto nao existe tela. Campo opcional:
+   * pedido vindo do portal nunca traz.
+   */
+  motivo?: string | null;
 }
 
 export interface WeeklyOrderPrevia {
@@ -76,6 +84,15 @@ export interface WeeklyOrderPrevia {
   status: 'rascunho' | 'confirmado';
   total_extras: number;
   extras: ExtraItem[] | null;
+  /**
+   * Quais paes da cesta a pessoa escolheu. **`null` NAO quer dizer "ainda nao
+   * escolheu"**: quer dizer cesta padrao, com todos os slots usados. Conferido
+   * em 04/09 no endpoint do portal (`api/weekly-orders/index.js`), cujo proprio
+   * comentario diz que null "limpa o swap (volta ao padrao da assinatura)", e
+   * nos dados (a Julia tem null em 13 e 20/08 com extras pagos normalmente).
+   * Por isso `null` da slots_vagos = 0, e nao total_paes.
+   */
+  composition: { original?: number; integral?: number } | null;
 }
 
 export interface EntregaPrevia {
@@ -116,9 +133,18 @@ export interface AlertaPrevia {
   subscriptionId: string | null;
 }
 
+/**
+ * Por que este extra custou o que custou.
+ *   pago     — extra normal, preco do cardapio
+ *   troca    — trocou um pao da cesta, ja pago na mensalidade
+ *   cortesia — zerado de proposito pelo Hugo, com `motivo` no jsonb
+ */
+export type TipoExtra = 'pago' | 'troca' | 'cortesia';
+
 export interface ExtraCobravel extends ExtraItem {
   quinta: string;
   subtotal: number;
+  tipo: TipoExtra;
 }
 
 export interface LinhaAssinatura {
@@ -391,6 +417,29 @@ function ajusteProporcional(sub: SubscriptionPrevia, periodoReferencia: string):
 }
 
 /**
+ * Quantos paes da cesta ficaram VAGOS neste pedido.
+ *
+ * A troca de produto (modelo de assinatura em teste desde setembro/2026) tira
+ * um pao da `composition` e poe o produto trocado nos `extras` com preco 0. O
+ * slot vago e a assinatura dessa operacao: e por ele que a previa sabe que o
+ * zerado ja foi pago na mensalidade e nao e preco faltando.
+ *
+ * `composition` nula = cesta padrao, todos os slots usados => 0 vagos. Ver a
+ * nota no tipo: null NAO e "ainda nao escolheu".
+ *
+ * ARMADILHA: o endpoint do portal valida `soma(composition) === total_paes`,
+ * entao pedido feito pela tela NUNCA tem slot vago. Todo slot vago no banco
+ * hoje veio de escrita SQL direta, que pula a regra de negocio. Se a troca for
+ * formalizada no produto, aquela validacao tem que mudar junto ou o portal vai
+ * recusar a troca.
+ */
+function slotsVagos(wo: WeeklyOrderPrevia, totalPaes: number): number {
+  if (wo.composition === null) return 0;
+  const usados = (wo.composition.original ?? 0) + (wo.composition.integral ?? 0);
+  return Math.max(0, totalPaes - usados);
+}
+
+/**
  * Monta a previa de um periodo de referencia ('AAAA-MM').
  *
  * O filtro de quem entra e `forma_pagamento <> 'cartao'` do PAGADOR — nunca
@@ -412,6 +461,10 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       .filter((e) => e.status === 'entregue' && e.weekly_order_id !== null)
       .map((e) => e.weekly_order_id as string),
   );
+
+  // Declarado aqui, e nao mais embaixo: o loop de pedidos precisa do total_paes
+  // do assinante pra contar slot vago.
+  const porId = new Map(entrada.subscriptions.map((s) => [s.id, s]));
 
   const extrasPorSub = new Map<string, ExtraCobravel[]>();
   for (const wo of entrada.weeklyOrders) {
@@ -437,29 +490,51 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
     let soma = 0;
     const cobravel: ExtraCobravel[] = [];
 
+    // Slots vagos sao consumidos na ORDEM do array, e um item so vira troca se
+    // couber inteiro (qty <= vagos restantes). Item que nao cabe cai no caminho
+    // de cortesia/alerta, sem se partir em dois: meia linha "troca" e meia
+    // linha "confira" seria pior de ler do que a pergunta que ela responde.
+    const assinante = porId.get(wo.subscription_id);
+    let vagos = assinante ? slotsVagos(wo, assinante.total_paes) : 0;
+
     for (const item of itens) {
       const subtotal = dinheiro(item.qty * item.preco_unit);
       soma += subtotal;
-      cobravel.push({ ...item, quinta: wo.delivery_date, subtotal });
+
+      let tipo: TipoExtra = 'pago';
+      if (item.preco_unit === 0) {
+        if (item.qty <= vagos) {
+          tipo = 'troca';
+          vagos -= item.qty;
+        } else if (item.motivo === 'cortesia') {
+          tipo = 'cortesia';
+        }
+      }
+
+      cobravel.push({ ...item, quinta: wo.delivery_date, subtotal, tipo });
 
       // O preco gravado e um SNAPSHOT do cardapio no momento do pedido, e e ele
       // que vale: cobrar outro valor seria cobrar um numero que o assinante
       // nunca viu na tela. Mas nunca corrigir calado — os dois alertas abaixo
       // sao o "em voz alta".
-      if (item.preco_unit === 0) {
-        // Alerta proprio, independente de divergencia: preco zero pode ser
-        // cortesia OU erro de cadastro, e hoje os dois tem exatamente o mesmo
-        // simbolo no banco. Ninguem consegue distinguir sem perguntar.
+      // Zerado que a regra nao explicou: nao e troca (nao havia slot vago) nem
+      // cortesia declarada. Sobra o caso que o alerta sempre quis pegar, e so
+      // ele — preco que faltou cadastrar.
+      if (item.preco_unit === 0 && tipo === 'pago') {
         alertas.push({
           codigo: 'preco_zero',
           mensagem:
             `${item.nome} na ${quintaLegivel(wo.delivery_date)} está com preço zero e ` +
-            `foi cobrado como zero. Cortesia ou preço que faltou cadastrar? O banco não distingue.`,
+            `foi cobrado como zero. Não é troca (a cesta está cheia) e não tem motivo ` +
+            `gravado. Confira se faltou cadastrar o preço.`,
           subscriptionId: wo.subscription_id,
         });
       }
 
-      const precoHoje = precosDaQuinta?.get(item.id);
+      // Divergencia so faz sentido pro que era pra ter preco. Em troca e em
+      // cortesia o zero e a regra, e o alerta acusaria "gravado R$ 0, cardapio
+      // diz R$ 36" em toda linha das duas — ruido por construcao.
+      const precoHoje = tipo === 'pago' ? precosDaQuinta?.get(item.id) : undefined;
       if (precoHoje !== undefined && precoHoje !== item.preco_unit) {
         alertas.push({
           codigo: 'preco_divergente',
@@ -491,7 +566,6 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
   }
 
   // ---- linhas por assinatura -------------------------------------------
-  const porId = new Map(entrada.subscriptions.map((s) => [s.id, s]));
   const linhas = new Map<string, LinhaAssinatura>();
 
   for (const sub of entrada.subscriptions) {
