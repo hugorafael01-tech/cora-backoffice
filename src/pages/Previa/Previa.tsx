@@ -1,47 +1,11 @@
 import { useMemo, useState } from 'react';
 import { usePrevia } from '../../hooks/usePrevia';
-import { mesAnterior } from '../../lib/previa';
-import { formatBRL } from '../../lib/financeiro';
+import { mesAnterior, reais } from '../../lib/previa';
 import { Shell } from '../Semana/components/Shell';
 import { AlertasPainel } from './components/AlertasPainel';
 import { GrupoCard } from './components/GrupoCard';
+import { opcoesDePeriodo, periodoPadrao, rotuloPeriodo } from './periodo';
 import { PESO_POR_CODIGO } from './types';
-
-const MESES = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-];
-
-/**
- * Período que a tela abre.
- *
- * A prévia de um mês é montada no dia 26 do mês anterior, então o "próximo
- * ciclo" é o mês que vem. Passado o dia 26, esse já foi conferido e o próximo
- * a montar é o seguinte.
- */
-function periodoPadrao(hoje: Date): string {
-  const ano = hoje.getFullYear();
-  const mes = hoje.getMonth(); // 0-11
-  const avanco = hoje.getDate() > 26 ? 2 : 1;
-  const d = new Date(ano, mes + avanco, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-/** Alguns meses em volta do padrão, pra conferir um ciclo passado sem digitar. */
-function opcoesDePeriodo(padrao: string): string[] {
-  const [a, m] = padrao.split('-').map(Number);
-  const out: string[] = [];
-  for (let delta = -3; delta <= 1; delta++) {
-    const d = new Date(a, m - 1 + delta, 1);
-    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return out;
-}
-
-function rotuloPeriodo(periodo: string): string {
-  const [a, m] = periodo.split('-').map(Number);
-  return `${MESES[m - 1]} de ${a}`;
-}
 
 export function Previa() {
   const padrao = useMemo(() => periodoPadrao(new Date()), []);
@@ -110,7 +74,7 @@ export function Previa() {
                   {previa.grupos.length === 1 ? '1 cobrança' : `${previa.grupos.length} cobranças`}
                 </div>
                 <div className="font-display text-[26px] leading-none tabular-nums text-ink-700">
-                  {formatBRL(previa.totalGeral)}
+                  {reais(previa.totalGeral)}
                 </div>
               </div>
 

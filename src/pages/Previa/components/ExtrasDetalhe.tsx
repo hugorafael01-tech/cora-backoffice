@@ -1,14 +1,7 @@
-import type { ExtraCobravel } from '../../../lib/previa';
-import { formatBRL } from '../../../lib/financeiro';
+import { quintaLegivel, reais, type ExtraCobravel } from '../../../lib/previa';
 
 interface Props {
   extras: ExtraCobravel[];
-}
-
-/** 'quinta 03/09' a partir de 'YYYY-MM-DD'. */
-function quintaCurta(ymd: string): string {
-  const [, m, d] = ymd.split('-');
-  return `${d}/${m}`;
 }
 
 /**
@@ -20,7 +13,7 @@ function quintaCurta(ymd: string): string {
  */
 export function ExtrasDetalhe({ extras }: Props) {
   if (extras.length === 0) {
-    return <p className="text-[13px] text-warm-400">Nenhum produto extra no ciclo.</p>;
+    return <p className="text-[13px] text-warm-400">Nenhum extra no ciclo.</p>;
   }
 
   const porQuinta = new Map<string, ExtraCobravel[]>();
@@ -33,7 +26,7 @@ export function ExtrasDetalhe({ extras }: Props) {
     <div className="space-y-2">
       {quintas.map((quinta) => (
         <div key={quinta}>
-          <div className="text-[12px] text-warm-400">quinta {quintaCurta(quinta)}</div>
+          <div className="text-[12px] text-warm-400">{quintaLegivel(quinta)}</div>
           <ul className="mt-0.5 space-y-0.5">
             {porQuinta.get(quinta)!.map((e, i) => (
               <li
@@ -49,7 +42,7 @@ export function ExtrasDetalhe({ extras }: Props) {
                     e.preco_unit === 0 ? 'text-warning-text' : 'text-warm-600'
                   }`}
                 >
-                  {formatBRL(e.subtotal)}
+                  {reais(e.subtotal)}
                 </span>
               </li>
             ))}

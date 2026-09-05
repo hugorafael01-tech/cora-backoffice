@@ -1,5 +1,4 @@
-import type { GrupoPagador, LinhaAssinatura } from '../../../lib/previa';
-import { formatBRL } from '../../../lib/financeiro';
+import { reais, type GrupoPagador, type LinhaAssinatura } from '../../../lib/previa';
 import { ExtrasDetalhe } from './ExtrasDetalhe';
 
 const ROTULO_FORMA: Record<string, string> = {
@@ -39,7 +38,7 @@ export function GrupoCard({ grupo }: Props) {
           </div>
         </div>
         <div className="shrink-0 font-display text-[22px] leading-none tabular-nums text-ink-700">
-          {formatBRL(grupo.total)}
+          {reais(grupo.total)}
         </div>
       </div>
 
@@ -59,7 +58,7 @@ function LinhaCesta({ linha, mostrarNome }: { linha: LinhaAssinatura; mostrarNom
         <div className="flex items-baseline justify-between gap-3">
           <span className="truncate text-[14px] text-ink-700">{linha.nome}</span>
           <span className="shrink-0 text-[14px] tabular-nums text-ink-700">
-            {formatBRL(linha.total)}
+            {reais(linha.total)}
           </span>
         </div>
       )}
@@ -70,7 +69,7 @@ function LinhaCesta({ linha, mostrarNome }: { linha: LinhaAssinatura; mostrarNom
           valor={linha.mensalidade}
         />
         {linha.ajuste > 0 && <Verba rotulo="Ajuste de mudança de plano" valor={linha.ajuste} />}
-        <Verba rotulo="Produtos extras" valor={linha.totalExtras} />
+        <Verba rotulo="Extras" valor={linha.totalExtras} />
       </dl>
 
       <div className="mt-1.5">
@@ -84,7 +83,7 @@ function Verba({ rotulo, valor }: { rotulo: string; valor: number }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-warm-500">{rotulo}</dt>
-      <dd className="shrink-0 tabular-nums text-warm-600">{formatBRL(valor)}</dd>
+      <dd className="shrink-0 tabular-nums text-warm-600">{reais(valor)}</dd>
     </div>
   );
 }

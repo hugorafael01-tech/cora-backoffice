@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { formatBRL } from './financeiro';
 import {
   corteDoMes,
   janelaDoCiclo,
   mesAnterior,
   montaPrevia,
+  quintaLegivel,
   quintasDoMes,
+  reais,
   type EntradaPrevia,
   type SubscriptionPrevia,
   type WeeklyOrderPrevia,
@@ -477,5 +480,22 @@ describe('ajuste irreconstruivel', () => {
     );
     expect(codigos(previa)).not.toContain('ajuste_nao_reconstruivel');
     expect(previa.grupos[0].assinaturas[0].ajuste).toBe(10);
+  });
+});
+
+describe('formatadores da tela', () => {
+  it('reais tem a MESMA saida de formatBRL', () => {
+    // As duas existem porque previa.ts nao pode importar financeiro.ts: ele tem
+    // um gemeo no portal e arrastaria codigo de app pra travessia. Este teste e
+    // o que impede as duas de divergirem — foi assim que apareceu, na revisao do
+    // Hugo, que uma punha separador de milhar e a outra nao.
+    for (const n of [0, 28, 114, 1234.5, 1234.56, 99999.99, 0.5]) {
+      expect(reais(n)).toBe(formatBRL(n));
+    }
+  });
+
+  it('quintaLegivel escreve a quinta como a tela le', () => {
+    expect(quintaLegivel('2026-09-03')).toBe('quinta 03/09');
+    expect(quintaLegivel('2026-10-29')).toBe('quinta 29/10');
   });
 });

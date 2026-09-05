@@ -264,17 +264,26 @@ export function dinheiro(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-// As duas funcoes abaixo formatam texto que vai PRA TELA, dentro das mensagens
-// de alerta. Ficam aqui e nao no formatador do app porque o gemeo do portal
-// (Fase 3) monta as mesmas mensagens e precisa das mesmas strings.
+// As duas funcoes abaixo formatam texto que vai PRA TELA. Moram aqui, e nao no
+// formatador do app, porque as mensagens de alerta sao montadas neste modulo e
+// o gemeo do portal (Fase 3) monta as mesmas mensagens — importar `financeiro.ts`
+// aqui seria arrastar codigo de app pra travessia.
+//
+// A TELA DA PREVIA IMPORTA ESTAS DUAS, nao as do app: assim o valor que aparece
+// no card e o valor que aparece dentro da mensagem de alerta tem, por
+// construcao, o mesmo formato.
 
-/** 'R$ 28,00' a partir de 28. */
-function reais(n: number): string {
-  return `R$ ${n.toFixed(2).replace('.', ',')}`;
+/**
+ * 'R$ 1.234,50'. Mesma chamada de `formatBRL` (lib/financeiro), de proposito:
+ * sao duas funcoes porque uma nao pode importar a outra, mas a saida tem que
+ * ser identica. Ha teste amarrando as duas — se alguem mexer numa, ele quebra.
+ */
+export function reais(n: number): string {
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 /** 'quinta 03/09' a partir de '2026-09-03'. Data crua em ISO seria ruido. */
-function quintaLegivel(ymd: string): string {
+export function quintaLegivel(ymd: string): string {
   const [, m, d] = ymd.split('-');
   return `quinta ${d}/${m}`;
 }
