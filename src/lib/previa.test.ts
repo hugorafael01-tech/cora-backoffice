@@ -21,6 +21,7 @@ function sub(over: Partial<SubscriptionPrevia> = {}): SubscriptionPrevia {
   return {
     id: 's1',
     nome: 'Assinante',
+    total_paes: 1,
     forma_pagamento: 'boleto_pix',
     valor_mensal: 114,
     valor_frete: 15,
@@ -40,6 +41,7 @@ function pedido(over: Partial<WeeklyOrderPrevia> = {}): WeeklyOrderPrevia {
     subscription_id: 's1',
     delivery_date: '2026-09-03',
     status: 'confirmado',
+    composition: null,
     total_extras: extras.reduce((s, e) => s + e.qty * e.preco_unit, 0),
     ...over,
     extras,
@@ -497,5 +499,156 @@ describe('formatadores da tela', () => {
   it('quintaLegivel escreve a quinta como a tela le', () => {
     expect(quintaLegivel('2026-09-03')).toBe('quinta 03/09');
     expect(quintaLegivel('2026-10-29')).toBe('quinta 29/10');
+  });
+});
+
+describe('troca de produto e cortesia', () => {
+  // Os cinco casos reais que a previa de 2026-10 levantou na tela, conferidos
+  // um a um contra o banco em 04/09. Nenhum deles e erro.
+
+  it('Isabel: 2 paes, 1 na cesta, 1 slot vago — o zerado e troca, sem alerta', () => {
+    const isabel = sub({ id: 'isa', nome: 'Isabel Considera', total_paes: 2 });
+    const p = pedido({
+      subscription_id: 'isa',
+      composition: { original: 1, integral: 0 },
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0 }],
+    });
+    const previa = montaPrevia(
+      entrada({
+        subscriptions: [isabel], weeklyOrders: [p], entregas: entregues([p]),
+        precos: new Map([['2026-09-03', new Map([['brioche', 36]])]]),
+      }),
+      '2026-10',
+    );
+    expect(codigos(previa)).not.toContain('preco_zero');
+    expect(codigos(previa)).not.toContain('preco_divergente');
+    expect(previa.grupos[0].assinaturas[0].extras[0].tipo).toBe('troca');
+    expect(previa.grupos[0].assinaturas[0].totalExtras).toBe(0);
+  });
+
+  it('Arouca: 1 pao, composition 0/0, 1 slot vago — troca', () => {
+    const arouca = sub({ id: 'aro', nome: 'Arouca', total_paes: 1 });
+    const p = pedido({
+      subscription_id: 'aro',
+      composition: { original: 0, integral: 0 },
+      extras: [{ id: 'ciabatta', nome: 'Ciabatta', qty: 1, preco_unit: 0 }],
+    });
+    const previa = montaPrevia(
+      entrada({ subscriptions: [arouca], weeklyOrders: [p], entregas: entregues([p]) }),
+      '2026-10',
+    );
+    expect(codigos(previa)).not.toContain('preco_zero');
+    expect(previa.grupos[0].assinaturas[0].extras[0].tipo).toBe('troca');
+  });
+
+  it('Julia: composition nula, sem slot vago — cortesia so quando o motivo esta gravado', () => {
+    const julia = sub({ id: 'jul', nome: 'Julia', total_paes: 1 });
+    const semMotivo = pedido({
+      subscription_id: 'jul', composition: null,
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0 }],
+    });
+    const semNada = montaPrevia(
+      entrada({ subscriptions: [julia], weeklyOrders: [semMotivo], entregas: entregues([semMotivo]) }),
+      '2026-10',
+    );
+    // Estado de HOJE no banco: o motivo ainda nao foi gravado, entao alerta.
+    expect(codigos(semNada)).toContain('preco_zero');
+    expect(semNada.grupos[0].assinaturas[0].extras[0].tipo).toBe('pago');
+
+    const comMotivo = pedido({
+      subscription_id: 'jul', composition: null,
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0, motivo: 'cortesia' }],
+    });
+    const declarada = montaPrevia(
+      entrada({
+        subscriptions: [julia], weeklyOrders: [comMotivo], entregas: entregues([comMotivo]),
+        precos: new Map([['2026-09-03', new Map([['brioche', 36]])]]),
+      }),
+      '2026-10',
+    );
+    expect(codigos(declarada)).not.toContain('preco_zero');
+    expect(codigos(declarada)).not.toContain('preco_divergente');
+    expect(declarada.grupos[0].assinaturas[0].extras[0].tipo).toBe('cortesia');
+  });
+
+  it('David: dois zerados sem slot vago, os dois como cortesia declarada', () => {
+    const david = sub({ id: 'dav', nome: 'David Hertz', total_paes: 1 });
+    const p = pedido({
+      subscription_id: 'dav', composition: null,
+      extras: [
+        { id: 'ciabatta', nome: 'Ciabatta', qty: 1, preco_unit: 0, motivo: 'cortesia' },
+        { id: 'focaccia', nome: 'Focaccia', qty: 1, preco_unit: 0, motivo: 'cortesia' },
+      ],
+    });
+    const previa = montaPrevia(
+      entrada({ subscriptions: [david], weeklyOrders: [p], entregas: entregues([p]) }),
+      '2026-10',
+    );
+    expect(codigos(previa)).not.toContain('preco_zero');
+    expect(previa.grupos[0].assinaturas[0].extras.map((e) => e.tipo)).toEqual([
+      'cortesia', 'cortesia',
+    ]);
+  });
+
+  it('zerado sem slot vago e sem motivo AINDA alerta', () => {
+    // O caso que o alerta sempre quis pegar: preco que faltou cadastrar.
+    const p = pedido({
+      composition: null,
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0 }],
+    });
+    const previa = montaPrevia(
+      entrada({ weeklyOrders: [p], entregas: entregues([p]) }), '2026-10');
+    expect(codigos(previa)).toContain('preco_zero');
+  });
+
+  it('zerados acima dos slots vagos: alerta so nos excedentes', () => {
+    const dois = sub({ id: 'd2', nome: 'Dois paes', total_paes: 2 });
+    const p = pedido({
+      subscription_id: 'd2',
+      composition: { original: 1, integral: 0 }, // 1 slot vago
+      extras: [
+        { id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 0 },
+        { id: 'focaccia', nome: 'Focaccia', qty: 1, preco_unit: 0 },
+      ],
+    });
+    const previa = montaPrevia(
+      entrada({ subscriptions: [dois], weeklyOrders: [p], entregas: entregues([p]) }),
+      '2026-10',
+    );
+    const tipos = previa.grupos[0].assinaturas[0].extras.map((e) => e.tipo);
+    expect(tipos).toEqual(['troca', 'pago']); // o primeiro consome o slot
+    expect(previa.alertas.filter((a) => a.codigo === 'preco_zero')).toHaveLength(1);
+  });
+
+  it('extra pago normal segue pago, e a divergencia de preco continua valendo', () => {
+    const p = pedido({
+      composition: null,
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 1, preco_unit: 30 }],
+    });
+    const previa = montaPrevia(
+      entrada({
+        weeklyOrders: [p], entregas: entregues([p]),
+        precos: new Map([['2026-09-03', new Map([['brioche', 36]])]]),
+      }),
+      '2026-10',
+    );
+    expect(previa.grupos[0].assinaturas[0].extras[0].tipo).toBe('pago');
+    expect(codigos(previa)).toContain('preco_divergente');
+  });
+
+  it('troca so vale quando o item cabe inteiro no slot', () => {
+    const dois = sub({ id: 'd2', nome: 'Dois paes', total_paes: 2 });
+    const p = pedido({
+      subscription_id: 'd2',
+      composition: { original: 1, integral: 0 }, // 1 slot vago
+      extras: [{ id: 'brioche', nome: 'Brioche', qty: 2, preco_unit: 0 }],
+    });
+    const previa = montaPrevia(
+      entrada({ subscriptions: [dois], weeklyOrders: [p], entregas: entregues([p]) }),
+      '2026-10',
+    );
+    // 2 unidades nao cabem em 1 slot: a linha nao se parte, cai no alerta.
+    expect(previa.grupos[0].assinaturas[0].extras[0].tipo).toBe('pago');
+    expect(codigos(previa)).toContain('preco_zero');
   });
 });

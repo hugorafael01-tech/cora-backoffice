@@ -1,4 +1,14 @@
-import { quintaLegivel, reais, type ExtraCobravel } from '../../../lib/previa';
+import { quintaLegivel, reais, type ExtraCobravel, type TipoExtra } from '../../../lib/previa';
+
+/**
+ * O que a linha diz quando custou zero. Sem preco riscado: riscar antes de a
+ * cortesia ser declarada faria erro de cadastro parecer presente, e o riscado
+ * ficou fora de escopo por isso.
+ */
+const ROTULO_TIPO: Partial<Record<TipoExtra, string>> = {
+  troca: 'troca',
+  cortesia: 'cortesia',
+};
 
 interface Props {
   extras: ExtraCobravel[];
@@ -36,10 +46,17 @@ export function ExtrasDetalhe({ extras }: Props) {
                 <span className="text-warm-600">
                   {e.qty > 1 ? `${e.qty}x ` : ''}
                   {e.nome}
+                  {ROTULO_TIPO[e.tipo] && (
+                    <span className="ml-1.5 text-[12px] text-warm-400">
+                      {ROTULO_TIPO[e.tipo]}
+                    </span>
+                  )}
                 </span>
                 <span
                   className={`shrink-0 tabular-nums ${
-                    e.preco_unit === 0 ? 'text-warning-text' : 'text-warm-600'
+                    e.preco_unit === 0 && e.tipo === 'pago'
+                      ? 'text-warning-text'
+                      : 'text-warm-600'
                   }`}
                 >
                   {reais(e.subtotal)}

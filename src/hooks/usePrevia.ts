@@ -53,15 +53,19 @@ export function usePrevia(periodoReferencia: string): UsePreviaResult {
           supabase
             .from('subscriptions')
             .select(
-              'id, nome, forma_pagamento, valor_mensal, valor_frete, activated_at, ' +
-                'next_billing_change_date, next_billing_value, pagador_subscription_id, ' +
-                'asaas_customer_id',
+              'id, nome, total_paes, forma_pagamento, valor_mensal, valor_frete, ' +
+                'activated_at, next_billing_change_date, next_billing_value, ' +
+                'pagador_subscription_id, asaas_customer_id',
             )
             .eq('status', 'active')
             .not('nome', 'ilike', '%dev%'),
           supabase
             .from('weekly_orders')
-            .select('id, subscription_id, delivery_date, status, total_extras, extras')
+            // `composition` entra pela regra de troca: slot vago na cesta e o
+            // que distingue produto trocado de preco que faltou cadastrar.
+            .select(
+              'id, subscription_id, delivery_date, status, total_extras, extras, composition',
+            )
             .gte('delivery_date', janela.primeiraQuinta)
             .lte('delivery_date', janela.ultimaQuinta),
         ]);
