@@ -11,7 +11,8 @@
     "test": "vitest run",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/database.types.ts",
-    "db:reset": "echo 'NÃO RODAR — base é compartilhada com Portal' && exit 1"
+    "db:reset": "echo 'NÃO RODAR — base é compartilhada com Portal' && exit 1",
+    "golden": "vite-node scripts/gera-golden.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
@@ -41,6 +42,7 @@
     "typescript": "6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
+    "vite-node": "^6.0.0",
     "vitest": "^4.1.7"
   }
 }

@@ -2,7 +2,9 @@
 
 *Read first em toda sessão de Backoffice (CC, Claude Chat, ou qualquer instância). Atualizado ao fim de cada sessão.*
 
-**Última atualização:** 4 de setembro de 2026 (11ª sessão) — **Fase 2c: a prévia aprende a diferença entre troca de produto, cortesia e preço que faltou cadastrar.** Saiu de conferir a prévia de outubro na tela da 2b: os 4 alertas de `preco_zero` e os 4 de `preco_divergente` **não eram erro nenhum**. **(a) Tarefa 1, verificada antes de codar: `composition = null` é cesta padrão com todos os slots usados**, não "ainda não escolheu" — o comentário do endpoint do portal diz que null "limpa o swap (volta ao padrao da assinatura)", e a Julia tem null em 13 e 20/08 com extras pagos normalmente. A regra do briefing valia. **(b) Regra de slot vago:** zerado até `total_paes - (original + integral)` é troca, cobrado zero e sem alerta; consome slot na ordem do array e só vira troca se couber inteiro. **(c) `motivo: 'cortesia'` no jsonb** silencia o zerado que sobrou. Só leitura: quem escreve é o Hugo, por SQL. **(d) `preco_divergente` deixa de disparar para troca e cortesia** — nelas o zero é a regra, e o alerta era ruído por construção. **(e) Achado que muda o critério de pronto:** o **David Hertz está `paused`**, então nunca entrou na prévia nem gerou alerta (é por isso que o briefing conta 4 alertas para 5 linhas), e a **Julia ainda vai alertar até o Hugo gravar o `motivo`** no jsonb dela. Simulei contra o banco: as 3 trocas já silenciam sozinhas. **(f) Armadilha registrada:** o endpoint do portal valida `soma(composition) === total_paes`, então pedido feito pela tela **nunca** tem slot vago — todos os do banco vieram de escrita SQL direta, e formalizar a troca exige mudar aquela validação junto. 8 testes novos, 226 no total, lint, tsc e build limpos.
+**Última atualização:** 5 de setembro de 2026 (12ª sessão) — **Fase 3, Bloco A: o gêmeo da prévia existe no portal, amarrado por golden fixture.** `src/lib/previa.ts` transposto para `cora-portal/api/_lib/previa.js`. **(a) O golden SUBSTITUI o porte dos 36 testes** (decisão do Hugo): suíte espelhada em estilo estrangeiro seria uma segunda coisa a manter, que divergiria. As regras seguem cobertas só aqui; o gêmeo prova mesma entrada, mesma saída. **(b) O fixture é rico de propósito** — grupo de pagador, troca, cortesia, zerado sem justificativa, proporcional de entrada, ajuste, a quinta 29/10 fora da janela, entrega não confirmada e um cartão cujo alerta é descartado pelo escopo — e um segundo teste impede que ele empobreça sem ninguém notar. **(c) Conferi que o teste realmente pega divergência**, sabotando o `dinheiro()` do gêmeo: 5 verificações vermelhas e exit 1. **(d) As mensagens são comparadas texto a texto**, não só os códigos, porque é o que pega diferença de `toLocaleString` entre browser e serverless. Passou. **(e) `vite-node` entrou como devDependency** só para o `npm run golden`, e o script mora fora de `src/` para não abrir types de node ao app. **(f) Registrada a ação da migração do cartão** para o par Sabina/Maria Helena, que é sequência a executar e não pendência vaga. Bloco A fechado; B e C não começaram. 228 testes aqui, `npm run test:previa` verde no portal.
+
+Antes (11ª sessão) — 4 de setembro de 2026 (11ª sessão) — **Fase 2c: a prévia aprende a diferença entre troca de produto, cortesia e preço que faltou cadastrar.** Saiu de conferir a prévia de outubro na tela da 2b: os 4 alertas de `preco_zero` e os 4 de `preco_divergente` **não eram erro nenhum**. **(a) Tarefa 1, verificada antes de codar: `composition = null` é cesta padrão com todos os slots usados**, não "ainda não escolheu" — o comentário do endpoint do portal diz que null "limpa o swap (volta ao padrao da assinatura)", e a Julia tem null em 13 e 20/08 com extras pagos normalmente. A regra do briefing valia. **(b) Regra de slot vago:** zerado até `total_paes - (original + integral)` é troca, cobrado zero e sem alerta; consome slot na ordem do array e só vira troca se couber inteiro. **(c) `motivo: 'cortesia'` no jsonb** silencia o zerado que sobrou. Só leitura: quem escreve é o Hugo, por SQL. **(d) `preco_divergente` deixa de disparar para troca e cortesia** — nelas o zero é a regra, e o alerta era ruído por construção. **(e) Achado que muda o critério de pronto:** o **David Hertz está `paused`**, então nunca entrou na prévia nem gerou alerta (é por isso que o briefing conta 4 alertas para 5 linhas), e a **Julia ainda vai alertar até o Hugo gravar o `motivo`** no jsonb dela. Simulei contra o banco: as 3 trocas já silenciam sozinhas. **(f) Armadilha registrada:** o endpoint do portal valida `soma(composition) === total_paes`, então pedido feito pela tela **nunca** tem slot vago — todos os do banco vieram de escrita SQL direta, e formalizar a troca exige mudar aquela validação junto. 8 testes novos, 226 no total, lint, tsc e build limpos.
 
 Antes (10ª sessão) — 4 de setembro de 2026 (10ª sessão) — **Fase 2 bloco 2b: a tela de conferência da prévia, em `/previa`.** Rota nova admin-only, com seletor de período (abre no próximo ciclo), painel de alertas em **dois pesos**, um card por pagador e o botão "Gerar cobranças" presente e desabilitado. **(a) Classificação dos alertas (Hugo, 04/09): BLOQUEIA** = `sem_cliente_asaas`, `forma_pagamento_ausente`, `total_extras_divergente` (impede criar a cobrança ou torna o valor não confiável); **CONFIRA** = `preco_zero`, `preco_divergente`, `entrega_nao_confirmada`, `ajuste_nao_reconstruivel`, `grupo_forma_mista`, `pagador_nao_encontrado` (decisão dele, caso a caso). O peso vive em `pages/Previa/types.ts` e **não** no módulo puro: é regra de tela, e o gêmeo do portal não desenha nada. **(b) Botão único e geral**, nunca por linha: a geração roda o ciclo inteiro de uma vez, e botão por pessoa convidaria a gerar parcial numa tela com alerta em aberto. **(c) Copy passou pelo vocabulário da casa:** cesta, quinta, produto, sentence case, sem caixa alta e sem travessão nas mensagens. As nove mensagens de alerta foram reescritas com acento e sem jargão de banco (`total_extras` virou "o total gravado"). **Não havia skill de UI nem de voz instalada neste ambiente** — o padrão saiu das telas existentes e das regras que o Hugo passou. **(d) Decisão do ajuste: lançamento manual em outubro**, sem tabela de histórico; a alternativa sem schema novo (o PATCH do portal gravar `next_billing_*`) ficou anotada como pendência pós-outubro. **(e) Registrado com destaque o conflito com a migration de contract da Frente D**, que dropa `valor_mensal`, `valor_paes`, `valor_frete` e `nome` — colunas de que a prévia agora depende. **(f) Duas correções da revisão do Hugo:** o dia que define o período padrão passa a vir do **calendário de São Paulo** (`dataSpStr`), não do relógio da máquina nem de UTC, e o limite virou **> 28** e não > 26, porque a janela de conferência vai até o dia 28. Extraído pra `pages/Previa/periodo.ts` com 9 testes de borda, inclusive as duas noites que trocavam o mês (26/09 às 23h e 28/09 às 21h em SP já são o dia seguinte em UTC). E os **formatadores foram unificados**: a tela da prévia importa `reais` e `quintaLegivel` do módulo, e não usa mais `formatBRL` — antes `R$ 1.234,50` e `R$ 1234,50` podiam aparecer na mesma tela, um no card e outro dentro da mensagem de alerta. As duas funções de dinheiro continuam existindo (o módulo não pode importar código de app por causa do gêmeo), mas **há teste amarrando a saída das duas**. 218 testes, lint, tsc e build limpos.
 
@@ -97,7 +99,9 @@ Antes (3ª sessão) — **PR #75 mergeado e migration 0033 APLICADA** (`main` em
 
 ## Branches em voo
 
-**Em voo (04/09/2026, 11ª sessão):** `feat/previa-troca-cortesia` (PR draft) — a Fase 2c em `previa.ts`, `usePrevia.ts` e `ExtrasDetalhe.tsx`. E `docs/briefing-fase2c` (PR #87 draft), só com o briefing. **Nada de banco:** nenhuma migration; a cortesia é jsonb. `main` em `68de341`. **Pendência operacional do Hugo:** gravar `motivo: 'cortesia'` no extra da Julia de 27/08, por SQL — sem isso a prévia de outubro fecha com 1 alerta de `preco_zero`.
+**Em voo (05/09/2026, 12ª sessão):** `feat/gemeo-previa-fase3a` **nos dois repos** — aqui o golden fixture, o teste, o `previaGolden.ts`, o `scripts/gera-golden.ts` e o STATUS; no `cora-portal`, o gêmeo `api/_lib/previa.js`, a cópia do golden e o `scripts/test-previa.mjs`. Também `docs/briefing-fase3` (PR #89), só com o briefing. **Nada de banco.** `main` em `5a54b1e`. Blocos B e C da Fase 3 não começaram.
+
+Antes (04/09, 11ª sessão) — `feat/previa-troca-cortesia` (PR draft) — a Fase 2c em `previa.ts`, `usePrevia.ts` e `ExtrasDetalhe.tsx`. E `docs/briefing-fase2c` (PR #87 draft), só com o briefing. **Nada de banco:** nenhuma migration; a cortesia é jsonb. `main` em `68de341`. **Pendência operacional do Hugo:** gravar `motivo: 'cortesia'` no extra da Julia de 27/08, por SQL — sem isso a prévia de outubro fecha com 1 alerta de `preco_zero`.
 
 Antes (04/09, 10ª sessão) — `feat/previa-tela-2b` — a tela de conferência, em PR draft. `src/pages/Previa/` (página, `types.ts` com os pesos de alerta, `AlertasPainel`, `GrupoCard`, `ExtrasDetalhe`), rota `/previa` no `App.tsx` e item na sidebar do `Shell`. **Nada de banco:** nenhuma migration, nenhuma RLS. O bloco 2a (PR #85) já está pronto pra review, com a 0045 aplicada.
 
@@ -174,7 +178,8 @@ Briefings `Docs/CORA_Briefing_CC_Geracao_Cobrancas_Out2026.md` (Fase 1) e `Docs/
 - **Fase 2a (montagem) — escrita, migration 0045 não aplicada.** `src/lib/previa.ts` + `usePrevia.ts` + 27 testes.
 - **Fase 2b (tela de conferência) — escrita.** Rota `/previa`, alertas em dois pesos (bloqueia/confira), card por pagador, botão único desabilitado até a Fase 3.
 - **Fase 2c (troca e cortesia) — escrita.** `preco_zero` passa a disparar só para preço que faltou cadastrar.
-- **Fases 3 a 6 — não existem.**
+- **Fase 3 — Bloco A (gêmeo) feito.** Blocos B (endpoint de geração) e C (ligar o botão) não começaram.
+- **Fases 4 a 6 — não existem.**
 
 #### A regra do gêmeo (vale pra toda a frente, não só pra 2a)
 
@@ -189,6 +194,33 @@ cora-portal/api/_lib/previa.js      JavaScript, recalcula do zero antes de cobra
 - **O que não pode mudar na travessia é a conta:** mesmas entradas, mesmas saídas, até o centavo e até a ordem dos alertas.
 - **A conciliação da Fase 4 detecta divergência entre os gêmeos.** Ela compara o conjunto e a soma da prévia (backoffice) com o que o portal recalculou antes de criar as cobranças. Gêmeo fora de sincronia aparece lá como divergência e **bloqueia a geração**, de propósito. Não é organização de código: é o mecanismo que impede uma das pontas de cobrar um número que a outra nunca viu.
 - Por isso o módulo é puro — sem React, sem client de banco, sem `Date.now()`, sem `date-fns` (a aritmética de data é UTC sobre `YYYY-MM-DD`, à mão). **Dependência nova aqui é dependência a portar pra lá.**
+
+#### O gêmeo existe: como os dois lados ficam amarrados
+
+Bloco A da Fase 3 (05/09). `src/lib/previa.ts` foi transposto para `cora-portal/api/_lib/previa.js`. A mesma conta agora vive em dois lugares, porque a geração roda no portal e o servidor não pode confiar no total que veio do browser.
+
+**O que amarra os dois é um golden fixture, não uma segunda suíte.** Decisão do Hugo (05/09): reescrever os 36 testes no estilo do portal criaria uma suíte estrangeira para manter, que divergiria. As regras continuam cobertas só aqui, onde há framework de verdade. O gêmeo precisa provar uma coisa só: **mesma entrada, mesma saída.**
+
+```
+src/lib/previa.golden.json          ORIGEM (gerado daqui)
+cora-portal/api/_lib/previa.golden.json   CÓPIA byte a byte
+```
+
+- Deste lado: `previa.golden.test.ts` (vitest).
+- Do lado de lá: `scripts/test-previa.mjs`, `npm run test:previa`, no estilo `.mjs` da casa. Sai com **exit 1** quando diverge — conferido por sabotagem deliberada antes de fechar o bloco.
+
+**A ordem quando uma regra muda** (está escrita nos dois arquivos):
+
+1. muda `previa.ts` e os testes de regra, aqui
+2. `npm run golden` (regenera a saída esperada)
+3. copia o JSON para `cora-portal/api/_lib/`
+4. `npm run test:previa` lá
+
+A entrada do fixture cobre de propósito: grupo de pagador, troca por slot vago, cortesia declarada, zerado sem justificativa (que **tem** que alertar), proporcional de entrada, ajuste de aumento, a quinta 29/10 fora da janela, entrega não confirmada, e um assinante de cartão cujo alerta tem que ser descartado pelo escopo. Um segundo teste afirma que o fixture continua cobrindo isso, para que ninguém o empobreça sem notar.
+
+O teste de mensagens compara **texto a texto**, e não só os códigos: é o que pega divergência de `toLocaleString` entre o runtime do browser e o do serverless. Passou.
+
+Ferramenta nova: `vite-node` como devDependency, só para rodar `npm run golden`. O script vive em `scripts/`, fora de `src/`, porque usa `node:fs` e o `tsconfig.app` limita os types a `vite/client` de propósito — ninguém deve conseguir escrever `process.env` dentro de um componente.
 
 #### Pendência: cortesia e erro de cadastro têm o mesmo símbolo
 
@@ -234,6 +266,18 @@ Simulado contra o banco em 04/09, a prévia de 2026-10 fica assim:
 | David Hertz 03/09 | não aparece: a assinatura está **pausada** |
 
 Duas notas sobre a tabela do briefing. A Julia precisa do `motivo` escrito por SQL no jsonb — o código lê, mas ninguém escreveu ainda. E o **David está `paused` e com `forma_pagamento` nula**, então não entra na prévia e nunca gerou alerta (por isso o briefing conta 4 alertas para 5 linhas). Exibir as linhas dele exige o bloco "não entram nesta cobrança", que é pendência pós-outubro.
+
+#### Ação da migração do cartão: o par Sabina / Maria Helena
+
+Não é pendência vaga, é uma sequência a executar quando o cartão migrar.
+
+O cliente **`cus_000189998872` está no CPF da Sabina, nomeado como Maria Helena**. As duas têm o mesmo CPF (`08309072708`) e o Asaas não aceita cliente duplicado; a cobrança de setembro da Sabina foi criada dentro desse cliente. Hoje a linha da Sabina está com `asaas_customer_id` nulo e a da Maria Helena com o id — invertido em relação a quem paga, já que o `pagador_subscription_id` diz Maria Helena → Sabina.
+
+Na migração: **mover o `asaas_customer_id` para a linha da Sabina, deixar a da Maria Helena nula, e renomear o cliente no Asaas.**
+
+**Nunca as duas com o mesmo valor.** O fallback do webhook usa `.maybeSingle()` sobre `asaas_customer_id`, que **dá erro com mais de uma linha**; o catch engole, `reflectionFailed` fica true e o `subscription_id` fica nulo. Hoje a Maria Helena resolve certo — com o preenchimento duplicado, as **duas** parariam de refletir status.
+
+Até lá a Sabina aparece "sem status" no Financeiro, e isso é o comportamento aceito. Ambas são cartão, fora do escopo da Fase 3.
 
 #### Pendências pós-outubro da prévia (registradas, não desenvolvidas)
 
