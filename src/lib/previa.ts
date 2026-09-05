@@ -264,6 +264,21 @@ export function dinheiro(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+// As duas funcoes abaixo formatam texto que vai PRA TELA, dentro das mensagens
+// de alerta. Ficam aqui e nao no formatador do app porque o gemeo do portal
+// (Fase 3) monta as mesmas mensagens e precisa das mesmas strings.
+
+/** 'R$ 28,00' a partir de 28. */
+function reais(n: number): string {
+  return `R$ ${n.toFixed(2).replace('.', ',')}`;
+}
+
+/** 'quinta 03/09' a partir de '2026-09-03'. Data crua em ISO seria ruido. */
+function quintaLegivel(ymd: string): string {
+  const [, m, d] = ymd.split('-');
+  return `quinta ${d}/${m}`;
+}
+
 // ---------------------------------------------------------------------------
 // Montagem
 // ---------------------------------------------------------------------------
@@ -401,8 +416,8 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       alertas.push({
         codigo: 'entrega_nao_confirmada',
         mensagem:
-          `Pedido confirmado de ${wo.delivery_date} sem entrega marcada como entregue. ` +
-          `Nao entrou na cobranca — confira antes de gerar.`,
+          `Cesta confirmada na ${quintaLegivel(wo.delivery_date)} sem entrega marcada como ` +
+          `entregue. Não entrou na cobrança, confira antes de gerar.`,
         subscriptionId: wo.subscription_id,
       });
       continue;
@@ -429,8 +444,8 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
         alertas.push({
           codigo: 'preco_zero',
           mensagem:
-            `${item.nome} em ${wo.delivery_date} esta com preco zero. ` +
-            `Cobrado como zero. Cortesia ou erro de cadastro? Hoje o banco nao distingue.`,
+            `${item.nome} na ${quintaLegivel(wo.delivery_date)} está com preço zero e ` +
+            `foi cobrado como zero. Cortesia ou preço que faltou cadastrar? O banco não distingue.`,
           subscriptionId: wo.subscription_id,
         });
       }
@@ -440,8 +455,9 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
         alertas.push({
           codigo: 'preco_divergente',
           mensagem:
-            `${item.nome} em ${wo.delivery_date} foi gravado a ${item.preco_unit} ` +
-            `e o cardapio da semana diz ${precoHoje}. Cobrado o gravado.`,
+            `${item.nome} na ${quintaLegivel(wo.delivery_date)} foi gravado a ` +
+            `${reais(item.preco_unit)} e o cardápio da semana diz ${reais(precoHoje)}. ` +
+            `Cobrado o valor gravado, que foi o que apareceu para a pessoa.`,
           subscriptionId: wo.subscription_id,
         });
       }
@@ -454,8 +470,9 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       alertas.push({
         codigo: 'total_extras_divergente',
         mensagem:
-          `Pedido de ${wo.delivery_date}: total_extras gravado e ${wo.total_extras}, ` +
-          `a soma dos itens da ${dinheiro(soma)}. Usada a soma dos itens.`,
+          `Na ${quintaLegivel(wo.delivery_date)} o total gravado é ${reais(wo.total_extras)} ` +
+          `e a soma dos produtos dá ${reais(dinheiro(soma))}. Os dois números do banco ` +
+          `discordam, então nenhum deles é confiável.`,
         subscriptionId: wo.subscription_id,
       });
     }
@@ -473,8 +490,8 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       alertas.push({
         codigo: 'forma_pagamento_ausente',
         mensagem:
-          `${sub.nome} esta ativa sem forma de pagamento. ` +
-          `Aparece na previa, mas confira no painel do Asaas antes de gerar.`,
+          `${sub.nome} está ativa sem forma de pagamento. Aparece na prévia, mas ` +
+          `confira no painel do Asaas antes de gerar.`,
         subscriptionId: sub.id,
       });
     }
@@ -523,8 +540,8 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       alertas.push({
         codigo: 'pagador_nao_encontrado',
         mensagem:
-          `${sub.nome} aponta para um pagador que nao esta entre as assinaturas ativas ` +
-          `(pode ter sido cancelada ou pausada). Cobrada separadamente, como pagadora de si mesma.`,
+          `${sub.nome} aponta para quem paga por ela, mas essa assinatura não está ativa ` +
+          `(pode ter sido cancelada ou pausada). Cobrada separadamente, por si mesma.`,
         subscriptionId: sub.id,
       });
       pagadorId = sub.id;
@@ -567,8 +584,8 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       alertas.push({
         codigo: 'grupo_forma_mista',
         mensagem:
-          `O grupo de ${grupo.pagadorNome} tem assinaturas com formas de pagamento diferentes. ` +
-          `Cobrado pela forma do pagador (${grupo.formaPagamento ?? 'sem forma'}).`,
+          `As assinaturas que ${grupo.pagadorNome} paga têm formas de pagamento ` +
+          `diferentes. Cobrado pela forma de quem paga (${grupo.formaPagamento ?? 'sem forma'}).`,
         subscriptionId: grupo.pagadorId,
       });
     }
@@ -578,8 +595,8 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
       alertas.push({
         codigo: 'sem_cliente_asaas',
         mensagem:
-          `${grupo.pagadorNome} nao tem cliente no Asaas. ` +
-          `A previa monta, mas a Fase 3 nao consegue criar a cobranca sem vincular antes.`,
+          `${grupo.pagadorNome} não tem cliente no Asaas. A prévia monta, mas a cobrança ` +
+          `não pode ser criada sem vincular antes.`,
         subscriptionId: grupo.pagadorId,
       });
     }
@@ -622,9 +639,9 @@ export function montaPrevia(entrada: EntradaPrevia, periodoReferencia: string): 
     alertasNoEscopo.push({
       codigo: 'ajuste_nao_reconstruivel',
       mensagem:
-        'Ajuste proporcional de mudanca de plano nao e reconstruivel pelo banco: o PATCH do ' +
-        'portal sobrescreve valor_mensal na hora e nao grava next_billing_*. Se houve mudanca ' +
-        'de plano no mes anterior, o ajuste NAO esta nesta previa — confira a mao.',
+        'Mudança de plano no meio do mês não deixa rastro no banco: o valor antigo é ' +
+        'substituído na hora. Se alguém mudou de plano no mês passado, o ajuste proporcional ' +
+        'não está nesta prévia e precisa de lançamento manual.',
       subscriptionId: null,
     });
   }

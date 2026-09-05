@@ -10,6 +10,7 @@ import { ProducaoDefinirVolume } from './pages/Producao/ProducaoDefinirVolume';
 import { ExpedicaoAtualRedirect } from './pages/Expedicao/ExpedicaoAtualRedirect';
 import { ExpedicaoDetalhe } from './pages/Expedicao/ExpedicaoDetalhe';
 import { Financeiro } from './pages/Financeiro/Financeiro';
+import { Previa } from './pages/Previa/Previa';
 
 export default function App() {
   return (
@@ -82,6 +83,14 @@ export default function App() {
           element={
             <RequireAuth>
               <Financeiro />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/previa"
+          element={
+            <RequireAuth>
+              <Previa />
             </RequireAuth>
           }
         />

@@ -10,6 +10,7 @@ const SIDEBAR_ITENS: { label: string; to?: string; emBreve?: boolean }[] = [
   { label: 'Estoque', emBreve: true },
   { label: 'Assinantes', emBreve: true },
   { label: 'Financeiro', to: '/financeiro' },
+  { label: 'Prévia de cobrança', to: '/previa' },
   { label: 'Configurações', emBreve: true },
 ];
 
