@@ -1,0 +1,387 @@
+{
+  "_leia": "GOLDEN FIXTURE DO GEMEO. Mesmo arquivo em cora-backoffice/src/lib/ e cora-portal/api/_lib/. A entrada e a saida esperada da montagem da previa; os dois repos afirmam contra ele. Mudou regra: muda no backoffice, roda 'REGENERA_GOLDEN=1 npx vitest run src/lib/previa.golden.test.ts', copia o arquivo pro portal e roda 'npm run test:previa' la. Divergiu, um dos dois fica vermelho.",
+  "periodoReferencia": "2026-11",
+  "entrada": {
+    "subscriptions": [
+      {
+        "id": "ald",
+        "nome": "Aldina",
+        "total_paes": 2,
+        "forma_pagamento": "boleto",
+        "valor_mensal": 114,
+        "valor_frete": 15,
+        "activated_at": "2026-07-27T12:00:00Z",
+        "next_billing_change_date": null,
+        "next_billing_value": null,
+        "pagador_subscription_id": null,
+        "asaas_customer_id": "cus_ald"
+      },
+      {
+        "id": "fer",
+        "nome": "Fernanda",
+        "total_paes": 1,
+        "forma_pagamento": "boleto",
+        "valor_mensal": 114,
+        "valor_frete": 15,
+        "activated_at": "2026-07-27T12:00:00Z",
+        "next_billing_change_date": null,
+        "next_billing_value": null,
+        "pagador_subscription_id": "ald",
+        "asaas_customer_id": null
+      },
+      {
+        "id": "sol",
+        "nome": "Solange",
+        "total_paes": 3,
+        "forma_pagamento": "boleto_pix",
+        "valor_mensal": 213,
+        "valor_frete": 15,
+        "activated_at": "2026-11-12T09:00:00Z",
+        "next_billing_change_date": null,
+        "next_billing_value": null,
+        "pagador_subscription_id": null,
+        "asaas_customer_id": "cus_sol"
+      },
+      {
+        "id": "aju",
+        "nome": "Ajustada",
+        "total_paes": 1,
+        "forma_pagamento": "boleto_pix",
+        "valor_mensal": 114,
+        "valor_frete": 15,
+        "activated_at": "2026-07-27T12:00:00Z",
+        "next_billing_change_date": "2026-10-15",
+        "next_billing_value": 134,
+        "pagador_subscription_id": null,
+        "asaas_customer_id": "cus_aju"
+      },
+      {
+        "id": "car",
+        "nome": "Cartao",
+        "total_paes": 1,
+        "forma_pagamento": "cartao",
+        "valor_mensal": 114,
+        "valor_frete": 15,
+        "activated_at": "2026-07-27T12:00:00Z",
+        "next_billing_change_date": null,
+        "next_billing_value": null,
+        "pagador_subscription_id": null,
+        "asaas_customer_id": "cus_car"
+      }
+    ],
+    "weeklyOrders": [
+      {
+        "id": "wo-ald-08",
+        "subscription_id": "ald",
+        "delivery_date": "2026-10-08",
+        "status": "confirmado",
+        "total_extras": 28,
+        "composition": null,
+        "extras": [
+          {
+            "id": "focaccia",
+            "nome": "Focaccia Genovesa",
+            "qty": 1,
+            "preco_unit": 28
+          }
+        ]
+      },
+      {
+        "id": "wo-ald-29",
+        "subscription_id": "ald",
+        "delivery_date": "2026-10-29",
+        "status": "confirmado",
+        "total_extras": 36,
+        "composition": null,
+        "extras": [
+          {
+            "id": "multigraos",
+            "nome": "Multigrãos",
+            "qty": 1,
+            "preco_unit": 36
+          }
+        ]
+      },
+      {
+        "id": "wo-fer-15",
+        "subscription_id": "fer",
+        "delivery_date": "2026-10-15",
+        "status": "confirmado",
+        "total_extras": 0,
+        "composition": {
+          "original": 0,
+          "integral": 0
+        },
+        "extras": [
+          {
+            "id": "brioche",
+            "nome": "Brioche",
+            "qty": 1,
+            "preco_unit": 0
+          }
+        ]
+      },
+      {
+        "id": "wo-sol-22",
+        "subscription_id": "sol",
+        "delivery_date": "2026-10-22",
+        "status": "confirmado",
+        "total_extras": 0,
+        "composition": null,
+        "extras": [
+          {
+            "id": "ciabatta",
+            "nome": "Ciabatta",
+            "qty": 1,
+            "preco_unit": 0,
+            "motivo": "cortesia"
+          }
+        ]
+      },
+      {
+        "id": "wo-aju-01",
+        "subscription_id": "aju",
+        "delivery_date": "2026-10-01",
+        "status": "confirmado",
+        "total_extras": 0,
+        "composition": null,
+        "extras": [
+          {
+            "id": "brioche",
+            "nome": "Brioche",
+            "qty": 1,
+            "preco_unit": 0
+          }
+        ]
+      },
+      {
+        "id": "wo-aju-08",
+        "subscription_id": "aju",
+        "delivery_date": "2026-10-08",
+        "status": "confirmado",
+        "total_extras": 28,
+        "composition": null,
+        "extras": [
+          {
+            "id": "focaccia",
+            "nome": "Focaccia Genovesa",
+            "qty": 1,
+            "preco_unit": 28
+          }
+        ]
+      },
+      {
+        "id": "wo-car-08",
+        "subscription_id": "car",
+        "delivery_date": "2026-10-08",
+        "status": "confirmado",
+        "total_extras": 0,
+        "composition": null,
+        "extras": [
+          {
+            "id": "brioche",
+            "nome": "Brioche",
+            "qty": 1,
+            "preco_unit": 0
+          }
+        ]
+      }
+    ],
+    "entregas": [
+      {
+        "weekly_order_id": "wo-ald-08",
+        "status": "entregue"
+      },
+      {
+        "weekly_order_id": "wo-ald-29",
+        "status": "entregue"
+      },
+      {
+        "weekly_order_id": "wo-fer-15",
+        "status": "entregue"
+      },
+      {
+        "weekly_order_id": "wo-sol-22",
+        "status": "entregue"
+      },
+      {
+        "weekly_order_id": "wo-aju-01",
+        "status": "entregue"
+      },
+      {
+        "weekly_order_id": "wo-aju-08",
+        "status": "em_rota"
+      },
+      {
+        "weekly_order_id": "wo-car-08",
+        "status": "entregue"
+      }
+    ],
+    "precos": {
+      "2026-10-01": {
+        "brioche": 36
+      },
+      "2026-10-08": {
+        "focaccia": 30
+      },
+      "2026-10-15": {
+        "brioche": 36
+      },
+      "2026-10-22": {
+        "ciabatta": 30
+      }
+    }
+  },
+  "saida": {
+    "periodoReferencia": "2026-11",
+    "janela": {
+      "primeiraQuinta": "2026-10-01",
+      "ultimaQuinta": "2026-10-22",
+      "quintas": [
+        "2026-10-01",
+        "2026-10-08",
+        "2026-10-15",
+        "2026-10-22"
+      ]
+    },
+    "grupos": [
+      {
+        "pagadorId": "aju",
+        "pagadorNome": "Ajustada",
+        "formaPagamento": "boleto_pix",
+        "assinaturas": [
+          {
+            "subscriptionId": "aju",
+            "nome": "Ajustada",
+            "formaPagamento": "boleto_pix",
+            "mensalidade": 134,
+            "ajuste": 12,
+            "extras": [
+              {
+                "id": "brioche",
+                "nome": "Brioche",
+                "qty": 1,
+                "preco_unit": 0,
+                "quinta": "2026-10-01",
+                "subtotal": 0,
+                "tipo": "pago"
+              }
+            ],
+            "totalExtras": 0,
+            "total": 146,
+            "proporcional": false
+          }
+        ],
+        "total": 146
+      },
+      {
+        "pagadorId": "ald",
+        "pagadorNome": "Aldina",
+        "formaPagamento": "boleto",
+        "assinaturas": [
+          {
+            "subscriptionId": "ald",
+            "nome": "Aldina",
+            "formaPagamento": "boleto",
+            "mensalidade": 114,
+            "ajuste": 0,
+            "extras": [
+              {
+                "id": "focaccia",
+                "nome": "Focaccia Genovesa",
+                "qty": 1,
+                "preco_unit": 28,
+                "quinta": "2026-10-08",
+                "subtotal": 28,
+                "tipo": "pago"
+              }
+            ],
+            "totalExtras": 28,
+            "total": 142,
+            "proporcional": false
+          },
+          {
+            "subscriptionId": "fer",
+            "nome": "Fernanda",
+            "formaPagamento": "boleto",
+            "mensalidade": 114,
+            "ajuste": 0,
+            "extras": [
+              {
+                "id": "brioche",
+                "nome": "Brioche",
+                "qty": 1,
+                "preco_unit": 0,
+                "quinta": "2026-10-15",
+                "subtotal": 0,
+                "tipo": "troca"
+              }
+            ],
+            "totalExtras": 0,
+            "total": 114,
+            "proporcional": false
+          }
+        ],
+        "total": 256
+      },
+      {
+        "pagadorId": "sol",
+        "pagadorNome": "Solange",
+        "formaPagamento": "boleto_pix",
+        "assinaturas": [
+          {
+            "subscriptionId": "sol",
+            "nome": "Solange",
+            "formaPagamento": "boleto_pix",
+            "mensalidade": 159.75,
+            "ajuste": 0,
+            "extras": [
+              {
+                "id": "ciabatta",
+                "nome": "Ciabatta",
+                "qty": 1,
+                "preco_unit": 0,
+                "motivo": "cortesia",
+                "quinta": "2026-10-22",
+                "subtotal": 0,
+                "tipo": "cortesia"
+              }
+            ],
+            "totalExtras": 0,
+            "total": 159.75,
+            "proporcional": true
+          }
+        ],
+        "total": 159.75
+      }
+    ],
+    "totalGeral": 561.75,
+    "alertas": [
+      {
+        "codigo": "preco_divergente",
+        "mensagem": "Focaccia Genovesa na quinta 08/10 foi gravado a R$ 28,00 e o cardápio da semana diz R$ 30,00. Cobrado o valor gravado, que foi o que apareceu para a pessoa.",
+        "subscriptionId": "ald"
+      },
+      {
+        "codigo": "preco_zero",
+        "mensagem": "Brioche na quinta 01/10 está com preço zero e foi cobrado como zero. Não é troca (a cesta está cheia) e não tem motivo gravado. Confira se faltou cadastrar o preço.",
+        "subscriptionId": "aju"
+      },
+      {
+        "codigo": "preco_divergente",
+        "mensagem": "Brioche na quinta 01/10 foi gravado a R$ 0,00 e o cardápio da semana diz R$ 36,00. Cobrado o valor gravado, que foi o que apareceu para a pessoa.",
+        "subscriptionId": "aju"
+      },
+      {
+        "codigo": "entrega_nao_confirmada",
+        "mensagem": "Cesta confirmada na quinta 08/10 sem entrega marcada como entregue. Não entrou na cobrança, confira antes de gerar.",
+        "subscriptionId": "aju"
+      },
+      {
+        "codigo": "ajuste_nao_reconstruivel",
+        "mensagem": "Mudança de plano no meio do mês não deixa rastro no banco: o valor antigo é substituído na hora. Se alguém mudou de plano no mês passado, o ajuste proporcional não está nesta prévia e precisa de lançamento manual.",
+        "subscriptionId": null
+      }
+    ]
+  }
+}
