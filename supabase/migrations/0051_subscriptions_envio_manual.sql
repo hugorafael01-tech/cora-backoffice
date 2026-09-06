@@ -1,0 +1,53 @@
+-- ============================================================
+-- Migration 0051 - subscriptions.envio_manual
+-- ============================================================
+-- Fase 3, bloco C. Marca quem NAO recebe a cobranca por e-mail e precisa que
+-- alguem entregue o boleto a mao.
+--
+-- O NOME: `envio_manual`, e nao `sem_email`. A coluna `email` e NOT NULL e
+-- essas linhas TEM email preenchido — o que elas nao tem e um endereco da
+-- propria pessoa. Hoje sao enderecos de fachada da casa
+-- (`hugo+<nome>@acora.com.br`), que chegam no Hugo e nao no assinante. Chamar
+-- isso de "sem email" seria mentira literal no schema; o que a coluna controla
+-- e o ENVIO. Nome decidido pelo Hugo em 06/09.
+--
+-- POR QUE COLUNA, E NAO DETECCAO POR PADRAO
+-- -----------------------------------------
+-- Daria pra inferir com `email ILIKE '%@acora.com.br'` — sao 2 linhas em 27, e
+-- funcionaria hoje. Mas isso codifica em regex um combinado que nao esta
+-- escrito em lugar nenhum: no dia em que uma pessoa de verdade tiver e-mail da
+-- casa (alguem que trabalhe aqui e assine), ela sai da regua de comunicacao EM
+-- SILENCIO, e ninguem descobre ate a pessoa reclamar que nunca recebeu boleto.
+--
+-- Mesmo formato de problema de `forma_pagamento` (0043) e
+-- `pagador_subscription_id` (0045), e mesma conclusao das duas: inferir nao
+-- fecha, o Hugo marca. O precedente e o argumento.
+--
+-- PREENCHIMENTO MANUAL do Hugo, DEPOIS de aplicar: UMA linha, a da Aldina.
+-- So o PAGADOR importa — a cobranca vai para o cliente Asaas dele, entao ha
+-- uma coisa a enviar, nao duas. A Fernanda e paga pela Aldina e nao tem envio
+-- proprio; marca-la tambem faria a tela mostrar dois envios onde ha um.
+-- Molde do UPDATE no .verificacao.sql.
+--
+-- NOT NULL DEFAULT false: o estado normal e receber por e-mail, e a excecao e
+-- que se declara. Diferente da 0045, onde null tinha significado proprio
+-- ("paga a propria"); aqui um terceiro estado (null = "nao se sabe") nao
+-- ajudaria ninguem — ou se envia, ou nao.
+--
+-- NAO BLOQUEIA a geracao: a fatura e criada normalmente e a cobranca vai ao
+-- Asaas do mesmo jeito. O que nao existe e o envio. Por isso `envio_manual`
+-- NAO vira codigo de alerta da previa — vira uma lista propria na tela de
+-- resultado, "enviar a mao".
+--
+-- Sobre expandir `subscriptions` (tabela legacy): mesmo racional da 0039 e da
+-- 0045. Grants sao de tabela, nao de coluna — sem GRANT novo. NAO recriar
+-- policy de escrita pro authenticated (dropada na 0019).
+--
+-- Aplicar pelo SQL Editor.
+-- Probes PRE/POS em 0051_subscriptions_envio_manual.verificacao.sql.
+--
+-- Data: 2026-09-06
+-- ============================================================
+
+ALTER TABLE subscriptions
+  ADD COLUMN envio_manual boolean NOT NULL DEFAULT false;
