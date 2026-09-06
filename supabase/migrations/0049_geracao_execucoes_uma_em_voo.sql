@@ -1,0 +1,43 @@
+-- ============================================================
+-- Migration 0049 - indice parcial: uma execucao em voo por periodo
+-- ============================================================
+-- Fase 3, bloco C. E ESTA a trava. A 0048 so criou a tabela.
+--
+-- COMO FUNCIONA
+-- -------------
+-- UNIQUE sobre `periodo_referencia`, mas SO nas linhas com
+-- `terminada_em IS NULL`. Ou seja: no maximo uma execucao EM VOO por periodo,
+-- e quantas execucoes ja encerradas quiser — o historico nao atrapalha a
+-- proxima geracao.
+--
+-- A exclusao passa a ser do POSTGRES, nao do codigo. Um `SELECT ... IF NOT
+-- EXISTS ... INSERT` no runner teria uma janela entre a leitura e a escrita
+-- exatamente do tamanho do problema que se quer resolver: duas execucoes
+-- simultaneas leem "nao ha ninguem" e as duas inserem. Com o indice, as duas
+-- inserem e uma leva 23505.
+--
+-- E a mesma mecanica que ja protege o desfecho `criar` pela constraint de
+-- faturas. A diferenca e o alcance: aquela protege por grupo e DEPOIS de a
+-- geracao comecar; esta protege o ciclo inteiro e ANTES de qualquer leitura.
+--
+-- TRAVA VELHA: uma execucao que morra sem liberar (function morta, deploy no
+-- meio) deixaria o periodo travado para sempre — o indice nao sabe a diferenca
+-- entre "rodando" e "morreu rodando". Quem resolve isso e o runner, que antes
+-- de abrir encerra o que estiver em voo ha mais de 10 MINUTOS, com log. Dez
+-- minutos e o dobro do maxDuration de 300s declarado no vercel.json do portal,
+-- entao nenhuma execucao viva e vitima da varredura. Decidido com o Hugo em
+-- 06/09.
+--
+-- NAO e UNIQUE simples sobre periodo_referencia: isso permitiria UMA geracao
+-- por periodo na historia inteira, e a segunda tentativa legitima (depois de um
+-- erro resolvido) ficaria impossivel.
+--
+-- Aplicar DEPOIS da 0048, pelo SQL Editor.
+-- Probes PRE/POS em 0049_geracao_execucoes_uma_em_voo.verificacao.sql.
+--
+-- Data: 2026-09-06
+-- ============================================================
+
+CREATE UNIQUE INDEX geracao_execucoes_uma_em_voo
+  ON geracao_execucoes (periodo_referencia)
+  WHERE terminada_em IS NULL;

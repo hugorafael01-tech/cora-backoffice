@@ -1,0 +1,27 @@
+-- ============================================================
+-- Migration 0050 - RLS em geracao_execucoes, sem policy
+-- ============================================================
+-- Fase 3, bloco C. Fecha a tabela criada na 0048.
+--
+-- RLS LIGADO E NENHUMA POLICY: sob RLS ligado, ausencia de policy significa
+-- NEGAR para todo mundo que passa por ela — anon e authenticated. O
+-- `service_role` do portal BYPASSA RLS, e e ele quem escreve. Ou seja: a tabela
+-- fica acessivel exatamente a quem precisa dela, e a ninguem mais.
+--
+-- POR QUE NAO UMA POLICY DE LEITURA PRO ADMIN: a tela nao le esta tabela. O
+-- endpoint devolve o 409 `geracao_em_voo` quando a trava esta fechada, e isso e
+-- tudo que o backoffice precisa saber. Policy que ninguem usa e superficie
+-- aberta de graca. Se um dia houver tela de historico de geracoes, ai se cria
+-- a policy com `is_admin()`, como as demais.
+--
+-- PRECEDENTE que torna isso obrigatorio e nao opcional: o incidente de 22/08,
+-- em que dado sensivel ficou alcancavel pela anon key por meio de uma view sem
+-- RLS. Tabela nova nesta base nasce fechada.
+--
+-- Aplicar DEPOIS da 0048, pelo SQL Editor.
+-- Probes PRE/POS em 0050_geracao_execucoes_rls.verificacao.sql.
+--
+-- Data: 2026-09-06
+-- ============================================================
+
+ALTER TABLE geracao_execucoes ENABLE ROW LEVEL SECURITY;
